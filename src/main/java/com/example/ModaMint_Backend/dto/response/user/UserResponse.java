@@ -1,4 +1,4 @@
-package com.example.ModaMint_Backend.dto.response;
+package com.example.ModaMint_Backend.dto.response.user;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;

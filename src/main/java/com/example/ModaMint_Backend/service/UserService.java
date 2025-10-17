@@ -1,8 +1,8 @@
 package com.example.ModaMint_Backend.service;
 
-import com.example.ModaMint_Backend.dto.request.UserCreationRequest;
-import com.example.ModaMint_Backend.dto.request.UserUpdateRequest;
-import com.example.ModaMint_Backend.dto.response.UserResponse;
+import com.example.ModaMint_Backend.dto.request.user.UserCreationRequest;
+import com.example.ModaMint_Backend.dto.request.user.UserUpdateRequest;
+import com.example.ModaMint_Backend.dto.response.user.UserResponse;
 import com.example.ModaMint_Backend.entity.User;
 import com.example.ModaMint_Backend.exception.AppException;
 import com.example.ModaMint_Backend.exception.ErrorCode;

@@ -1,4 +1,4 @@
-package com.example.ModaMint_Backend.dto.request;
+package com.example.ModaMint_Backend.dto.request.user;
 
 
 import com.fasterxml.jackson.annotation.JsonFormat;

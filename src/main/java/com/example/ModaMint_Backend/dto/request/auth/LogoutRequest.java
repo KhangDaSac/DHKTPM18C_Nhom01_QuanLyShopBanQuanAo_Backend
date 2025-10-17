@@ -1,4 +1,4 @@
-package com.example.ModaMint_Backend.dto.response;
+package com.example.ModaMint_Backend.dto.request.auth;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -8,6 +8,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class RefreshResponse {
-    String newAccessToken;
+public class LogoutRequest {
+    String accessToken;
+    String refreshToken;
 }

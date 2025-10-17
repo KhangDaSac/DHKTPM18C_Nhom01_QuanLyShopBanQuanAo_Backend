@@ -19,6 +19,8 @@ public class Brand {
     @Column(name = "logo_url")
     String logoUrl;
 
+    Boolean active = true;
+
     @OneToMany(mappedBy = "brand")
     Set<Product> products;
 }
