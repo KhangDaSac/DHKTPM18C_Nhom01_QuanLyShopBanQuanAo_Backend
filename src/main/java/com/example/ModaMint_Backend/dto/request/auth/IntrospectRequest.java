@@ -1,4 +1,4 @@
-package com.example.ModaMint_Backend.dto.response;
+package com.example.ModaMint_Backend.dto.request.auth;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -8,8 +8,6 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AuthenticationResponse {
+public class IntrospectRequest {
     String accessToken;
-    String tokenType = "Bearer";
-    long expiresIn;
 }

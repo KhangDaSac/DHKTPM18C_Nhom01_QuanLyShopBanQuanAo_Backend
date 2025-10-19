@@ -1,9 +1,9 @@
 package com.example.ModaMint_Backend.controller;
 
-import com.example.ModaMint_Backend.dto.request.UserCreationRequest;
-import com.example.ModaMint_Backend.dto.request.UserUpdateRequest;
+import com.example.ModaMint_Backend.dto.request.user.UserCreationRequest;
+import com.example.ModaMint_Backend.dto.request.user.UserUpdateRequest;
 import com.example.ModaMint_Backend.dto.response.ApiResponse;
-import com.example.ModaMint_Backend.dto.response.UserResponse;
+import com.example.ModaMint_Backend.dto.response.user.UserResponse;
 import com.example.ModaMint_Backend.service.UserService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;

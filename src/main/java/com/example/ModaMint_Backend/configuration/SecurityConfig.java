@@ -34,7 +34,6 @@ public class SecurityConfig {
             "/products/**",
             "/categories/**",
             "/brands/**",
-
     };
 
     private final String[] ADMIN_ENDPOINTS = {

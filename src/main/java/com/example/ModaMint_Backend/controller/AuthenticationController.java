@@ -1,10 +1,14 @@
 package com.example.ModaMint_Backend.controller;
 
-import com.example.ModaMint_Backend.dto.request.AuthenticationRequest;
-import com.example.ModaMint_Backend.dto.request.IntrospectRequest;
-import com.example.ModaMint_Backend.dto.request.LogoutRequest;
+import com.example.ModaMint_Backend.dto.request.auth.AuthenticationRequest;
+import com.example.ModaMint_Backend.dto.request.auth.IntrospectRequest;
+import com.example.ModaMint_Backend.dto.request.auth.LogoutRequest;
 
 import com.example.ModaMint_Backend.dto.response.*;
+import com.example.ModaMint_Backend.dto.response.auth.AuthenticationResponse;
+import com.example.ModaMint_Backend.dto.response.auth.IntrospectResponse;
+import com.example.ModaMint_Backend.dto.response.auth.RefreshResponse;
+import com.example.ModaMint_Backend.dto.response.user.UserResponse;
 import com.example.ModaMint_Backend.service.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
 import jakarta.servlet.http.HttpServletResponse;

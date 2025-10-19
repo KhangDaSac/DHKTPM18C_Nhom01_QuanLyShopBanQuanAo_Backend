@@ -1,18 +1,16 @@
 package com.example.ModaMint_Backend.service;
 
-import com.example.ModaMint_Backend.dto.request.AuthenticationRequest;
-import com.example.ModaMint_Backend.dto.request.IntrospectRequest;
-import com.example.ModaMint_Backend.dto.request.LogoutRequest;
-import com.example.ModaMint_Backend.dto.response.AuthenticationResponse;
-import com.example.ModaMint_Backend.dto.response.IntrospectResponse;
-import com.example.ModaMint_Backend.dto.response.RefreshResponse;
-import com.example.ModaMint_Backend.dto.response.UserResponse;
+import com.example.ModaMint_Backend.dto.request.auth.AuthenticationRequest;
+import com.example.ModaMint_Backend.dto.request.auth.IntrospectRequest;
+import com.example.ModaMint_Backend.dto.request.auth.LogoutRequest;
+import com.example.ModaMint_Backend.dto.response.auth.AuthenticationResponse;
+import com.example.ModaMint_Backend.dto.response.auth.IntrospectResponse;
+import com.example.ModaMint_Backend.dto.response.auth.RefreshResponse;
+import com.example.ModaMint_Backend.dto.response.user.UserResponse;
 import com.example.ModaMint_Backend.entity.User;
-import com.example.ModaMint_Backend.entity.InvalidToken;
 import com.example.ModaMint_Backend.exception.AppException;
 import com.example.ModaMint_Backend.exception.ErrorCode;
 import com.example.ModaMint_Backend.repository.UserRepository;
-import com.example.ModaMint_Backend.repository.InvalidTokenRepository;
 import com.example.ModaMint_Backend.mapper.UserMapper;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
@@ -188,6 +186,7 @@ public class AuthenticationService {
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(user.getUsername())
                 .claim("type", type)
+                .claim("scope", buildScope(user)) // thêm scope
                 .issuer("ModaMint")
                 .issueTime(new Date())
                 .expirationTime(Date.from(Instant.now().plus(timeAmout, chronoUnit)))
@@ -207,8 +206,8 @@ public class AuthenticationService {
 
     private String buildScope(User user) {
         StringJoiner stringJoiner = new StringJoiner(" ");
-        if(!    CollectionUtils.isEmpty(user.getRoles())){
-//            user.getRoles().forEach(stringJoiner::add);
+        if (!CollectionUtils.isEmpty(user.getRoles())) {
+            user.getRoles().forEach(role -> stringJoiner.add(role.getName().name()));
         }
         return stringJoiner.toString();
     }

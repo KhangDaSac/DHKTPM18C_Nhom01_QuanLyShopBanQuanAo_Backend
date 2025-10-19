@@ -1,12 +1,15 @@
 package com.example.ModaMint_Backend.service;
 
-import com.example.ModaMint_Backend.dto.request.UserCreationRequest;
-import com.example.ModaMint_Backend.dto.request.UserUpdateRequest;
-import com.example.ModaMint_Backend.dto.response.UserResponse;
+import com.example.ModaMint_Backend.dto.request.user.UserCreationRequest;
+import com.example.ModaMint_Backend.dto.request.user.UserUpdateRequest;
+import com.example.ModaMint_Backend.dto.response.user.UserResponse;
+import com.example.ModaMint_Backend.entity.Role;
 import com.example.ModaMint_Backend.entity.User;
+import com.example.ModaMint_Backend.enums.RoleName;
 import com.example.ModaMint_Backend.exception.AppException;
 import com.example.ModaMint_Backend.exception.ErrorCode;
 import com.example.ModaMint_Backend.mapper.UserMapper;
+import com.example.ModaMint_Backend.repository.RoleRepository;
 import com.example.ModaMint_Backend.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -25,18 +28,40 @@ public class UserService {
     UserRepository userRepository;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
+    private final RoleRepository roleRepository;
 
     public UserResponse createRequest(UserCreationRequest request) {
-        if(userRepository.existsByUsername(request.getUsername())){
+        if (userRepository.existsByUsername(request.getUsername())) {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
+
         User user = userMapper.toUser(request);
-//        Set<String> roles = new HashSet<>();
-//        roles.add(Role.USER.name());
-//        user.setRoles(roles);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        return userMapper.toUserResponse( userRepository.save(user));
+        Set<Role> roleEntities = new HashSet<>();
+
+        if (request.getRoles() == null || request.getRoles().isEmpty()) {
+            Role defaultRole = (Role) roleRepository.findByName(RoleName.USER)
+                    .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+            roleEntities.add(defaultRole);
+        } else {
+            for (String roleNameStr : request.getRoles()) {
+                RoleName roleName;
+                try {
+                    roleName = RoleName.valueOf(roleNameStr);
+                } catch (IllegalArgumentException e) {
+                    throw new AppException(ErrorCode.ROLE_NOT_FOUND);
+                }
+                Role role = (Role) roleRepository.findByName(roleName)
+                        .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+                roleEntities.add(role);
+            }
+        }
+
+        user.setRoles(roleEntities);
+
+        User savedUser = userRepository.save(user);
+        return userMapper.toUserResponse(savedUser);
     }
 
     public List<UserResponse> getUsers() {

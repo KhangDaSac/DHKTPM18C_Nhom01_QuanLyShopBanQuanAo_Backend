@@ -25,7 +25,7 @@ public class Product {
     Long categoryId;
     String description;
     BigDecimal price;
-    Boolean active;
+    Boolean active = true;
 
     @CreationTimestamp
     @Column(name = "create_at")

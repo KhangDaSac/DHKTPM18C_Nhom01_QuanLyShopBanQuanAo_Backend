@@ -1,4 +1,5 @@
-package com.example.ModaMint_Backend.dto.request;
+package com.example.ModaMint_Backend.dto.response.auth;
+
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -8,7 +9,6 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AuthenticationRequest {
-    String username;
-    String password;
+public class IntrospectResponse {
+    boolean valid;
 }
