@@ -43,7 +43,10 @@ public class SecurityConfig {
 
     // Endpoints chỉ cho ADMIN
     private final String[] ADMIN_ENDPOINTS = {
-            "/user/**"
+            "/user/**",
+            "/products/**",
+            "/categories/**",
+            "/brands/**"
     };
 
     @Value("${jwt.signer-key}")
