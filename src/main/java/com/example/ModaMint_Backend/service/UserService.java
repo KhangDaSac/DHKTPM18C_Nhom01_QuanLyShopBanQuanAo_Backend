@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.HashSet;
 import java.util.List;
@@ -30,6 +31,9 @@ public class UserService {
     PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
 
+    // Ảnh mặc định cố định
+    private static final String DEFAULT_IMAGE_URL = "https://res.cloudinary.com/dhjksobmf/image/upload/v1729402353/default-avatar_c2opdo.png";
+
     public UserResponse createRequest(UserCreationRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new AppException(ErrorCode.USER_EXISTED);
@@ -37,6 +41,11 @@ public class UserService {
 
         User user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        // Xử lý ảnh mặc định nếu không có ảnh
+        if (!StringUtils.hasText(request.getImage())) {
+            user.setImage(DEFAULT_IMAGE_URL);
+        }
 
         Set<Role> roleEntities = new HashSet<>();
 
@@ -81,6 +90,11 @@ public class UserService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         userMapper.updateUser(request, user);
+
+        // Xử lý ảnh mặc định nếu không có ảnh trong request update
+        if (!StringUtils.hasText(request.getImage())) {
+            user.setImage(DEFAULT_IMAGE_URL);
+        }
 
         return userMapper.toUserResponse(userRepository.save(user));
     }

@@ -25,6 +25,7 @@ public class UserCreationRequest {
     String lastName;
     @JsonFormat(pattern = "yyyy-MM-dd")
     LocalDate dob;
+    String image;
 
     Set<String> roles;
 }

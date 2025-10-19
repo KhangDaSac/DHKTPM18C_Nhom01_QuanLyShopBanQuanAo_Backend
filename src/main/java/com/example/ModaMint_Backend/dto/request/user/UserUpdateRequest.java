@@ -14,11 +14,10 @@ import java.time.LocalDate;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserUpdateRequest {
     String email;
-    @Size(min = 8, message = "PASSWORD_INVALID")
-    String password;
     String phone;
     String firstName;
     String lastName;
     @JsonFormat(pattern = "yyyy-MM-dd")
     LocalDate dob;
+    String image;
 }

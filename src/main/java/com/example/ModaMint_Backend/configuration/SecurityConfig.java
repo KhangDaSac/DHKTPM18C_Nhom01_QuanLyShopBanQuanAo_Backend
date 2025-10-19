@@ -27,27 +27,28 @@ public class SecurityConfig {
 
     private final String[] PUBLIC_POST_ENDPOINTS = {
             "/users",
-            "/auth/**",
+            "/auth/**"
     };
 
-    public final String[] PUBLIC_GET_ENDPOINTS = {
+    private final String[] PUBLIC_GET_ENDPOINTS = {
             "/products/**",
             "/categories/**",
-            "/brands/**",
+            "/brands/**"
     };
 
-    private final String[] ADMIN_ENDPOINTS = {
-            "/user/**",
-            "/auth/me"
-    };
-
+    // Endpoints cho USER hoặc ADMIN
     private final String[] USER_ADMIN_ENDPOINTS = {
             "/auth/me"
     };
 
+    // Endpoints chỉ cho ADMIN
+    private final String[] ADMIN_ENDPOINTS = {
+            "/user/**"
+    };
 
+    @Value("${jwt.signer-key}")
+    private String signerKey;
 
-    // ===== SecurityFilterChain: phân quyền ROLE_ADMIN và ROLE_USER =====
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -55,15 +56,15 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
-                        .requestMatchers(HttpMethod.POST,PUBLIC_POST_ENDPOINTS).permitAll()
-                        .requestMatchers(HttpMethod.GET,PUBLIC_GET_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Admin only
-                        .requestMatchers(ADMIN_ENDPOINTS).hasRole("ADMIN")
-
-                        // User or Admin
+                        // Endpoints USER hoặc ADMIN
                         .requestMatchers(USER_ADMIN_ENDPOINTS).hasAnyRole("USER", "ADMIN")
+
+                        // Endpoints chỉ ADMIN
+                        .requestMatchers(ADMIN_ENDPOINTS).hasRole("ADMIN")
 
                         .anyRequest().authenticated()
                 )
@@ -74,14 +75,11 @@ public class SecurityConfig {
         return http.build();
     }
 
-    @Value("${jwt.signer-key}")
-    private String signerKey;
-
-    // ===== JwtAuthenticationConverter: lấy roles từ JWT =====
+    // ===== JwtAuthenticationConverter =====
     JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        grantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");  // Prefix ROLE_
-        grantedAuthoritiesConverter.setAuthoritiesClaimName("roles"); // Lấy từ claim "roles" trong JWT
+        grantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
+        grantedAuthoritiesConverter.setAuthoritiesClaimName("scope"); // Sử dụng "scope" làm tên claim chứa vai trò
 
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
@@ -116,17 +114,4 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
-
-    //    @Bean
-//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-//        http
-//                .cors(Customizer.withDefaults())
-//                .csrf(csrf -> csrf.disable())
-//                .authorizeHttpRequests(auth -> auth
-//                        .anyRequest().permitAll()
-//                );
-//
-//        return http.build();
-//    }
 }
