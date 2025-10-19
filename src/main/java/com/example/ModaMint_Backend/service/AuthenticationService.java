@@ -186,6 +186,7 @@ public class AuthenticationService {
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(user.getUsername())
                 .claim("type", type)
+                .claim("scope", buildScope(user)) // thêm scope
                 .issuer("ModaMint")
                 .issueTime(new Date())
                 .expirationTime(Date.from(Instant.now().plus(timeAmout, chronoUnit)))
@@ -205,8 +206,8 @@ public class AuthenticationService {
 
     private String buildScope(User user) {
         StringJoiner stringJoiner = new StringJoiner(" ");
-        if(!    CollectionUtils.isEmpty(user.getRoles())){
-//            user.getRoles().forEach(stringJoiner::add);
+        if (!CollectionUtils.isEmpty(user.getRoles())) {
+            user.getRoles().forEach(role -> stringJoiner.add(role.getName().name()));
         }
         return stringJoiner.toString();
     }

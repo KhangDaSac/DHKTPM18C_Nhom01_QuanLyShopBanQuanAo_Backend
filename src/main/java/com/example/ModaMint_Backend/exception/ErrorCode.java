@@ -16,7 +16,8 @@ public enum ErrorCode {
     TOKEN_IS_NOT_VALID(1007, "Token is not valid", HttpStatus.UNAUTHORIZED),
     PRODUCT_NOT_FOUND(2001, "Product not found", HttpStatus.NOT_FOUND),
     BRAND_NOT_FOUND(2002, "Brand not found", HttpStatus.NOT_FOUND),
-    CATEGORY_NOT_FOUND(2003, "Category not found", HttpStatus.NOT_FOUND);
+    CATEGORY_NOT_FOUND(2003, "Category not found", HttpStatus.NOT_FOUND),
+    ROLE_NOT_FOUND(2004, "Role not found", HttpStatus.NOT_FOUND);
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;
