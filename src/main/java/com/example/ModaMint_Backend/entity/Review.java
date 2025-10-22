@@ -25,6 +25,7 @@ public class Review {
     Long orderItemId;
 
     Integer rating;
+
     String comment;
 
     @CreationTimestamp

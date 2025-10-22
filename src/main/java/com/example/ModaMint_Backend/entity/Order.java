@@ -2,6 +2,7 @@ package com.example.ModaMint_Backend.entity;
 
 import com.example.ModaMint_Backend.enums.OrderStatus;
 import com.example.ModaMint_Backend.enums.PaymentStatus;
+import com.example.ModaMint_Backend.enums.ShipmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -51,6 +52,9 @@ public class Order {
 
     String phone; // Số điện thoại người mua
 
+    @Embedded
+    Shipment shipment;  // Nhúng Shipment vào Order
+
     @UpdateTimestamp
     @Column(name = "update_at")
     LocalDateTime updateAt;
@@ -76,9 +80,6 @@ public class Order {
 
     @OneToMany(mappedBy = "order")
     Set<OrderStatusHistory> orderStatusHistories;
-
-    @OneToMany(mappedBy = "order")
-    Set<Shipment> shipments;
 
     @OneToOne(mappedBy = "order")
     Payment payment;
