@@ -23,6 +23,10 @@ public class ProductVariant {
     String size;
     String color;
 
+    BigDecimal price;           // Giá của variant này
+    BigDecimal discount;       // Giảm giá của variant này
+    Integer quantity;          // Số lượng tồn kho
+
     @Column(name = "additional_price")
     BigDecimal additionalPrice;
 
@@ -34,8 +38,6 @@ public class ProductVariant {
     @JoinColumn(name = "product_id", insertable = false, updatable = false)
     Product product;
 
-    @OneToMany(mappedBy = "productVariant")
-    Set<Inventory> inventories;
 
     @OneToMany(mappedBy = "productVariant")
     Set<CartItem> cartItems;

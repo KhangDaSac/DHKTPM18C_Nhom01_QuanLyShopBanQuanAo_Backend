@@ -17,20 +17,21 @@ public class OrderItem {
     @Column(name = "order_id")
     Long orderId;
 
-    @Column(name = "variant_id")
-    Long variantId;
+    @Column(name = "product_variant_id")
+    Long productVariantId; 
 
-    @Column(name = "price_at_purchase")
-    BigDecimal priceAtPurchase;
-
-    Integer quantity;
-    BigDecimal discount;
+    BigDecimal unitPrice; // Giá đơn vị của sản phẩm
+    Integer quantity; // Số lượng sản phẩm
 
     @ManyToOne
     @JoinColumn(name = "order_id", insertable = false, updatable = false)
     Order order;
 
     @ManyToOne
-    @JoinColumn(name = "variant_id", insertable = false, updatable = false)
+    @JoinColumn(name = "product_variant_id", insertable = false, updatable = false)
     ProductVariant productVariant;
+
+    public BigDecimal getLineTotal() { // Tổng tiền của sản phẩm
+        return unitPrice.multiply(BigDecimal.valueOf(quantity));
+    }
 }

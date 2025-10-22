@@ -1,6 +1,8 @@
 package com.example.ModaMint_Backend.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
@@ -24,17 +26,29 @@ public class User {
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
 
+    @Size(min = 3, message = "Username must be at least 3 characters")
     String username;
+    
     String email;
+
+    @Size(min = 8, message = "Password must be at least 8 characters")
     String password;
     String phone;
     String firstName;
     String lastName;
     String image;
     LocalDate dob;
-    boolean active;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "gender")
+    Gender gender;
+
+    @Builder.Default
+    boolean active = true;
+
     @CreationTimestamp
     LocalDateTime createAt;
+    
     @UpdateTimestamp
     LocalDateTime updateAt;
 
@@ -49,20 +63,8 @@ public class User {
     @OneToOne(mappedBy = "user")
     Customer customer;
 
-    @OneToMany(mappedBy = "user")
-    Set<Review> reviews;
-
-    @OneToMany(mappedBy = "user")
-    Set<Cart> carts;
-
-    @OneToMany(mappedBy = "user")
-    Set<Order> orders;
-
-    @OneToMany(mappedBy = "user")
-    Set<OrderStatusHistory> orderStatusHistories;
-
-    @OneToMany(mappedBy = "user")
-    Set<ChatSession> chatSessions;
+    @OneToMany(mappedBy = "user") 
+    Set<Conversation> conversations;
 
     @PrePersist
     public void prePersist() {

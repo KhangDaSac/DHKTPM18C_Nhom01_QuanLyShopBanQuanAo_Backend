@@ -1,5 +1,7 @@
 package com.example.ModaMint_Backend.entity;
 
+import com.example.ModaMint_Backend.enums.OrderStatus;
+import com.example.ModaMint_Backend.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -21,28 +23,33 @@ public class Order {
     @Column(name = "order_code")
     String orderCode;
 
-    @Column(name = "user_id")
-    String userId;
+    @Column(name = "customer_id")
+    String customerId;
 
     @Column(name = "total_amount")
-    BigDecimal totalAmount;
+    BigDecimal totalAmount; // Tổng tiền hàng (Tổng tiền hàng + phí vận chuyển)
 
     @Column(name = "sub_total")
-    BigDecimal subTotal;
+    BigDecimal subTotal; // Tổng tiền hàng - khuyến mãi (Tổng tiền cuối cùng)
 
     @Column(name = "promotion_id")
-    Long promotionId;
+    Long promotionId; 
 
-    @Column(name = "promotion_value")
-    BigDecimal promotionValue;
+    @Column(name = "promotion_value") 
+    BigDecimal promotionValue; // Phải lưu vì theo thời gian promotion có thể thay đổi
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "order_status")
-    String orderStatus;
+    OrderStatus orderStatus;  // Chỉ lưu trạng thái đơn hàng (Chờ xác nhận, Đang giao, Đã giao, Đã hủy)
 
-    @Column(name = "shipping_address")
-    String shippingAddress;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_status")
+    PaymentStatus paymentStatus; // Chỉ lưu trạng thái thanh toán (Chưa thanh toán, Đã thanh toán, Lỗi thanh toán)
 
-    String phone;
+    @Column(name = "shipping_address_id")
+    Long shippingAddressId;
+
+    String phone; // Số điện thoại người mua
 
     @UpdateTimestamp
     @Column(name = "update_at")
@@ -53,12 +60,16 @@ public class Order {
     LocalDateTime createAt;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", insertable = false, updatable = false)
-    User user;
+    @JoinColumn(name = "customer_id", insertable = false, updatable = false)
+    Customer customer;
 
     @ManyToOne
     @JoinColumn(name = "promotion_id", insertable = false, updatable = false)
     Promotion promotion;
+
+    @ManyToOne
+    @JoinColumn(name = "shipping_address_id", insertable = false, updatable = false)
+    Address shippingAddress;
 
     @OneToMany(mappedBy = "order")
     Set<OrderItem> orderItems;
@@ -69,6 +80,25 @@ public class Order {
     @OneToMany(mappedBy = "order")
     Set<Shipment> shipments;
 
-    @OneToMany(mappedBy = "order")
-    Set<Payment> payments;
+    @OneToOne(mappedBy = "order")
+    Payment payment;
+
+    public BigDecimal totalProductPrice() {
+        return orderItems.stream()
+                .map(OrderItem::getLineTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public BigDecimal shippingFee() {
+        return BigDecimal.valueOf(30000);
+    }
+
+    public BigDecimal totalPromotion() {
+        return promotionValue != null ? promotionValue : BigDecimal.ZERO;
+    }
+
+    public BigDecimal totalAmount() {
+        return totalProductPrice().add(shippingFee()).subtract(totalPromotion());
+    }
+
 }

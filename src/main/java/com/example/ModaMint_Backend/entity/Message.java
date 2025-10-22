@@ -1,30 +1,29 @@
 package com.example.ModaMint_Backend.entity;
 
+import com.example.ModaMint_Backend.enums.SenderType;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "inventory")
+@Table(name = "messages")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Inventory {
+
+public class Message {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    Integer quantity;
+    String content;
+    LocalDateTime timestamp;
 
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    LocalDateTime updatedAt;
-
-    @Column(name = "variant_id")
-    Long variantId;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "sender_type")
+    SenderType senderType;
 
     @ManyToOne
-    @JoinColumn(name = "variant_id", insertable = false, updatable = false)
-    ProductVariant productVariant;
+    @JoinColumn(name = "conversation_id")
+    Conversation conversation;
 }

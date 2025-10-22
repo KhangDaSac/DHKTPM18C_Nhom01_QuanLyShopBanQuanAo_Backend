@@ -1,5 +1,6 @@
 package com.example.ModaMint_Backend.entity;
 
+import com.example.ModaMint_Backend.enums.ShipmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -18,18 +19,20 @@ public class Shipment {
     @Column(name = "order_id")
     Long orderId;
 
-    String carrier;
+    String carrier; //Tên công ty vận chuyển
 
     @Column(name = "tracking_number")
-    String trackingNumber;
+    String trackingNumber; // Mã vận chuyển
 
-    String status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    ShipmentStatus status; // Trạng thái vận chuyển (Đang giao, Đã giao, Đã hủy)
 
     @Column(name = "shipped_at")
-    LocalDateTime shippedAt;
+    LocalDateTime shippedAt; // Ngày giao hàng
 
     @Column(name = "expected_delivery_at")
-    LocalDateTime expectedDeliveryAt;
+    LocalDateTime expectedDeliveryAt; // Ngày dự kiến giao hàng
 
     @CreationTimestamp
     @Column(name = "create_at")

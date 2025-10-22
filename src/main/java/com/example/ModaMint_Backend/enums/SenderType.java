@@ -1,7 +1,7 @@
 package com.example.ModaMint_Backend.enums;
 
-public enum RoleName {
-    ADMIN,
+public enum SenderType {
+    CUSTOMER,
     STAFF,
-    CUSTOMER
+    AI
 }

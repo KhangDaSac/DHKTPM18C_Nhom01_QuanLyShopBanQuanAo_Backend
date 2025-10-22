@@ -17,8 +17,8 @@ public class Cart {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @Column(name = "user_id")
-    String userId;
+    @Column(name = "customer_id")
+    String customerId;
 
     @Column(name = "session_id")
     String sessionId;
@@ -31,9 +31,9 @@ public class Cart {
     @Column(name = "create_at")
     LocalDateTime createAt;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", insertable = false, updatable = false)
-    User user;
+    @OneToOne
+    @JoinColumn(name = "customer_id", insertable = false, updatable = false)
+    Customer customer;
 
     @OneToMany(mappedBy = "cart")
     Set<CartItem> cartItems;

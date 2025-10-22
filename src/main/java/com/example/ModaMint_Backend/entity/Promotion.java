@@ -17,31 +17,32 @@ public class Promotion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    String code;
-    String value;
+    String code; // Mã khuyến mãi ví dụ: "WELCOME10"
+
+    String value; // Giá trị khuyến mãi ví dụ: 10% hoặc 100.000 VNĐ
 
     @Column(name = "min_order_value")
-    BigDecimal minOrderValue;
+    BigDecimal minOrderValue; // Giá trị tối thiểu để áp dụng khuyến mãi ví dụ: 100000
 
     @Column(name = "start_at")
-    LocalDateTime startAt;
+    LocalDateTime startAt; 
 
     @Column(name = "end_at")
-    LocalDateTime endAt;
+    LocalDateTime endAt; 
 
-    @Column(name = "max_use")
-    Integer maxUse;
-
+    @Column(name = "quantity")
+    Integer quantity; // Số lượng khuyến mãi
+ 
     @Column(name = "is_active")
-    Boolean isActive;
+    Boolean isActive; // Trạng thái khuyến mãi (true: khuyến mãi đang hoạt động, false: khuyến mãi đã hết hạn)
 
     @CreationTimestamp
     @Column(name = "create_at")
-    LocalDateTime createAt;
+    LocalDateTime createAt; 
 
     @OneToMany(mappedBy = "promotion")
-    Set<Order> orders;
+    Set<Order> orders;  
 
     @OneToMany(mappedBy = "promotion")
-    Set<TypePromotion> typePromotions;
+    Set<TypePromotion> typePromotions; // Loại khuyến mãi (Phần trăm, tiền)
 }

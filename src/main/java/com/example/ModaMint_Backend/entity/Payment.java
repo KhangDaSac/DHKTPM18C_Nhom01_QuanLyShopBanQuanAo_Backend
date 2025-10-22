@@ -19,20 +19,20 @@ public class Payment {
     @Column(name = "order_id")
     Long orderId;
 
-    String method;
-    BigDecimal amount;
-    String status;
+    String method; // Mã phương thức thanh toán (COD, ZALO, VNPAY, ...)
+    BigDecimal amount; // Số tiền thanh toán
+    String status; // Trạng thái thanh toán (Chưa thanh toán, Đã thanh toán, Lỗi thanh toán)
 
     @Column(name = "transaction_id")
-    String transactionId;
+    String transactionId; // Mã giao dịch thanh toán
 
-    String payload;
+    String payload;     // Dữ liệu thanh toán 
 
     @CreationTimestamp
     @Column(name = "create_at")
     LocalDateTime createAt;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "order_id", insertable = false, updatable = false)
     Order order;
 }

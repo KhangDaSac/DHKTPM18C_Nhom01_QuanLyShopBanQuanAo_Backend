@@ -19,12 +19,15 @@ public class Product {
     Long id;
 
     String name;
+
     @Column(name = "brand_id")
     Long brandId;
+
     @Column(name = "category_id")
     Long categoryId;
+
     String description;
-    BigDecimal price;
+
     Boolean active = true;
 
     @CreationTimestamp

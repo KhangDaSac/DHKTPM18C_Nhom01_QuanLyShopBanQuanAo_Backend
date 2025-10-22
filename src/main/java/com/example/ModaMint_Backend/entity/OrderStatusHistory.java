@@ -1,5 +1,6 @@
 package com.example.ModaMint_Backend.entity;
 
+import com.example.ModaMint_Backend.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -15,25 +16,16 @@ public class OrderStatusHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    String status;
-
-    @Column(name = "user_id")
-    String userId;
-
-    String note;
-
-    @CreationTimestamp
-    @Column(name = "create_at")
-    LocalDateTime createAt;
-
     @Column(name = "order_id")
     Long orderId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "order_status")
+    OrderStatus orderStatus;
+
+    String message;
 
     @ManyToOne
     @JoinColumn(name = "order_id", insertable = false, updatable = false)
     Order order;
-
-    @ManyToOne
-    @JoinColumn(name = "user_id", insertable = false, updatable = false)
-    User user;
 }

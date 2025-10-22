@@ -18,8 +18,8 @@ public class Review {
     @Column(name = "product_id")
     Long productId;
 
-    @Column(name = "user_id")
-    String userId;
+    @Column(name = "customer_id")
+    String customerId;
 
     @Column(name = "order_item_id")
     Long orderItemId;
@@ -36,6 +36,6 @@ public class Review {
     Product product;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", insertable = false, updatable = false)
-    User user;
+    @JoinColumn(name = "customer_id", insertable = false, updatable = false)
+    Customer customer;
 }

@@ -1,5 +1,6 @@
 package com.example.ModaMint_Backend.entity;
 
+import com.example.ModaMint_Backend.enums.PromotionType;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -17,14 +18,9 @@ public class TypePromotion {
     Long promotionId;
 
     @Enumerated(EnumType.STRING)
-    PromotionType type; // PERCENT or AMOUNT
+    PromotionType type; // Phần trăm hoặc Tiền
 
     @ManyToOne
     @JoinColumn(name = "promotion_id", insertable = false, updatable = false)
     Promotion promotion;
-}
-
-enum PromotionType {
-    PERCENT,
-    AMOUNT
 }
