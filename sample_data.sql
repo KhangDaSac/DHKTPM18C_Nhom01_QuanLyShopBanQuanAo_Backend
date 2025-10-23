@@ -5,11 +5,7 @@
 -- 1. ROLES AND PERMISSIONS
 -- ==============================================
 
--- Insert Roles
-INSERT INTO roles (id, name, description) VALUES
-(1, 'ADMIN', 'Administrator role with full access'),
-(2, 'STAFF', 'Staff role with limited access'),
-(3, 'CUSTOMER', 'Customer role for regular users');
+-- Roles will be created in ApplicationInitConfig
 
 -- Insert Permissions
 INSERT INTO permissions (id, name, description) VALUES
@@ -22,51 +18,17 @@ INSERT INTO permissions (id, name, description) VALUES
 (7, 'REVIEW_MANAGEMENT', 'Manage reviews'),
 (8, 'PROMOTION_MANAGEMENT', 'Manage promotions');
 
--- Link Roles and Permissions
-INSERT INTO role_permissions (role_id, permission_id) VALUES
--- Admin has all permissions
-(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8),
--- Staff has limited permissions
-(2, 2), (2, 3), (2, 4), (2, 7),
--- Customer has basic permissions
-(3, 7);
+-- Role-Permission mappings will be created in ApplicationInitConfig
 
 -- ==============================================
 -- 2. USERS AND CUSTOMERS
 -- ==============================================
 
--- Insert Users (10 customers)
-INSERT INTO users (id, username, email, password, phone, first_name, last_name, image, dob, gender, active, create_at, update_at) VALUES
-('user-001', 'customer1', 'customer1@email.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDi', '0123456789', 'Nguyễn', 'Văn A', 'https://example.com/avatar1.jpg', '1990-01-15', 'MALE', true, NOW(), NOW()),
-('user-002', 'customer2', 'customer2@email.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDi', '0123456790', 'Trần', 'Thị B', 'https://example.com/avatar2.jpg', '1992-03-20', 'FEMALE', true, NOW(), NOW()),
-('user-003', 'customer3', 'customer3@email.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDi', '0123456791', 'Lê', 'Văn C', 'https://example.com/avatar3.jpg', '1988-07-10', 'MALE', true, NOW(), NOW()),
-('user-004', 'customer4', 'customer4@email.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDi', '0123456792', 'Phạm', 'Thị D', 'https://example.com/avatar4.jpg', '1995-11-25', 'FEMALE', true, NOW(), NOW()),
-('user-005', 'customer5', 'customer5@email.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDi', '0123456793', 'Hoàng', 'Văn E', 'https://example.com/avatar5.jpg', '1991-05-08', 'MALE', true, NOW(), NOW()),
-('user-006', 'customer6', 'customer6@email.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDi', '0123456794', 'Vũ', 'Thị F', 'https://example.com/avatar6.jpg', '1993-09-12', 'FEMALE', true, NOW(), NOW()),
-('user-007', 'customer7', 'customer7@email.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDi', '0123456795', 'Đặng', 'Văn G', 'https://example.com/avatar7.jpg', '1989-12-30', 'MALE', true, NOW(), NOW()),
-('user-008', 'customer8', 'customer8@email.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDi', '0123456796', 'Bùi', 'Thị H', 'https://example.com/avatar8.jpg', '1994-04-18', 'FEMALE', true, NOW(), NOW()),
-('user-009', 'customer9', 'customer9@email.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDi', '0123456797', 'Đinh', 'Văn I', 'https://example.com/avatar9.jpg', '1990-08-22', 'MALE', true, NOW(), NOW()),
-('user-010', 'customer10', 'customer10@email.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDi', '0123456798', 'Ngô', 'Thị J', 'https://example.com/avatar10.jpg', '1992-06-14', 'FEMALE', true, NOW(), NOW());
+-- Customer users will be created in ApplicationInitConfig
 
--- Insert Admin and Staff users
-INSERT INTO users (id, username, email, password, phone, first_name, last_name, image, dob, gender, active, create_at, update_at) VALUES
-('admin-001', 'admin', 'admin@orientalfashion.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDi', '0987654321', 'Admin', 'System', 'https://example.com/admin.jpg', '1985-01-01', 'MALE', true, NOW(), NOW()),
-('staff-001', 'staff1', 'staff1@orientalfashion.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDi', '0987654322', 'Staff', 'Member', 'https://example.com/staff.jpg', '1990-01-01', 'FEMALE', true, NOW(), NOW());
+-- Admin and Staff users will be created in ApplicationInitConfig
 
--- Link Users to Roles
-INSERT INTO user_role (user_id, role_id) VALUES
--- Admin role
-('admin-001', 1),
--- Staff role
-('staff-001', 2),
--- Customer roles
-('user-001', 3), ('user-002', 3), ('user-003', 3), ('user-004', 3), ('user-005', 3),
-('user-006', 3), ('user-007', 3), ('user-008', 3), ('user-009', 3), ('user-010', 3);
-
--- Insert Customers
-INSERT INTO customers (user_id) VALUES
-('user-001'), ('user-002'), ('user-003'), ('user-004'), ('user-005'),
-('user-006'), ('user-007'), ('user-008'), ('user-009'), ('user-010');
+-- Customer users will be created in ApplicationInitConfig
 
 -- ==============================================
 -- 3. BRANDS (15 brands)
@@ -526,49 +488,19 @@ INSERT INTO product_image (id, product_id, variant_id, url) VALUES
 -- 8. ADDRESSES (Sample addresses for customers)
 -- ==============================================
 
-INSERT INTO addresses (id, city, ward, address_detail, customer_id) VALUES
-(1, 'Hà Nội', 'Phường Cầu Giấy', 'Số 123 Đường Cầu Giấy', 'user-001'),
-(2, 'Hà Nội', 'Phường Đống Đa', 'Số 456 Đường Đống Đa', 'user-001'),
-(3, 'TP. Hồ Chí Minh', 'Phường Bến Nghé', 'Số 789 Đường Nguyễn Huệ', 'user-002'),
-(4, 'TP. Hồ Chí Minh', 'Phường Tân Bình', 'Số 321 Đường Cộng Hòa', 'user-002'),
-(5, 'Đà Nẵng', 'Phường Hải Châu', 'Số 654 Đường Lê Duẩn', 'user-003'),
-(6, 'Hải Phòng', 'Phường Lê Chân', 'Số 987 Đường Lê Lợi', 'user-004'),
-(7, 'Cần Thơ', 'Phường Ninh Kiều', 'Số 147 Đường Nguyễn Văn Cừ', 'user-005'),
-(8, 'Huế', 'Phường Phú Hội', 'Số 258 Đường Lê Lợi', 'user-006'),
-(9, 'Nha Trang', 'Phường Lộc Thọ', 'Số 369 Đường Trần Phú', 'user-007'),
-(10, 'Vũng Tàu', 'Phường Thắng Tam', 'Số 741 Đường Thùy Vân', 'user-008');
+-- Addresses will be created when customers are created in ApplicationInitConfig
 
 -- ==============================================
 -- 9. CARTS (Sample carts for customers)
 -- ==============================================
 
-INSERT INTO cart (id, customer_id, session_id, update_at, create_at) VALUES
-(1, 'user-001', 'session-001', NOW(), NOW()),
-(2, 'user-002', 'session-002', NOW(), NOW()),
-(3, 'user-003', 'session-003', NOW(), NOW()),
-(4, 'user-004', 'session-004', NOW(), NOW()),
-(5, 'user-005', 'session-005', NOW(), NOW()),
-(6, 'user-006', 'session-006', NOW(), NOW()),
-(7, 'user-007', 'session-007', NOW(), NOW()),
-(8, 'user-008', 'session-008', NOW(), NOW()),
-(9, 'user-009', 'session-009', NOW(), NOW()),
-(10, 'user-010', 'session-010', NOW(), NOW());
+-- Carts will be created when customers are created in ApplicationInitConfig
 
 -- ==============================================
 -- 10. CART ITEMS (Sample cart items)
 -- ==============================================
 
-INSERT INTO cart_item (id, cart_id, variant_id, quantity) VALUES
-(1, 1, 1, 2),  -- Customer 1 has 2x Product 1 Size S
-(2, 1, 5, 1),  -- Customer 1 has 1x Product 2 Size S
-(3, 2, 9, 3),  -- Customer 2 has 3x Product 3 Size S
-(4, 2, 13, 1), -- Customer 2 has 1x Product 4 Size S
-(5, 3, 17, 1), -- Customer 3 has 1x Product 5 Size S
-(6, 3, 21, 2), -- Customer 3 has 2x Product 6 Size S
-(7, 4, 25, 1), -- Customer 4 has 1x Product 7 Size S
-(8, 4, 29, 1), -- Customer 4 has 1x Product 8 Size S
-(9, 5, 33, 2), -- Customer 5 has 2x Product 9 Size S
-(10, 5, 37, 1); -- Customer 5 has 1x Product 10 Size S
+-- Cart items will be created when customers are created in ApplicationInitConfig
 
 -- ==============================================
 -- 11. PROMOTIONS (Sample promotions)
@@ -596,120 +528,49 @@ INSERT INTO type_promotions (id, promotion_id, type) VALUES
 -- 13. ORDERS (Sample orders)
 -- ==============================================
 
-INSERT INTO orders (id, order_code, customer_id, total_amount, sub_total, promotion_id, promotion_value, order_status, payment_method, shipping_address_id, phone, update_at, create_at) VALUES
-(1, 'ORD-001', 'user-001', 598000, 548000, 1, 50000, 'DELIVERED', 'CASH_ON_DELIVERY', 1, '0123456789', NOW(), NOW()),
-(2, 'ORD-002', 'user-002', 897000, 867000, 2, 30000, 'SHIPPED', 'BANK_TRANSFER', 3, '0123456790', NOW(), NOW()),
-(3, 'ORD-003', 'user-003', 998000, 968000, NULL, 0, 'PENDING', 'E_WALLET', 5, '0123456791', NOW(), NOW()),
-(4, 'ORD-004', 'user-004', 2198000, 2148000, 3, 50000, 'PREPARING', 'BANK_TRANSFER', 6, '0123456792', NOW(), NOW()),
-(5, 'ORD-005', 'user-005', 598000, 568000, 1, 30000, 'DELIVERED', 'CASH_ON_DELIVERY', 7, '0123456793', NOW(), NOW());
+-- Orders will be created when customers are created in ApplicationInitConfig
 
 -- ==============================================
 -- 14. ORDER ITEMS (Sample order items)
 -- ==============================================
 
-INSERT INTO order_item (id, order_id, product_variant_id, unit_price, quantity) VALUES
--- Order 1 items
-(1, 1, 1, 299000, 2),  -- 2x Product 1 Size S
--- Order 2 items
-(2, 2, 9, 199000, 3),  -- 3x Product 3 Size S
-(3, 2, 13, 249000, 1), -- 1x Product 4 Size S
--- Order 3 items
-(4, 3, 17, 599000, 1), -- 1x Product 5 Size S
-(5, 3, 21, 399000, 1), -- 1x Product 6 Size S
--- Order 4 items
-(6, 4, 25, 1299000, 1), -- 1x Product 7 Size S
-(7, 4, 29, 1199000, 1), -- 1x Product 8 Size S
--- Order 5 items
-(8, 5, 33, 349000, 1), -- 1x Product 9 Size S
-(9, 5, 37, 229000, 1); -- 1x Product 10 Size S
+-- Order items will be created when customers are created in ApplicationInitConfig
 
 -- ==============================================
 -- 15. ORDER STATUS HISTORY (Sample status history)
 -- ==============================================
 
-INSERT INTO order_status_history (id, order_id, order_status, message, created_at) VALUES
--- Order 1 history
-(1, 1, 'PENDING', 'Đơn hàng được tạo', NOW()),
-(2, 1, 'PREPARING', 'Đơn hàng đang được chuẩn bị', NOW()),
-(3, 1, 'SHIPPED', 'Đơn hàng đã được gửi', NOW()),
-(4, 1, 'DELIVERED', 'Đơn hàng đã giao thành công', NOW()),
--- Order 2 history
-(5, 2, 'PENDING', 'Đơn hàng được tạo', NOW()),
-(6, 2, 'PREPARING', 'Đơn hàng đang được chuẩn bị', NOW()),
-(7, 2, 'SHIPPED', 'Đơn hàng đã được gửi', NOW()),
--- Order 3 history
-(8, 3, 'PENDING', 'Đơn hàng được tạo', NOW()),
--- Order 4 history
-(9, 4, 'PENDING', 'Đơn hàng được tạo', NOW()),
-(10, 4, 'PREPARING', 'Đơn hàng đang được chuẩn bị', NOW()),
--- Order 5 history
-(11, 5, 'PENDING', 'Đơn hàng được tạo', NOW()),
-(12, 5, 'PREPARING', 'Đơn hàng đang được chuẩn bị', NOW()),
-(13, 5, 'SHIPPED', 'Đơn hàng đã được gửi', NOW()),
-(14, 5, 'DELIVERED', 'Đơn hàng đã giao thành công', NOW());
+-- Order status history will be created when customers are created in ApplicationInitConfig
 
 -- ==============================================
 -- 16. PAYMENTS (Sample payments)
 -- ==============================================
 
-INSERT INTO payments (id, order_id, payment_method, amount, payment_status, transaction_id, payload, create_at) VALUES
-(1, 1, 'CASH_ON_DELIVERY', 598000, 'PAID', 'TXN-001', '{"method": "COD", "delivery_fee": 30000}', NOW()),
-(2, 2, 'BANK_TRANSFER', 897000, 'PAID', 'TXN-002', '{"method": "BANK_TRANSFER", "bank": "Vietcombank"}', NOW()),
-(3, 3, 'E_WALLET', 998000, 'PENDING', 'TXN-003', '{"method": "E_WALLET", "wallet": "MoMo"}', NOW()),
-(4, 4, 'BANK_TRANSFER', 2198000, 'PAID', 'TXN-004', '{"method": "BANK_TRANSFER", "bank": "BIDV"}', NOW()),
-(5, 5, 'CASH_ON_DELIVERY', 598000, 'PAID', 'TXN-005', '{"method": "COD", "delivery_fee": 30000}', NOW());
+-- Payments will be created when customers are created in ApplicationInitConfig
 
 -- ==============================================
 -- 17. SHIPMENTS (Sample shipments)
 -- ==============================================
 
-INSERT INTO shipments (id, order_id, carrier, tracking_number, status, shipped_at, expected_delivery_at, create_at) VALUES
-(1, 1, 'Viettel Post', 'VT001234567', 'DELIVERED', NOW(), NOW(), NOW()),
-(2, 2, 'Giao Hàng Nhanh', 'GHN001234567', 'IN_TRANSIT', NOW(), NOW() + INTERVAL 2 DAY, NOW()),
-(3, 3, 'J&T Express', 'JT001234567', 'PENDING', NULL, NOW() + INTERVAL 3 DAY, NOW()),
-(4, 4, 'Viettel Post', 'VT001234568', 'PICKED_UP', NOW(), NOW() + INTERVAL 2 DAY, NOW()),
-(5, 5, 'Giao Hàng Nhanh', 'GHN001234568', 'DELIVERED', NOW(), NOW(), NOW());
+-- Shipments will be created when customers are created in ApplicationInitConfig
 
 -- ==============================================
 -- 18. REVIEWS (Sample reviews)
 -- ==============================================
 
-INSERT INTO reviews (id, product_id, customer_id, order_item_id, rating, comment, create_at) VALUES
-(1, 1, 'user-001', 1, 5, 'Sản phẩm chất lượng tốt, giao hàng nhanh', NOW()),
-(2, 3, 'user-002', 2, 4, 'Áo thun đẹp, chất liệu mềm mại', NOW()),
-(3, 5, 'user-003', 4, 5, 'Áo khoác bomber rất đẹp và ấm', NOW()),
-(4, 7, 'user-004', 6, 5, 'Áo vest chất lượng cao, đáng giá', NOW()),
-(5, 9, 'user-005', 8, 4, 'Áo sơ mi kẻ sọc đẹp, form chuẩn', NOW());
+-- Reviews will be created when customers are created in ApplicationInitConfig
 
 -- ==============================================
 -- 19. CONVERSATIONS (Sample conversations)
 -- ==============================================
 
-INSERT INTO conversations (id, is_active, user_id) VALUES
-(1, true, 'user-001'),
-(2, true, 'user-002'),
-(3, true, 'user-003'),
-(4, true, 'user-004'),
-(5, true, 'user-005');
+-- Conversations will be created when customers are created in ApplicationInitConfig
 
 -- ==============================================
 -- 20. MESSAGES (Sample messages)
 -- ==============================================
 
-INSERT INTO messages (id, content, timestamp, sender_type, conversation_id) VALUES
-(1, 'Xin chào, tôi muốn hỏi về sản phẩm áo sơ mi', NOW(), 'CUSTOMER', 1),
-(2, 'Chào bạn! Tôi có thể giúp gì cho bạn về sản phẩm áo sơ mi?', NOW(), 'STAFF', 1),
-(3, 'Sản phẩm này có size nào?', NOW(), 'CUSTOMER', 1),
-(4, 'Sản phẩm có các size S, M, L, XL bạn nhé', NOW(), 'STAFF', 1),
-(5, 'Cảm ơn bạn!', NOW(), 'CUSTOMER', 1),
-(6, 'Tôi muốn đổi size sản phẩm', NOW(), 'CUSTOMER', 2),
-(7, 'Bạn có thể đổi size trong vòng 7 ngày kể từ khi nhận hàng', NOW(), 'STAFF', 2),
-(8, 'Làm sao để theo dõi đơn hàng?', NOW(), 'CUSTOMER', 3),
-(9, 'Bạn có thể theo dõi đơn hàng qua mã tracking number', NOW(), 'STAFF', 3),
-(10, 'Sản phẩm có được bảo hành không?', NOW(), 'CUSTOMER', 4),
-(11, 'Sản phẩm được bảo hành 1 năm từ ngày mua', NOW(), 'STAFF', 4),
-(12, 'Tôi muốn hủy đơn hàng', NOW(), 'CUSTOMER', 5),
-(13, 'Bạn có thể hủy đơn hàng nếu chưa được xử lý', NOW(), 'STAFF', 5);
+-- Messages will be created when customers are created in ApplicationInitConfig
 
 -- ==============================================
 -- END OF SAMPLE DATA
