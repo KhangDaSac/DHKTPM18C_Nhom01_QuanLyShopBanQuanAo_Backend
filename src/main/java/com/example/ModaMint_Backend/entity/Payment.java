@@ -1,5 +1,6 @@
 package com.example.ModaMint_Backend.entity;
 
+import com.example.ModaMint_Backend.enums.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -19,9 +20,14 @@ public class Payment {
     @Column(name = "order_id")
     Long orderId;
 
-    String method; // Mã phương thức thanh toán (COD, ZALO, VNPAY, ...)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method")
+    PaymentMethod paymentMethod; // Phương thức thanh toán (COD, BANK_TRANSFER, E_WALLET)
+    
     BigDecimal amount; // Số tiền thanh toán
-    String status; // Trạng thái thanh toán (Chưa thanh toán, Đã thanh toán, Lỗi thanh toán)
+    
+    @Column(name = "payment_status")
+    String paymentStatus; // Trạng thái thanh toán (PENDING, PAID, FAILED, REFUNDED)
 
     @Column(name = "transaction_id")
     String transactionId; // Mã giao dịch thanh toán

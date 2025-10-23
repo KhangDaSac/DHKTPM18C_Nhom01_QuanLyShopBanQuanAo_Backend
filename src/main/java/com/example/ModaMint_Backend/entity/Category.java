@@ -18,6 +18,13 @@ public class Category {
     @Column(name = "is_active")
     Boolean isActive;
 
+    @ManyToOne
+    @JoinColumn(name = "parent_id")
+    Category parentCategory;
+
+    @OneToMany(mappedBy = "parentCategory")
+    Set<Category> subCategories;
+
     @OneToMany(mappedBy = "category")
     Set<Product> products;
 }

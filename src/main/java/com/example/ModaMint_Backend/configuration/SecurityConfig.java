@@ -36,8 +36,8 @@ public class SecurityConfig {
             "/brands/**"
     };
 
-    // Endpoints cho USER hoặc ADMIN
-    private final String[] USER_ADMIN_ENDPOINTS = {
+    // Endpoints cho CUSTOMER hoặc ADMIN
+    private final String[] CUSTOMER_ADMIN_ENDPOINTS = {
             "/auth/me"
     };
 
@@ -63,8 +63,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Endpoints USER hoặc ADMIN
-                        .requestMatchers(USER_ADMIN_ENDPOINTS).hasAnyRole("USER", "ADMIN")
+                        // Endpoints CUSTOMER hoặc ADMIN
+                        .requestMatchers(CUSTOMER_ADMIN_ENDPOINTS).hasAnyRole("CUSTOMER", "ADMIN")
 
                         // Endpoints chỉ ADMIN
                         .requestMatchers(ADMIN_ENDPOINTS).hasRole("ADMIN")

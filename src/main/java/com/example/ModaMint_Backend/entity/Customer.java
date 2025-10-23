@@ -20,9 +20,6 @@ public class Customer {
     @JoinColumn(name = "user_id")
     User user;
 
-    Integer loyaltyPoints;
-
-
     @OneToMany(mappedBy = "customer")
     Set<Address> addresses;
 
@@ -32,8 +29,6 @@ public class Customer {
     @OneToMany(mappedBy = "customer")
     Set<Order> orders;
 
-    @OneToMany(mappedBy = "customer")
-    Set<OrderStatusHistory> orderStatusHistories;
 
     @OneToMany(mappedBy = "customer")
     Set<Review> reviews;

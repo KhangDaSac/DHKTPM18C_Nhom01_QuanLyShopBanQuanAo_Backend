@@ -50,7 +50,7 @@ public class UserService {
         Set<Role> roleEntities = new HashSet<>();
 
         if (request.getRoles() == null || request.getRoles().isEmpty()) {
-            Role defaultRole = (Role) roleRepository.findByName(RoleName.USER)
+            Role defaultRole = (Role) roleRepository.findByName(RoleName.CUSTOMER)
                     .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
             roleEntities.add(defaultRole);
         } else {

@@ -1,7 +1,7 @@
 package com.example.ModaMint_Backend.entity;
 
 import com.example.ModaMint_Backend.enums.OrderStatus;
-import com.example.ModaMint_Backend.enums.PaymentStatus;
+import com.example.ModaMint_Backend.enums.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -43,8 +43,8 @@ public class Order {
     OrderStatus orderStatus;  // Chỉ lưu trạng thái đơn hàng (Chờ xác nhận, Đang giao, Đã giao, Đã hủy)
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "payment_status")
-    PaymentStatus paymentStatus; // Chỉ lưu trạng thái thanh toán (Chưa thanh toán, Đã thanh toán, Lỗi thanh toán)
+    @Column(name = "payment_method")
+    PaymentMethod paymentMethod; // Phương thức thanh toán (COD, BANK_TRANSFER, E_WALLET)
 
     @Column(name = "shipping_address_id")
     Long shippingAddressId;
