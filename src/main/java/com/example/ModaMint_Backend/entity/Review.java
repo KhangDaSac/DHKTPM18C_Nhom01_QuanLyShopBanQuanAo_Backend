@@ -39,4 +39,8 @@ public class Review {
     @ManyToOne
     @JoinColumn(name = "customer_id", insertable = false, updatable = false)
     Customer customer;
+
+    @ManyToOne
+    @JoinColumn(name = "order_item_id", insertable = false, updatable = false)
+    OrderItem orderItem;
 }

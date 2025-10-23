@@ -18,7 +18,12 @@ public class Category {
     @Column(name = "is_active")
     Boolean isActive;
 
-    String parentID; // Lưu trữ ID của danh mục cha
+    @ManyToOne
+    @JoinColumn(name = "parent_id")
+    Category parentCategory;
+
+    @OneToMany(mappedBy = "parentCategory")
+    Set<Category> subCategories;
 
     @OneToMany(mappedBy = "category")
     Set<Product> products;

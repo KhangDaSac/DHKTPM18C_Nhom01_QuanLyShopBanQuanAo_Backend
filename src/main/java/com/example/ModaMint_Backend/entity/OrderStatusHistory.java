@@ -16,8 +16,9 @@ public class OrderStatusHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @Column(name = "order_id")
-    Long orderId;
+    @ManyToOne
+    @JoinColumn(name = "order_id")
+    Order order;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "order_status")
@@ -25,7 +26,7 @@ public class OrderStatusHistory {
 
     String message;
 
-    @ManyToOne
-    @JoinColumn(name = "order_id", insertable = false, updatable = false)
-    Order order;
+    @CreationTimestamp
+    @Column(name = "created_at")
+    LocalDateTime createdAt;
 }

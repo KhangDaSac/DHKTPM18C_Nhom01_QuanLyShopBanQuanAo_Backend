@@ -4,21 +4,41 @@ import com.example.ModaMint_Backend.enums.ShipmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
-@Embeddable
+@Entity
+@Table(name = "shipments")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Shipment {
-    String carrier;                    // Tên công ty vận chuyển
-    String trackingNumber;             // Mã vận đơn
-    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
+
+    @Column(name = "order_id")
+    Long orderId;
+
+    String carrier; //Tên công ty vận chuyển
+
+    @Column(name = "tracking_number")
+    String trackingNumber; // Mã vận chuyển
+
     @Enumerated(EnumType.STRING)
-    ShipmentStatus status;             // Trạng thái vận chuyển
-    
+    @Column(name = "status")
+    ShipmentStatus status; // Trạng thái vận chuyển (Đang giao, Đã giao, Đã hủy)
+
     @Column(name = "shipped_at")
-    LocalDateTime shippedAt;           // Thời gian gửi hàng
-    
+    LocalDateTime shippedAt; // Ngày giao hàng
+
     @Column(name = "expected_delivery_at")
-    LocalDateTime expectedDeliveryAt;  // Thời gian dự kiến giao hàng
+    LocalDateTime expectedDeliveryAt; // Ngày dự kiến giao hàng
+
+    @CreationTimestamp
+    @Column(name = "create_at")
+    LocalDateTime createAt;
+
+    @ManyToOne
+    @JoinColumn(name = "order_id", insertable = false, updatable = false)
+    Order order;
 }

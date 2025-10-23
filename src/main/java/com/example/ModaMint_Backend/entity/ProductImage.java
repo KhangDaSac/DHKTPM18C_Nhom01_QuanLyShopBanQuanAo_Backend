@@ -24,4 +24,8 @@ public class ProductImage {
     @ManyToOne
     @JoinColumn(name = "product_id", insertable = false, updatable = false)
     Product product;
+
+    @ManyToOne
+    @JoinColumn(name = "variant_id", insertable = false, updatable = false)
+    ProductVariant productVariant;
 }

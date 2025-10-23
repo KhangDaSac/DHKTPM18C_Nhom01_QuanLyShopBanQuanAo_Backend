@@ -29,79 +29,79 @@ public class ApplicationInitConfig {
     @Bean
     ApplicationRunner init() {
         return args -> {
-            // 1️⃣ Khởi tạo tất cả role từ enum
-            for (RoleName roleName : RoleName.values()) {
-                roleRepository.findByName(roleName)
-                        .orElseGet(() -> {
-                            log.info("Creating role: {}", roleName);
-                            Role newRole = roleRepository.save(
-                                    Role.builder()
-                                            .name(roleName)
-                                            .description("Default role: " + roleName)
-                                            .build()
-                            );
-                            log.info("Role created: {}", newRole);
-                            return newRole;
-                        });
-            }
-
-            // 2️⃣ Tạo admin user nếu chưa có
-            if (userRepository.findByUsername("admin").isEmpty()) {
-                log.info("Checking for ADMIN role...");
-                Role adminRole = (Role) roleRepository.findByName(RoleName.ADMIN)
-                        .orElseThrow(() -> new RuntimeException("ROLE_ADMIN not found"));
-
-                log.info("Admin Role found: {}", adminRole);
-
-                User admin = User.builder()
-                        .username("admin")
-                        .email("admin@modamint.com")
-                        .password(passwordEncoder.encode("123456789"))
-                        .phone("0123456789")
-                        .firstName("Huy")
-                        .lastName("Nguyen")
-                        .dob(LocalDate.parse("2004-04-20"))
-                        .roles(Set.of(adminRole))
-                        .active(true)
-                        .build();
-
-                // Đảm bảo set image sau khi build
-                admin.setImage(DEFAULT_IMAGE_URL);
-
-                userRepository.save(admin);
-                log.warn("Admin user has been created with default image!");
-            } else {
-                log.info("Admin user already exists.");
-            }
-
-            // 3️⃣ Tạo user thường nếu chưa có
-            if (userRepository.findByUsername("user01").isEmpty()) {
-                log.info("Checking for USER role...");
-                Role userRole = (Role) roleRepository.findByName(RoleName.USER)
-                        .orElseThrow(() -> new RuntimeException("ROLE_USER not found"));
-
-                log.info("User Role found: {}", userRole);
-
-                User normalUser = User.builder()
-                        .username("Nguyen Quang Huy")
-                        .email("user01@modamint.com")
-                        .password(passwordEncoder.encode("123456789"))
-                        .phone("0123456789")
-                        .firstName("Huy")
-                        .lastName("Nguyen")
-                        .dob(LocalDate.parse("2004-04-20"))
-                        .roles(Set.of(userRole))
-                        .active(true)
-                        .build();
-
-                // Đảm bảo set image sau khi build
-                normalUser.setImage(DEFAULT_IMAGE_URL);
-
-                userRepository.save(normalUser);
-                log.warn("Normal user has been created with default image!");
-            } else {
-                log.info("Normal user already exists.");
-            }
+//            // 1️⃣ Khởi tạo tất cả role từ enum
+//            for (RoleName roleName : RoleName.values()) {
+//                roleRepository.findByName(roleName)
+//                        .orElseGet(() -> {
+//                            log.info("Creating role: {}", roleName);
+//                            Role newRole = roleRepository.save(
+//                                    Role.builder()
+//                                            .name(roleName)
+//                                            .description("Default role: " + roleName)
+//                                            .build()
+//                            );
+//                            log.info("Role created: {}", newRole);
+//                            return newRole;
+//                        });
+//            }
+//
+//            // 2️⃣ Tạo admin user nếu chưa có
+//            if (userRepository.findByUsername("admin").isEmpty()) {
+//                log.info("Checking for ADMIN role...");
+//                Role adminRole = (Role) roleRepository.findByName(RoleName.ADMIN)
+//                        .orElseThrow(() -> new RuntimeException("ROLE_ADMIN not found"));
+//
+//                log.info("Admin Role found: {}", adminRole);
+//
+//                User admin = User.builder()
+//                        .username("admin")
+//                        .email("admin@modamint.com")
+//                        .password(passwordEncoder.encode("123456789"))
+//                        .phone("0123456789")
+//                        .firstName("Huy")
+//                        .lastName("Nguyen")
+//                        .dob(LocalDate.parse("2004-04-20"))
+//                        .roles(Set.of(adminRole))
+//                        .active(true)
+//                        .build();
+//
+//                // Đảm bảo set image sau khi build
+//                admin.setImage(DEFAULT_IMAGE_URL);
+//
+//                userRepository.save(admin);
+//                log.warn("Admin user has been created with default image!");
+//            } else {
+//                log.info("Admin user already exists.");
+//            }
+//
+//            // 3️⃣ Tạo customer thường nếu chưa có
+//            if (userRepository.findByUsername("user01").isEmpty()) {
+//                log.info("Checking for CUSTOMER role...");
+//                Role customerRole = (Role) roleRepository.findByName(RoleName.CUSTOMER)
+//                        .orElseThrow(() -> new RuntimeException("ROLE_CUSTOMER not found"));
+//
+//                log.info("Customer Role found: {}", customerRole);
+//
+//                User normalUser = User.builder()
+//                        .username("Nguyen Quang Huy")
+//                        .email("user01@modamint.com")
+//                        .password(passwordEncoder.encode("123456789"))
+//                        .phone("0123456789")
+//                        .firstName("Huy")
+//                        .lastName("Nguyen")
+//                        .dob(LocalDate.parse("2004-04-20"))
+//                        .roles(Set.of(customerRole))
+//                        .active(true)
+//                        .build();
+//
+//                // Đảm bảo set image sau khi build
+//                normalUser.setImage(DEFAULT_IMAGE_URL);
+//
+//                userRepository.save(normalUser);
+//                log.warn("Normal customer has been created with default image!");
+//            } else {
+//                log.info("Normal customer already exists.");
+//            }
         };
     }
 }

@@ -12,12 +12,15 @@ public enum ErrorCode {
     USERNAME_INVALID(1003, "Username must be at least {min} characters", HttpStatus.BAD_REQUEST),
     INVALID_PASSWORD(1004, "Password must be at least {min} characters", HttpStatus.BAD_REQUEST),
     USER_NOT_EXISTED(1005, "User not found", HttpStatus.NOT_FOUND),
+    USER_NOT_FOUND(1005, "User not found", HttpStatus.NOT_FOUND),
     UNAUTHENTICATED(1006, "Unauthenticated", HttpStatus.UNAUTHORIZED),
     TOKEN_IS_NOT_VALID(1007, "Token is not valid", HttpStatus.UNAUTHORIZED),
     PRODUCT_NOT_FOUND(2001, "Product not found", HttpStatus.NOT_FOUND),
     BRAND_NOT_FOUND(2002, "Brand not found", HttpStatus.NOT_FOUND),
     CATEGORY_NOT_FOUND(2003, "Category not found", HttpStatus.NOT_FOUND),
-    ROLE_NOT_FOUND(2004, "Role not found", HttpStatus.NOT_FOUND);
+    ROLE_NOT_FOUND(2004, "Role not found", HttpStatus.NOT_FOUND),
+    CUSTOMER_NOT_FOUND(2005, "Customer not found", HttpStatus.NOT_FOUND),
+    CUSTOMER_ALREADY_EXISTS(2006, "Customer already exists", HttpStatus.BAD_REQUEST);
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

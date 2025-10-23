@@ -29,8 +29,6 @@ public class Customer {
     @OneToMany(mappedBy = "customer")
     Set<Order> orders;
 
-    @OneToMany(mappedBy = "customer")
-    Set<OrderStatusHistory> orderStatusHistories;
 
     @OneToMany(mappedBy = "customer")
     Set<Review> reviews;
