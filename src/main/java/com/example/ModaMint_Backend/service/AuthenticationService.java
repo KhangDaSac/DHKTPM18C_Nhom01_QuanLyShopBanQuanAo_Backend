@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.text.ParseException;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -46,7 +47,7 @@ public class AuthenticationService {
     @Value("${jwt.signer-key}")
     protected String SIGNER_KEY;
     PasswordEncoder passwordEncoder;
-    InvalidTokenService invalidTokenService;
+    RedisTokenService redisTokenService;
     UserMapper userMapper;
 
     public AuthenticationResponse authenticate(AuthenticationRequest request,
@@ -75,6 +76,7 @@ public class AuthenticationService {
         // Trả về access token trong body
         return AuthenticationResponse.builder()
                 .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .expiresIn(3600)
                 .tokenType("Bearer")
                 .build();
@@ -93,8 +95,8 @@ public class AuthenticationService {
         JWSVerifier jwsVerifier = new MACVerifier(SIGNER_KEY.getBytes());
         boolean verified = signedJWT.verify(jwsVerifier);
 
-        // Kiểm tra blacklist
-        if (invalidTokenService.existsById(signedJWT.getJWTClaimsSet().getJWTID())) {
+        // Kiểm tra Redis blacklist
+        if (redisTokenService.isTokenBlacklisted(signedJWT.getJWTClaimsSet().getJWTID())) {
             verified = false;
         }
 
@@ -105,8 +107,6 @@ public class AuthenticationService {
                 .valid(verified && expiredTime.after(new Date()))
                 .build();
     }
-
-
 
 
     public RefreshResponse refresh(String refreshToken) throws JOSEException, ParseException {
@@ -129,17 +129,55 @@ public class AuthenticationService {
     }
 
 
-    public void logout(LogoutRequest request) {
+    public void logout(LogoutRequest request, HttpServletResponse response) {
         try {
             if(request.getAccessToken() != null) {
                 SignedJWT accessJWT = verify(request.getAccessToken());
-                invalidTokenService.saveInvalidToken(accessJWT);
+                // Kiểm tra token type
+                String type = accessJWT.getJWTClaimsSet().getStringClaim("type");
+                if (!"access".equals(type)) {
+                    throw new AppException(ErrorCode.TOKEN_IS_NOT_VALID);
+                }
+                // Chỉ blacklist nếu token còn hạn
+                Date expireAt = accessJWT.getJWTClaimsSet().getExpirationTime();
+                long ttlMillis = expireAt.getTime() - System.currentTimeMillis();
+                
+                if (ttlMillis > 0) {
+                    String tokenId = accessJWT.getJWTClaimsSet().getJWTID();
+                    redisTokenService.blacklistToken(tokenId, Duration.ofMillis(ttlMillis));
+                    log.info("Access token {} blacklisted, expires in {}ms", tokenId, ttlMillis);
+                } else {
+                    log.info("Access token already expired, no need to blacklist");
+                }
             }
 
             if(request.getRefreshToken() != null) {
                 SignedJWT refreshJWT = verify(request.getRefreshToken());
-                invalidTokenService.saveInvalidToken(refreshJWT);
+                // Kiểm tra token type
+                String type = refreshJWT.getJWTClaimsSet().getStringClaim("type");
+                if (!"refresh".equals(type)) {
+                    throw new AppException(ErrorCode.TOKEN_IS_NOT_VALID);
+                }
+                // Chỉ blacklist nếu token còn hạn
+                Date expireAt = refreshJWT.getJWTClaimsSet().getExpirationTime();
+                long ttlMillis = expireAt.getTime() - System.currentTimeMillis();
+                
+                if (ttlMillis > 0) {
+                    String tokenId = refreshJWT.getJWTClaimsSet().getJWTID();
+                    redisTokenService.blacklistToken(tokenId, Duration.ofMillis(ttlMillis));
+                    log.info("Refresh token {} blacklisted, expires in {}ms", tokenId, ttlMillis);
+                } else {
+                    log.info("Refresh token already expired, no need to blacklist");
+                }
             }
+
+            // Xóa refresh token cookie
+            Cookie cookie = new Cookie("refreshToken", null);
+            cookie.setHttpOnly(true);
+            cookie.setSecure(true);
+            cookie.setPath("/refresh");
+            cookie.setMaxAge(0); // Xóa cookie ngay lập tức
+            response.addCookie(cookie);
 
         } catch (ParseException | JOSEException e) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
@@ -174,7 +212,9 @@ public class AuthenticationService {
             throw new AppException(ErrorCode.TOKEN_IS_NOT_VALID);
         }
 
-        if (invalidTokenService.existsById(signedJWT.getJWTClaimsSet().getJWTID())) {
+        // Kiểm tra Redis blacklist
+        String tokenId = signedJWT.getJWTClaimsSet().getJWTID();
+        if (redisTokenService.isTokenBlacklisted(tokenId)) {
             throw new AppException(ErrorCode.TOKEN_IS_NOT_VALID);
         }
         return signedJWT;

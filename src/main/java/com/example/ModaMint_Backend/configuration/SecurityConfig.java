@@ -24,56 +24,29 @@ import java.util.List;
 
 @Configuration
 public class SecurityConfig {
-
-    private final String[] PUBLIC_POST_ENDPOINTS = {
-            "/users",
-            "/auth/**"
-    };
-
-    private final String[] PUBLIC_GET_ENDPOINTS = {
-            "/products/**",
-            "/categories/**",
-            "/brands/**"
-    };
-
-    // Endpoints cho CUSTOMER hoặc ADMIN
-    private final String[] CUSTOMER_ADMIN_ENDPOINTS = {
-            "/auth/me"
-    };
-
-    // Endpoints chỉ cho ADMIN
-    private final String[] ADMIN_ENDPOINTS = {
-            "/user/**",
-            "/products/**",
-            "/categories/**",
-            "/brands/**"
-    };
-
     @Value("${jwt.signer-key}")
     private String signerKey;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(Customizer.withDefaults())
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth
-                        // Public endpoints
-                        .requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS).permitAll()
-                        .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS).permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-                        // Endpoints CUSTOMER hoặc ADMIN
-                        .requestMatchers(CUSTOMER_ADMIN_ENDPOINTS).hasAnyRole("CUSTOMER", "ADMIN")
-
-                        // Endpoints chỉ ADMIN
-                        .requestMatchers(ADMIN_ENDPOINTS).hasRole("ADMIN")
-
-                        .anyRequest().authenticated()
-                )
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
-                );
+            .cors(Customizer.withDefaults())
+            .csrf(AbstractHttpConfigurer::disable)
+            .authorizeHttpRequests(auth -> auth
+                // === PUBLIC ENDPOINTS ===
+                .requestMatchers("/auth/**").permitAll()  // Login, logout, refresh
+                .requestMatchers(HttpMethod.POST, "/users").permitAll()  // Đăng ký tài khoản
+                .requestMatchers(HttpMethod.GET, "/products/**").permitAll()  // Xem sản phẩm
+                .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()  // Xem danh mục
+                .requestMatchers(HttpMethod.GET, "/brands/**").permitAll()  // Xem thương hiệu
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // CORS
+                
+                // === TẤT CẢ ENDPOINTS KHÁC CẦN AUTHENTICATION ===
+                .anyRequest().authenticated()
+            )
+            .oauth2ResourceServer(oauth2 -> oauth2
+                .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
+            );
 
         return http.build();
     }

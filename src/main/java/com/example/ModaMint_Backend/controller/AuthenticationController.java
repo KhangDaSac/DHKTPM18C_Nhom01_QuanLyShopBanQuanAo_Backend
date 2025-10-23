@@ -52,14 +52,15 @@ public class AuthenticationController {
     ApiResponse<RefreshResponse> refresh(@CookieValue("refreshToken") String refreshToken)
             throws JOSEException, ParseException {
         RefreshResponse result = authenticationService.refresh(refreshToken);
+
         return ApiResponse.<RefreshResponse>builder()
                 .result(result)
                 .build();
     }
 
     @PostMapping("/logout")
-    ApiResponse<Void> logout(@RequestBody LogoutRequest request) {
-        authenticationService.logout(request);
+    ApiResponse<Void> logout(@RequestBody LogoutRequest request, HttpServletResponse response) {
+        authenticationService.logout(request, response);
         return ApiResponse.<Void>builder()
                 .message("Logout successful")
                 .build();
