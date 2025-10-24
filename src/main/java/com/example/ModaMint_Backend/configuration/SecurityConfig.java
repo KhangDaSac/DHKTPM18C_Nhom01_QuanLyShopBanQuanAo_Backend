@@ -34,14 +34,14 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 // === PUBLIC ENDPOINTS ===
-                .requestMatchers("/auth/**").permitAll()  // Login, logout, refresh
-                .requestMatchers(HttpMethod.POST, "/users").permitAll()  // Đăng ký tài khoản
-                .requestMatchers(HttpMethod.GET, "/products/**").permitAll()  // Xem sản phẩm
-                .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()  // Xem danh mục
-                .requestMatchers(HttpMethod.GET, "/brands/**").permitAll()  // Xem thương hiệu
+                    .requestMatchers(HttpMethod.GET, "/cart/**").permitAll() // Cho xem
+                    .requestMatchers(HttpMethod.POST, "/cart/**").authenticated() // Cần token
+                    .requestMatchers(HttpMethod.DELETE, "/cart/**").authenticated()
+                    .requestMatchers("/auth/**", "/users", "/products/**", "/categories/**", "/brands/**").permitAll()
+                    // Xem thương hiệu
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // CORS
-                
-                // === TẤT CẢ ENDPOINTS KHÁC CẦN AUTHENTICATION ===
+
+                    // === TẤT CẢ ENDPOINTS KHÁC CẦN AUTHENTICATION ===
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2
