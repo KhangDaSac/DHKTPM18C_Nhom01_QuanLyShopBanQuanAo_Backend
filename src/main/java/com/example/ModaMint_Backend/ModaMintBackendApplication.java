@@ -1,7 +1,9 @@
 package com.example.ModaMint_Backend;
 
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
 public class ModaMintBackendApplication {
@@ -9,5 +11,4 @@ public class ModaMintBackendApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(ModaMintBackendApplication.class, args);
 	}
-
 }

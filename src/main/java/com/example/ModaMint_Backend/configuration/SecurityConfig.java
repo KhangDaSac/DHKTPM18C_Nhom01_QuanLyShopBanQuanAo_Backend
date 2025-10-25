@@ -39,7 +39,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/products/**").permitAll()  // Xem sản phẩm
                 .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()  // Xem danh mục
                 .requestMatchers(HttpMethod.GET, "/brands/**").permitAll()  // Xem thương hiệu
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // CORS
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/chat").permitAll()// CORS
                 
                 // === TẤT CẢ ENDPOINTS KHÁC CẦN AUTHENTICATION ===
                 .anyRequest().authenticated()
