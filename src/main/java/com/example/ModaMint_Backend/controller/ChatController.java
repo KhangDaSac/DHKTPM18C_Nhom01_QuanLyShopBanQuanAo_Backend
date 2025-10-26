@@ -2,6 +2,7 @@ package com.example.ModaMint_Backend.controller;
 
 import com.example.ModaMint_Backend.dto.request.chat.ChatRequest;
 import com.example.ModaMint_Backend.dto.response.ApiResponse;
+import com.example.ModaMint_Backend.dto.response.chat.ChatAIResponse;
 import com.example.ModaMint_Backend.service.ChatService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -16,8 +17,8 @@ import org.springframework.web.multipart.MultipartFile;
 public class ChatController {
     ChatService chatService;
     @PostMapping("/ai")
-    ApiResponse<String> chat(@RequestBody ChatRequest request) {
-        return ApiResponse.<String>builder()
+    ApiResponse<ChatAIResponse> chat(@RequestBody ChatRequest request) {
+        return ApiResponse.<ChatAIResponse>builder()
                 .result(chatService.chat(request))
                 .message("Thành công")
                 .build();

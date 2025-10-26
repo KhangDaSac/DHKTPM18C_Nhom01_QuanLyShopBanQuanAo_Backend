@@ -1,6 +1,7 @@
 package com.example.ModaMint_Backend.service;
 
 import com.example.ModaMint_Backend.dto.request.chat.ChatRequest;
+import com.example.ModaMint_Backend.dto.response.chat.ChatAIResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -13,6 +14,7 @@ import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.content.Media;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,9 +27,11 @@ public class ChatService {
 
     ChatClient chatClient;
     JdbcChatMemoryRepository chatMemoryRepository;
+    RagService ragService;
 
-    public ChatService(ChatClient.Builder builder, JdbcChatMemoryRepository chatMemoryRepository) {
+    public ChatService(ChatClient.Builder builder, JdbcChatMemoryRepository chatMemoryRepository, RagService ragService) {
         this.chatMemoryRepository = chatMemoryRepository;
+        this.ragService = ragService;
         ChatMemory chatMemory = MessageWindowChatMemory.builder()
                 .chatMemoryRepository(chatMemoryRepository)
                 .maxMessages(200)
@@ -37,8 +41,9 @@ public class ChatService {
                 .build();
     }
 
-    public String chat(ChatRequest request) {
+    public ChatAIResponse chat(ChatRequest request) {
         String conversationId = "fashion-assistant-chat";
+        String context = ragService.retrieveContext();
         SystemMessage systemMessage = new SystemMessage(
                 """
                         You are a fashion assistant. Help users with fashion advice and recommendations.
@@ -48,7 +53,8 @@ public class ChatService {
                         """
         );
 
-        UserMessage userMessage = new UserMessage(request.message());
+
+        UserMessage userMessage = new UserMessage(request.message() + "\n\nContext:\n" + context );
         Prompt prompt = new Prompt(systemMessage, userMessage);
 
         return chatClient
@@ -57,7 +63,7 @@ public class ChatService {
                         ChatMemory.CONVERSATION_ID, conversationId
                 ))
                 .call()
-                .content();
+                .entity(new ParameterizedTypeReference<>(){});
     }
 
     public String chatWithImage(MultipartFile file, String message) {
