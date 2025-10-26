@@ -11,6 +11,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -117,5 +118,21 @@ public class CategoryService {
                 .stream()
                 .filter(Category::getIsActive)
                 .count();
+    }
+
+
+    //QuocHuy
+    public List<CategoryResponse> getTopActiveLeafCategoriesByProductCount() {
+        // 1. Tạo Pageable để yêu cầu trang đầu tiên (0) và 8 phần tử (size 8).
+        Pageable top8Pageable = PageRequest.of(0, 8); // <-- THAY ĐỔI TỪ 10 -> 8
+
+        // 2. Gọi phương thức repository (đã được cập nhật query)
+        Page<Category> categoryPage = categoryRepository.findTopLeafCategoriesByProductCount(top8Pageable);
+
+        // 3. Chuyển đổi Page<Category> thành List<CategoryResponse>
+        return categoryPage.getContent()
+                .stream()
+                .map(categoryMapper::toCategoryResponse)
+                .toList();
     }
 }

@@ -56,15 +56,15 @@ INSERT INTO brands (id, name, description, logo_url, active) VALUES
 -- ==============================================
 
 -- Main Categories
-INSERT INTO categories (id, name, is_active, parent_id) VALUES
-(1, 'Áo Nam', true, NULL),
-(2, 'Áo Nữ', true, NULL),
-(3, 'Quần Nam', true, NULL),
-(4, 'Quần Nữ', true, NULL),
-(5, 'Giày Nam', true, NULL),
-(6, 'Giày Nữ', true, NULL),
-(7, 'Phụ Kiện', true, NULL),
-(8, 'Túi Xách', true, NULL);
+INSERT INTO categories (id, name, is_active, parent_id, image) VALUES
+(1, 'Áo Nam', true, NULL, 'https://res.cloudinary.com/dkokkltme/image/upload/v1760199723/image_cate_1_wwqg84.webp'),
+(2, 'Áo Nữ', true, NULL, 'https://res.cloudinary.com/dkokkltme/image/upload/v1760199723/image_cate_1_wwqg84.webp'),
+(3, 'Quần Nam', true, NULL, 'https://res.cloudinary.com/dkokkltme/image/upload/v1760199723/image_cate_1_wwqg84.webp'),
+(4, 'Quần Nữ', true, NULL, 'https://res.cloudinary.com/dkokkltme/image/upload/v1760199723/image_cate_1_wwqg84.webp'),
+(5, 'Giày Nam', true, NULL, 'https://res.cloudinary.com/dkokkltme/image/upload/v1760199723/image_cate_1_wwqg84.webp'),
+(6, 'Giày Nữ', true, NULL, 'https://res.cloudinary.com/dkokkltme/image/upload/v1760199723/image_cate_1_wwqg84.webp'),
+(7, 'Phụ Kiện', true, NULL, 'https://res.cloudinary.com/dkokkltme/image/upload/v1760199723/image_cate_1_wwqg84.webp'),
+(8, 'Túi Xách', true, NULL, 'https://res.cloudinary.com/dkokkltme/image/upload/v1760199723/image_cate_1_wwqg84.webp');
 
 -- Sub Categories for Áo Nam
 INSERT INTO categories (id, name, is_active, parent_id) VALUES
