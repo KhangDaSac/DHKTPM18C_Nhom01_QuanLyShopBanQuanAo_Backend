@@ -29,9 +29,14 @@ public class CartController {
     @PostMapping("/items")
     public ResponseEntity<ApiResponse<CartDto>> addItem(@RequestHeader(value = "X-User-Id", required = false) String userId,
                                                             @RequestBody AddCartItemRequest req) {
-        CartDto dto = cartService.addItem(userId, req);
-        ApiResponse<CartDto> resp = ApiResponse.<CartDto>builder().code(1000).message("Thêm vào giỏ hàng thành công").result(dto).build();
-        return ResponseEntity.status(HttpStatus.CREATED).body(resp);
+        try {
+            CartDto dto = cartService.addItem(userId, req);
+            ApiResponse<CartDto> resp = ApiResponse.<CartDto>builder().code(1000).message("Thêm vào giỏ hàng thành công").result(dto).build();
+            return ResponseEntity.status(HttpStatus.CREATED).body(resp);
+        } catch (IllegalArgumentException ex) {
+            ApiResponse<CartDto> resp = ApiResponse.<CartDto>builder().code(400).message(ex.getMessage()).result(null).build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(resp);
+        }
     }
 
     @PutMapping("/items/{itemId}")

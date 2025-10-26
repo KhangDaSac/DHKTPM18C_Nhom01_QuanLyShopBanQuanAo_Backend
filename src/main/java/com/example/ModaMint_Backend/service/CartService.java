@@ -104,25 +104,51 @@ public class CartService {
         Long variantId = req.getVariantId();
         Integer qty = req.getQuantity() != null ? req.getQuantity() : 1;
 
-        var existing = cartItemRepository.findByCartIdAndVariantId(cart.getId(), variantId);
+        // Resolve variant: prefer explicit variantId; if not found, try productId -> default variant
+        // Log inputs for debugging
+        try {
+            System.out.println("CartService.addItem request: variantId=" + req.getVariantId() + ", productId=" + req.getProductId() + ", sessionId=" + req.getSessionId());
+        } catch (Exception e) {}
+        ProductVariant variant = null;
+        if (variantId != null) {
+            variant = productVariantRepository.findById(variantId).orElse(null);
+        }
+        if (variant == null && req.getProductId() != null) {
+            variant = productVariantRepository.findFirstByProductIdOrderByIdAsc(req.getProductId()).orElse(null);
+        }
+        // It's possible frontend passed productId in the variantId slot (older behavior). Try that too.
+        if (variant == null && variantId != null) {
+            variant = productVariantRepository.findFirstByProductIdOrderByIdAsc(variantId).orElse(null);
+        }
+
+        if (variant == null) {
+            throw new IllegalArgumentException("Không tìm thấy variant cho sản phẩm");
+        }
+
+        Long resolvedVariantId = variant.getId();
+
+        try {
+            System.out.println("CartService.addItem resolved variantId=" + resolvedVariantId + ", productId=" + variant.getProductId() + ", qty=" + qty + ", cartSession=" + cart.getSessionId());
+        } catch (Exception e) {}
+
+        var existing = cartItemRepository.findByCartIdAndVariantId(cart.getId(), resolvedVariantId);
         CartItem item;
         if (existing.isPresent()) {
             item = existing.get();
             item.setQuantity(item.getQuantity() + qty);
         } else {
-            item = CartItem.builder().cartId(cart.getId()).variantId(variantId).quantity(qty).build();
+            item = CartItem.builder().cartId(cart.getId()).variantId(resolvedVariantId).quantity(qty).build();
         }
-    CartItem saved = cartItemRepository.save(item);
+    cartItemRepository.save(item);
 
-        ProductVariant variant = productVariantRepository.findById(variantId).orElse(null);
-        Long productId = variant != null ? variant.getProductId() : null;
-        String productName = null;
-        if (productId != null) productName = productService.getProductById(productId).getName();
+        // Log cart items count for debugging
+        try {
+            var c = getCart(null, cart.getSessionId());
+            System.out.println("CartService.addItem returning cart with session=" + cart.getSessionId() + " itemsCount=" + (c.getItems() != null ? c.getItems().size() : 0));
+        } catch (Exception e) {}
 
-        long unit = variant != null && variant.getPrice() != null ? variant.getPrice().longValue() : 0L;
-
-    // Return the full cart DTO so client can persist sessionId and show updated cart
-    return getCart(userId, cart.getSessionId());
+        // Return the full cart DTO so client can persist sessionId and show updated cart
+        return getCart(userId, cart.getSessionId());
     }
 
     public CartItemDto updateItemQuantity(Long itemId, UpdateCartItemRequest req) {

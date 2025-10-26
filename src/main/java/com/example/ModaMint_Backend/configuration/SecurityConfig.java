@@ -39,6 +39,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/products/**").permitAll()  // Xem sản phẩm
                 .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()  // Xem danh mục
                 .requestMatchers(HttpMethod.GET, "/brands/**").permitAll()  // Xem thương hiệu
+                // Allow guest access to carts and creating orders (guest checkout)
+                .requestMatchers("/carts/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/orders").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // CORS
                 
                 // === TẤT CẢ ENDPOINTS KHÁC CẦN AUTHENTICATION ===
