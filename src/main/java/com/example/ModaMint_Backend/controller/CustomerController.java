@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +23,7 @@ public class CustomerController {
     private final CustomerService customerService;
 
     @PostMapping
+    @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<CustomerResponse>> createCustomer(
             @Valid @RequestBody CustomerRequest request) {
         log.info("Creating customer with userId: {}", request.getUserId());
@@ -38,6 +40,7 @@ public class CustomerController {
     }
 
     @GetMapping("/{userId}")
+    @PreAuthorize("hasRole('ADMIN') or (#userId == authentication.name)")
     public ResponseEntity<ApiResponse<CustomerResponse>> getCustomerById(
             @PathVariable String userId) {
         log.info("Getting customer by userId: {}", userId);
@@ -54,6 +57,7 @@ public class CustomerController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<CustomerResponse>>> getAllCustomers() {
         log.info("Getting all customers");
         
@@ -69,6 +73,7 @@ public class CustomerController {
     }
 
     @GetMapping("/active")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<CustomerResponse>>> getAllActiveCustomers() {
         log.info("Getting all active customers");
         
@@ -84,6 +89,7 @@ public class CustomerController {
     }
 
     @PutMapping("/{userId}")
+    @PreAuthorize("hasRole('ADMIN') or (#userId == authentication.name)")
     public ResponseEntity<ApiResponse<CustomerResponse>> updateCustomer(
             @PathVariable String userId,
             @Valid @RequestBody CustomerRequest request) {
@@ -101,6 +107,7 @@ public class CustomerController {
     }
 
     @DeleteMapping("/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteCustomer(@PathVariable String userId) {
         log.info("Deleting customer with userId: {}", userId);
         

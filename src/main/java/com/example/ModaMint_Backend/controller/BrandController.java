@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,6 +25,7 @@ public class BrandController {
     BrandService brandService;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<BrandResponse> createBrand(@RequestBody @Valid BrandRequest request) {
         return ApiResponse.<BrandResponse>builder()
                 .result(brandService.createBrand(request))
@@ -75,6 +77,7 @@ public class BrandController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<BrandResponse> updateBrand(
             @PathVariable Long id,
             @RequestBody @Valid BrandRequest request) {
@@ -85,6 +88,7 @@ public class BrandController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<String> deleteBrand(@PathVariable Long id) {
         brandService.deleteBrand(id);
         return ApiResponse.<String>builder()
@@ -94,6 +98,7 @@ public class BrandController {
     }
 
     @PutMapping("/{id}/restore")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<BrandResponse> restoreBrand(@PathVariable Long id) {
         return ApiResponse.<BrandResponse>builder()
                 .result(brandService.restoreBrand(id))
@@ -102,6 +107,7 @@ public class BrandController {
     }
 
     @DeleteMapping("/{id}/permanent")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<String> permanentDeleteBrand(@PathVariable Long id) {
         brandService.permanentDeleteBrand(id);
         return ApiResponse.<String>builder()

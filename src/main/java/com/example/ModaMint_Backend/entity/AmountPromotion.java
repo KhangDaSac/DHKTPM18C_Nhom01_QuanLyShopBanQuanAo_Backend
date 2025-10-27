@@ -9,17 +9,18 @@ import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
-@Table(name = "promotions")
+@Table(name = "amount_promotions")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Promotion {
+public class AmountPromotion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    String code; // Mã khuyến mãi ví dụ: "WELCOME10"
+    String code; // Mã khuyến mãi ví dụ: "SALE5000"
 
-    String value; // Giá trị khuyến mãi ví dụ: 10% hoặc 100.000 VNĐ
+    @Column(name = "discount_amount")
+    BigDecimal discountAmount; // Số tiền giảm cụ thể ví dụ: 5000
 
     @Column(name = "min_order_value")
     BigDecimal minOrderValue; // Giá trị tối thiểu để áp dụng khuyến mãi ví dụ: 100000
@@ -40,9 +41,6 @@ public class Promotion {
     @Column(name = "create_at")
     LocalDateTime createAt; 
 
-    @OneToMany(mappedBy = "promotion")
+    @OneToMany(mappedBy = "amountPromotion")
     Set<Order> orders;  
-
-    @OneToMany(mappedBy = "promotion")
-    Set<TypePromotion> typePromotions; // Loại khuyến mãi (Phần trăm, tiền)
 }

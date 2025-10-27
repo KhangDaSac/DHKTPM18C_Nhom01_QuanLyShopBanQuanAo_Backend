@@ -32,8 +32,11 @@ public class Order {
     @Column(name = "sub_total")
     BigDecimal subTotal; // Tổng tiền hàng - khuyến mãi (Tổng tiền cuối cùng)
 
-    @Column(name = "promotion_id")
-    Long promotionId; 
+    @Column(name = "percentage_promotion_id")
+    Long percentagePromotionId; 
+
+    @Column(name = "amount_promotion_id")
+    Long amountPromotionId; 
 
     @Column(name = "promotion_value") 
     BigDecimal promotionValue; // Phải lưu vì theo thời gian promotion có thể thay đổi
@@ -64,8 +67,12 @@ public class Order {
     Customer customer;
 
     @ManyToOne
-    @JoinColumn(name = "promotion_id", insertable = false, updatable = false)
-    Promotion promotion;
+    @JoinColumn(name = "percentage_promotion_id", insertable = false, updatable = false)
+    PercentagePromotion percentagePromotion;
+
+    @ManyToOne
+    @JoinColumn(name = "amount_promotion_id", insertable = false, updatable = false)
+    AmountPromotion amountPromotion;
 
     @ManyToOne
     @JoinColumn(name = "shipping_address_id", insertable = false, updatable = false)
