@@ -1,4 +1,4 @@
-package com.example.ModaMint_Backend.dto.response.cartitem;
+package com.example.ModaMint_Backend.dto.response.cart;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@FieldDefaults(level = lombok.AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class CartItemResponse {
     Long id;
     Long variantId;
@@ -17,5 +17,5 @@ public class CartItemResponse {
     String size;
     BigDecimal price;
     Integer quantity;
-    BigDecimal total;
+    String imageUrl;
 }

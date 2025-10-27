@@ -1,11 +1,15 @@
 package com.example.ModaMint_Backend.repository;
 
 import com.example.ModaMint_Backend.entity.Cart;
+import com.example.ModaMint_Backend.entity.CartItem;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
-public interface CartRepository extends JpaRepository<Cart, Integer> {
-    Optional<Cart> findById(Long id);
+@Repository
+public interface CartRepository extends JpaRepository<Cart, Long> {
     Optional<Cart> findByCustomerId(String customerId);
+    Optional<Cart> findBySessionId(String sessionId);
 }
