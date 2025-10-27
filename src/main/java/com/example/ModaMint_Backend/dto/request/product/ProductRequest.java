@@ -8,6 +8,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
 @Data
 @Builder
@@ -27,6 +28,8 @@ public class ProductRequest {
 
     @NotBlank(message = "Mô tả sản phẩm không được để trống")
     String description;
+
+    Set<String> images;
 
     @NotNull(message = "Giá sản phẩm là bắt buộc")
     @DecimalMin(value = "0.0", inclusive = false, message = "Giá phải lớn hơn 0")

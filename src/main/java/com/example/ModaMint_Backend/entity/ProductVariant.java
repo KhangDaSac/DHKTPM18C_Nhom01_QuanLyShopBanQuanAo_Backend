@@ -22,6 +22,8 @@ public class ProductVariant {
 
     String size;
     String color;
+    
+    String image;               // Hình ảnh của variant này
 
     BigDecimal price;           // Giá của variant này
     BigDecimal discount;       // Giảm giá của variant này
@@ -37,6 +39,8 @@ public class ProductVariant {
     @ManyToOne
     @JoinColumn(name = "product_id", insertable = false, updatable = false)
     Product product;
+
+
 
 
     @OneToMany(mappedBy = "productVariant")

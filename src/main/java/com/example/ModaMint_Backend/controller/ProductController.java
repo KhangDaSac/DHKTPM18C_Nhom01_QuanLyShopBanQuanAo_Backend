@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -48,6 +49,7 @@ public class ProductController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<ProductResponse> createProduct(@RequestBody @Valid ProductRequest request) {
         return ApiResponse.<ProductResponse>builder()
                 .result(productService.createProduct(request))
@@ -56,6 +58,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<ProductResponse> updateProduct(
             @PathVariable Long id,
             @RequestBody @Valid ProductRequest request) {
@@ -66,6 +69,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<String> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
         return ApiResponse.<String>builder()
@@ -75,6 +79,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}/restore")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<ProductResponse> restoreProduct(@PathVariable Long id) {
         return ApiResponse.<ProductResponse>builder()
                 .result(productService.restoreProduct(id))
@@ -83,6 +88,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}/permanent")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<String> permanentDeleteProduct(@PathVariable Long id) {
         productService.permanentDeleteProduct(id);
         return ApiResponse.<String>builder()
