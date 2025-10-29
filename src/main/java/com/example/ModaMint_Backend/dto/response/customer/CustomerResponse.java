@@ -12,7 +12,7 @@ import java.util.Set;
 @Builder
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class CustomerResponse {
-    String userId;
+    String customerId;
     UserResponse user;
     Set<AddressResponse> addresses;
     CartResponse cart;
@@ -38,7 +38,7 @@ public class CustomerResponse {
     @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
     public static class CartResponse {
         Long id;
-        String sessionId;
+        String customerId;
     }
 
     @Data

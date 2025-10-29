@@ -26,7 +26,7 @@ public class CustomerController {
     @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<CustomerResponse>> createCustomer(
             @Valid @RequestBody CustomerRequest request) {
-        log.info("Creating customer with userId: {}", request.getUserId());
+        log.info("Creating customer with customerId: {}", request.getCustomerId());
         
         CustomerResponse response = customerService.createCustomer(request);
         
@@ -39,13 +39,13 @@ public class CustomerController {
         return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
     }
 
-    @GetMapping("/{userId}")
-    @PreAuthorize("hasRole('ADMIN') or (#userId == authentication.name)")
+    @GetMapping("/{customerId}")
+    @PreAuthorize("hasRole('ADMIN') or (#customerId == authentication.name)")
     public ResponseEntity<ApiResponse<CustomerResponse>> getCustomerById(
-            @PathVariable String userId) {
-        log.info("Getting customer by userId: {}", userId);
+            @PathVariable String customerId) {
+        log.info("Getting customer by customerId: {}", customerId);
         
-        CustomerResponse response = customerService.getCustomerById(userId);
+        CustomerResponse response = customerService.getCustomerById(customerId);
         
         ApiResponse<CustomerResponse> apiResponse = ApiResponse.<CustomerResponse>builder()
                 .code(2000)
@@ -88,14 +88,14 @@ public class CustomerController {
         return ResponseEntity.ok(apiResponse);
     }
 
-    @PutMapping("/{userId}")
-    @PreAuthorize("hasRole('ADMIN') or (#userId == authentication.name)")
+    @PutMapping("/{customerId}")
+    @PreAuthorize("hasRole('ADMIN') or (#customerId == authentication.name)")
     public ResponseEntity<ApiResponse<CustomerResponse>> updateCustomer(
-            @PathVariable String userId,
+            @PathVariable String customerId,
             @Valid @RequestBody CustomerRequest request) {
-        log.info("Updating customer with userId: {}", userId);
+        log.info("Updating customer with customerId: {}", customerId);
         
-        CustomerResponse response = customerService.updateCustomer(userId, request);
+        CustomerResponse response = customerService.updateCustomer(customerId, request);
         
         ApiResponse<CustomerResponse> apiResponse = ApiResponse.<CustomerResponse>builder()
                 .code(2000)
@@ -106,12 +106,12 @@ public class CustomerController {
         return ResponseEntity.ok(apiResponse);
     }
 
-    @DeleteMapping("/{userId}")
+    @DeleteMapping("/{customerId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> deleteCustomer(@PathVariable String userId) {
-        log.info("Deleting customer with userId: {}", userId);
+    public ResponseEntity<ApiResponse<Void>> deleteCustomer(@PathVariable String customerId) {
+        log.info("Deleting customer with customerId: {}", customerId);
         
-        customerService.deleteCustomer(userId);
+        customerService.deleteCustomer(customerId);
         
         ApiResponse<Void> apiResponse = ApiResponse.<Void>builder()
                 .code(2000)
