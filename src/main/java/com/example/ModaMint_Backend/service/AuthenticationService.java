@@ -34,6 +34,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.UUID;
 
@@ -112,10 +113,24 @@ public class AuthenticationService {
     public RefreshResponse refresh(String refreshToken) throws JOSEException, ParseException {
         SignedJWT signedJWT = verify(refreshToken);
 
-        String username = signedJWT.getJWTClaimsSet().getSubject();
+        String userId = signedJWT.getJWTClaimsSet().getSubject();
 
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        // Try to find user by ID first
+        Optional<User> userOptional = userRepository.findById(userId);
+        User user;
+        
+        if (userOptional.isPresent()) {
+            user = userOptional.get();
+        } else {
+            // Fallback: try to get username from claim for backward compatibility with old tokens
+            String username = signedJWT.getJWTClaimsSet().getStringClaim("username");
+            if (username != null) {
+                user = userRepository.findByUsername(username)
+                        .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+            } else {
+                throw new AppException(ErrorCode.USER_NOT_EXISTED);
+            }
+        }
 
         String type = signedJWT.getJWTClaimsSet().getStringClaim("type");
         if (!"refresh".equals(type)) {
@@ -192,9 +207,24 @@ public class AuthenticationService {
             throw new AppException(ErrorCode.TOKEN_IS_NOT_VALID);
         }
 
-        String username = signedJWT.getJWTClaimsSet().getSubject();
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        String userId = signedJWT.getJWTClaimsSet().getSubject();
+        
+        // Try to find user by ID first
+        Optional<User> userOptional = userRepository.findById(userId);
+        User user;
+        
+        if (userOptional.isPresent()) {
+            user = userOptional.get();
+        } else {
+            // Fallback: try to get username from claim for backward compatibility with old tokens
+            String username = signedJWT.getJWTClaimsSet().getStringClaim("username");
+            if (username != null) {
+                user = userRepository.findByUsername(username)
+                        .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+            } else {
+                throw new AppException(ErrorCode.USER_NOT_EXISTED);
+            }
+        }
 
         return userMapper.toUserResponse(user);
     }
@@ -224,9 +254,10 @@ public class AuthenticationService {
         JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                .subject(user.getUsername())
+                .subject(user.getId()) // Use user.id instead of username for subject
                 .claim("type", type)
                 .claim("scope", buildScope(user)) // thêm scope
+                .claim("username", user.getUsername()) // Add username as a claim for backward compatibility
                 .issuer("ModaMint")
                 .issueTime(new Date())
                 .expirationTime(Date.from(Instant.now().plus(timeAmout, chronoUnit)))

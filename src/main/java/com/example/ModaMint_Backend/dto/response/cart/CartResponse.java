@@ -11,7 +11,6 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CartResponse {
     Long cartId;
-    String sessionId;
     String customerId;
     List<com.example.ModaMint_Backend.dto.response.cart.CartItemResponse> items;
     BigDecimal totalPrice;

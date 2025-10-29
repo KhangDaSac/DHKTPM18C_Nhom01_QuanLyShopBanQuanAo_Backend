@@ -24,7 +24,7 @@ import java.util.Set;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
-public class ApplicationInitConfig {
+public class    ApplicationInitConfig {
 
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;

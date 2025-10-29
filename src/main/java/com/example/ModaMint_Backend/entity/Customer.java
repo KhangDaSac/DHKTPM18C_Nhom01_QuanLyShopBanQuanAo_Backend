@@ -13,7 +13,7 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Customer {
     @Id
-    String userId;
+    String customerId;
 
     @OneToOne(cascade = CascadeType.ALL)
     @MapsId

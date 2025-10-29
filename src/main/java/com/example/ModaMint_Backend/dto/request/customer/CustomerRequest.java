@@ -11,6 +11,6 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class CustomerRequest {
-    @NotBlank(message = "User ID is required")
-    String userId;
+    @NotBlank(message = "Customer ID is required")
+    String customerId;
 }

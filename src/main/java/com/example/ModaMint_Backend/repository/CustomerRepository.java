@@ -12,8 +12,8 @@ import java.util.Optional;
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer, String> {
     
-    @Query("SELECT c FROM Customer c JOIN FETCH c.user WHERE c.userId = :userId")
-    Optional<Customer> findByUserIdWithUser(@Param("userId") String userId);
+    @Query("SELECT c FROM Customer c JOIN FETCH c.user WHERE c.customerId = :customerId")
+    Optional<Customer> findByCustomerIdWithUser(@Param("customerId") String customerId);
     
     @Query("SELECT c FROM Customer c JOIN FETCH c.user")
     List<Customer> findAllWithUser();
@@ -21,5 +21,5 @@ public interface CustomerRepository extends JpaRepository<Customer, String> {
     @Query("SELECT c FROM Customer c JOIN FETCH c.user WHERE c.user.active = true")
     List<Customer> findAllActiveCustomers();
     
-    boolean existsByUserId(String userId);
+    boolean existsByCustomerId(String customerId);
 }

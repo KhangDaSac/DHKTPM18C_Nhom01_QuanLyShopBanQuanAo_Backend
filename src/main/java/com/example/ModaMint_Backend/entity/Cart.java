@@ -20,9 +20,6 @@ public class Cart {
     @Column(name = "customer_id")
     String customerId;
 
-    @Column(name = "session_id")
-    String sessionId;
-
     @UpdateTimestamp
     @Column(name = "update_at")
     LocalDateTime updateAt;

@@ -17,7 +17,7 @@ public class Favorite {
     Long id;
 
     @Column(name = "user_id")
-    String userId; // corresponds to Customer.userId
+    String userId; // corresponds to Customer.customerId (which maps to User.id via @MapsId)
 
     @Column(name = "product_id")
     Long productId;
