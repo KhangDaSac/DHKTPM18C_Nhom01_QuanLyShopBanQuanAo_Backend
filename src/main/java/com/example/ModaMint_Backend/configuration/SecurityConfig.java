@@ -32,24 +32,24 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .cors(Customizer.withDefaults())
-            .csrf(AbstractHttpConfigurer::disable)
-            .authorizeHttpRequests(auth -> auth
-                // === PUBLIC ENDPOINTS ===
-                .requestMatchers("/auth/**").permitAll()  // Login, logout, refresh
-                .requestMatchers(HttpMethod.POST, "/users").permitAll()  // Đăng ký tài khoản
-                .requestMatchers(HttpMethod.GET, "/products/**").permitAll()  // Xem sản phẩm
-                .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()  // Xem danh mục
-                .requestMatchers(HttpMethod.GET, "/brands/**").permitAll()  // Xem thương hiệu
-                    .requestMatchers(HttpMethod.POST, "/cart/**").hasRole("CUSTOMER") // bắt buộc CUSTOMER// Xem giỏ hàng
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // CORS
-                
-                // === TẤT CẢ ENDPOINTS KHÁC CẦN AUTHENTICATION ===
-                .anyRequest().authenticated()
-            )
-            .oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
-            );
+                .cors(Customizer.withDefaults())
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth
+                        // === PUBLIC ENDPOINTS ===
+                        .requestMatchers("/auth/**").permitAll()  // Login, logout, refresh
+                        .requestMatchers(HttpMethod.POST, "/users").permitAll()  // Đăng ký tài khoản
+                        .requestMatchers(HttpMethod.GET, "/products/**").permitAll()  // Xem sản phẩm
+                        .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()  // Xem danh mục
+                        .requestMatchers(HttpMethod.GET, "/brands/**").permitAll()  // Xem thương hiệu
+                        .requestMatchers(HttpMethod.POST, "/cart/**").hasRole("CUSTOMER") // bắt buộc CUSTOMER// Xem giỏ hàng
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // CORS
+
+                        // === TẤT CẢ ENDPOINTS KHÁC CẦN AUTHENTICATION ===
+                        .anyRequest().authenticated()
+                )
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                );
 
         return http.build();
     }
