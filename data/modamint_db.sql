@@ -84,11 +84,11 @@
     -- 4. PRODUCTS (50 products)
     -- ==============================================
 
-    INSERT INTO products (id, name, brand_id, category_id, description, active, create_at, update_at) VALUES
+    INSERT INTO products (id, name, brand_id, category_id, description, images, active, create_at, update_at) VALUES
     -- Áo Nam (Products 1-15)
-    (1, 'Áo Sơ Mi Trắng Nam', 1, 9, 'Áo sơ mi trắng chất liệu cotton cao cấp', true, NOW(), NOW()),
-    (2, 'Áo Sơ Mi Xanh Nam', 1, 9, 'Áo sơ mi xanh dương chất liệu cotton', true, NOW(), NOW()),
-    (3, 'Áo Thun Basic Nam', 2, 10, 'Áo thun basic màu đen chất liệu cotton', true, NOW(), NOW()),
+    (1, 'Áo Sơ Mi Trắng Nam', 1, 9, 'Áo sơ mi trắng chất liệu cotton cao cấp', 'https://images.unsplash.com/photo-1594938291227-94d900314a36?w=500&h=600&fit=crop,https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=500&h=600&fit=crop,https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=500&h=600&fit=crop,https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=500&h=600&fit=crop', true, NOW(), NOW()),
+    (2, 'Áo Sơ Mi Xanh Nam', 1, 9, 'Áo sơ mi xanh dương chất liệu cotton', 'https://images.unsplash.com/photo-1513519245088-0e12902e8492?w=500&h=600&fit=crop,https://images.unsplash.com/photo-1603252109303-2751441dd157?w=500&h=600&fit=crop,https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=500&h=600&fit=crop,https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=500&h=600&fit=crop', true, NOW(), NOW()),
+    (3, 'Áo Thun Basic Nam', 2, 10, 'Áo thun basic màu đen chất liệu cotton', 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500&h=600&fit=crop,https://images.unsplash.com/photo-1596755094514-f76798c6f04d?w=500&h=600&fit=crop,https://images.unsplash.com/photo-1609501676725-7186fea88845?w=500&h=600&fit=crop,https://images.unsplash.com/photo-1618354691373-d851c3c3a0f2?w=500&h=600&fit=crop', true, NOW(), NOW()),
     (4, 'Áo Thun Polo Nam', 2, 10, 'Áo polo nam màu xanh chất liệu cotton', true, NOW(), NOW()),
     (5, 'Áo Khoác Bomber Nam', 3, 11, 'Áo khoác bomber nam màu đen', true, NOW(), NOW()),
     (6, 'Áo Khoác Hoodie Nam', 3, 11, 'Áo hoodie nam màu xám chất liệu cotton', true, NOW(), NOW()),

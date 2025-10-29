@@ -107,7 +107,8 @@ public class CustomerService {
     public void deleteCustomer(String userId) {
         log.info("Deleting customer with userId: {}", userId);
         
-        Customer customer = customerRepository.findById(userId)
+        // Tìm customer bằng userId thông qua user.id
+        Customer customer = customerRepository.findByUserIdWithUser(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.CUSTOMER_NOT_FOUND));
         
         customerRepository.delete(customer);

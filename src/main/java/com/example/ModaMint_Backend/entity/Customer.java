@@ -15,7 +15,7 @@ public class Customer {
     @Id
     String userId;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @MapsId
     @JoinColumn(name = "user_id")
     User user;

@@ -24,6 +24,7 @@ public interface ProductMapper {
     @Mapping(source = "category.name", target = "categoryName")
     @Mapping(target = "price", expression = "java(getMinPriceFromVariants(product))")
     @Mapping(target = "quantity", expression = "java(getTotalQuantityFromVariants(product))")
+    @Mapping(source = "images", target = "images")
     ProductResponse toProductResponse(Product product);
 
     default BigDecimal getMinPriceFromVariants(Product product) {
