@@ -1,6 +1,4 @@
 package com.example.ModaMint_Backend.dto.response.cart;
-
-import com.example.ModaMint_Backend.dto.response.cartitem.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import java.math.BigDecimal;
@@ -10,10 +8,11 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@FieldDefaults(level = lombok.AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class CartResponse {
-    Long id;
+    Long cartId;
+    String sessionId;
     String customerId;
-    List<CartItemResponse> items;
+    List<com.example.ModaMint_Backend.dto.response.cart.CartItemResponse> items;
     BigDecimal totalPrice;
 }
