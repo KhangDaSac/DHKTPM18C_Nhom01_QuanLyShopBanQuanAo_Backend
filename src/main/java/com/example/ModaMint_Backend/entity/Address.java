@@ -20,6 +20,7 @@ public class Address {
     Long id;
 
     String city;
+    String district;
     String ward;
     String addressDetail;
 

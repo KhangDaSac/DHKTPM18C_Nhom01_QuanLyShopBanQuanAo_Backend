@@ -16,4 +16,7 @@ public class CategoryRequest {
 
     @Builder.Default
     Boolean isActive = true;
+
+    // ID danh mục cha (có thể null nếu là danh mục cấp 1)
+    Long parentId;
 }

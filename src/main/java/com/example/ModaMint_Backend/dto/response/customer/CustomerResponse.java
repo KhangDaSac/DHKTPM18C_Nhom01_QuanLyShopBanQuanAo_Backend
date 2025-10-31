@@ -27,6 +27,7 @@ public class CustomerResponse {
     public static class AddressResponse {
         Long id;
         String city;
+        String district;
         String ward;
         String addressDetail;
     }

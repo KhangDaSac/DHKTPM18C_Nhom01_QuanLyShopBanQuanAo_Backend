@@ -17,6 +17,8 @@ public class PercentagePromotion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
+    String name; // Tên khuyến mãi ví dụ: "Khuyến mãi chào mừng"
+
     String code; // Mã khuyến mãi ví dụ: "WELCOME10"
 
     @Column(name = "discount_percent")
