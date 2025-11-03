@@ -20,7 +20,19 @@ public enum ErrorCode {
     CATEGORY_NOT_FOUND(2003, "Category not found", HttpStatus.NOT_FOUND),
     ROLE_NOT_FOUND(2004, "Role not found", HttpStatus.NOT_FOUND),
     CUSTOMER_NOT_FOUND(2005, "Customer not found", HttpStatus.NOT_FOUND),
-    CUSTOMER_ALREADY_EXISTS(2006, "Customer already exists", HttpStatus.BAD_REQUEST);
+    CUSTOMER_ALREADY_EXISTS(2006, "Customer already exists", HttpStatus.BAD_REQUEST),
+    ORDER_NOT_FOUND(2007, "Order not found", HttpStatus.NOT_FOUND),
+    ORDER_ITEM_NOT_FOUND(2008, "Order item not found", HttpStatus.NOT_FOUND),
+    REVIEW_NOT_FOUND(2009, "Review not found", HttpStatus.NOT_FOUND),
+    PRODUCT_VARIANT_NOT_FOUND(2010, "Product variant not found", HttpStatus.NOT_FOUND),
+    PROMOTION_NOT_FOUND(2011, "Promotion not found", HttpStatus.NOT_FOUND),
+    PRODUCT_IMAGE_NOT_FOUND(2012, "Product image not found", HttpStatus.NOT_FOUND),
+    PROMOTION_CODE_EXISTED(2013, "Promotion code already exists", HttpStatus.BAD_REQUEST),
+    CART_NOT_FOUND(2014, "Cart not found", HttpStatus.NOT_FOUND),
+    CART_EMPTY(2015, "Cart is empty", HttpStatus.BAD_REQUEST),
+    ADDRESS_NOT_FOUND(2016, "Address not found", HttpStatus.NOT_FOUND),
+    UNAUTHORIZED(2017, "Unauthorized access", HttpStatus.FORBIDDEN),
+    INVALID_INPUT(3000, "Invalid input", HttpStatus.BAD_REQUEST);
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

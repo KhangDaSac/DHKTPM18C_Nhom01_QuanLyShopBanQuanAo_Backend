@@ -20,6 +20,9 @@ public class Customer {
     @JoinColumn(name = "user_id")
     User user;
 
+    @Version
+    Long version;
+
     @OneToMany(mappedBy = "customer")
     Set<Address> addresses;
 
