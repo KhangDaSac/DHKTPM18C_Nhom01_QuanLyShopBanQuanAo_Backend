@@ -43,14 +43,14 @@ public class ProductService {
     }
 
     public List<ProductResponse> getAllProducts() {
-        return productRepository.findAll()
+        return productRepository.findAllWithImagesAndVariants()
                 .stream()
                 .map(productMapper::toProductResponse)
                 .toList();
     }
 
     public ProductResponse getProductById(Long id) {
-        Product product = productRepository.findById(id)
+        Product product = productRepository.findByIdWithImagesAndVariants(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
 
         return productMapper.toProductResponse(product);

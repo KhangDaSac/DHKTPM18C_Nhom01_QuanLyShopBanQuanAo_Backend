@@ -1,6 +1,6 @@
 package com.example.ModaMint_Backend.dto.response.checkout;
 
-import com.example.ModaMint_Backend.dto.response.cart.CartItemResponse;
+import com.example.ModaMint_Backend.dto.response.cart.CartItemDto;
 import com.example.ModaMint_Backend.dto.response.customer.AddressResponse;
 import com.example.ModaMint_Backend.dto.response.promotion.PromotionSummary;
 import lombok.*;
@@ -30,7 +30,7 @@ public class CheckoutResponse {
     
     AddressResponse shippingAddress;
     
-    List<CartItemResponse> orderItems;
+    List<CartItemDto> orderItems;
     
     BigDecimal subtotal; // Tổng tiền hàng
     

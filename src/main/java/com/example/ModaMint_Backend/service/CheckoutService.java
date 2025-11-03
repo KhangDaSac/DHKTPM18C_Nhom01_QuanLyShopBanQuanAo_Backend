@@ -1,7 +1,7 @@
 package com.example.ModaMint_Backend.service;
 
 import com.example.ModaMint_Backend.dto.request.checkout.CheckoutRequest;
-import com.example.ModaMint_Backend.dto.response.cart.CartItemResponse;
+import com.example.ModaMint_Backend.dto.response.cart.CartItemDto;
 import com.example.ModaMint_Backend.dto.response.checkout.CheckoutResponse;
 import com.example.ModaMint_Backend.dto.response.customer.AddressResponse;
 import com.example.ModaMint_Backend.dto.response.promotion.PromotionSummary;
@@ -26,17 +26,17 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class CheckoutService {
+public class    CheckoutService {
 
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final CustomerRepository customerRepository;
     private final AddressRepository addressRepository;
     private final ProductVariantRepository productVariantRepository;
-    private final PercentagePromotionRepository percentagePromotionRepository;
-    private final AmountPromotionRepository amountPromotionRepository;
+    private final PromotionRepository promotionRepository;
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
+    private final CartService cartService;
 
     /**
      * Lấy danh sách mã giảm giá khả dụng cho đơn hàng
@@ -53,27 +53,12 @@ public class CheckoutService {
         
         List<PromotionSummary> promotions = new ArrayList<>();
         
-        // Lấy percentage promotions
-        List<PercentagePromotion> percentagePromotions = percentagePromotionRepository
-                .findActivePromotions(now);
+        // Lấy tất cả promotions đang active
+        List<Promotion> activePromotions = promotionRepository.findActivePromotions(now);
         
-        for (PercentagePromotion promo : percentagePromotions) {
-            if (promo.getQuantity() != null && promo.getQuantity() > 0) {
-                if (promo.getMinOrderValue() == null || cartTotal.compareTo(promo.getMinOrderValue()) >= 0) {
-                    promotions.add(buildPromotionSummary(promo));
-                }
-            }
-        }
-        
-        // Lấy amount promotions
-        List<AmountPromotion> amountPromotions = amountPromotionRepository
-                .findActivePromotions(now);
-        
-        for (AmountPromotion promo : amountPromotions) {
-            if (promo.getQuantity() != null && promo.getQuantity() > 0) {
-                if (promo.getMinOrderValue() == null || cartTotal.compareTo(promo.getMinOrderValue()) >= 0) {
-                    promotions.add(buildPromotionSummary(promo));
-                }
+        for (Promotion promo : activePromotions) {
+            if (promo.getMinOrderValue() == null || cartTotal.compareTo(promo.getMinOrderValue()) >= 0) {
+                promotions.add(buildPromotionSummary(promo));
             }
         }
         
@@ -96,7 +81,7 @@ public class CheckoutService {
         Address address = addressRepository.findById(request.getShippingAddressId())
                 .orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_FOUND));
         
-        if (!address.getCustomer().getCustomerId().equals(request.getCustomerId())) {
+        if (!address.getCustomer().getUserId().equals(request.getCustomerId())) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         
@@ -132,8 +117,8 @@ public class CheckoutService {
                 .customerId(request.getCustomerId())
                 .totalAmount(subtotal.add(shippingFee)) // Tổng trước khi giảm
                 .subTotal(totalAmount) // Tổng sau khi giảm
-                .percentagePromotionId(promotionResult.getPercentagePromotionId())
-                .amountPromotionId(promotionResult.getAmountPromotionId())
+                .promotionId(promotionResult.getPercentagePromotionId() != null ? 
+                        promotionResult.getPercentagePromotionId() : promotionResult.getAmountPromotionId())
                 .promotionValue(discountAmount)
                 .orderStatus(OrderStatus.PENDING)
                 .paymentMethod(request.getPaymentMethod())
@@ -145,7 +130,7 @@ public class CheckoutService {
         log.info("Order created with ID: {}, code: {}", savedOrder.getId(), orderCode);
         
         // 7. Create order items from cart items
-        List<CartItemResponse> orderItemResponses = new ArrayList<>();
+        List<CartItemDto> orderItemResponses = new ArrayList<>();
         
         for (CartItem cartItem : cartItems) {
             ProductVariant variant = productVariantRepository.findById(cartItem.getVariantId())
@@ -161,20 +146,26 @@ public class CheckoutService {
             orderItemRepository.save(orderItem);
             
             // Add to response
-            orderItemResponses.add(CartItemResponse.builder()
-                    .id(cartItem.getId())
+            String imageUrl = null;
+            if (variant.getProduct() != null && variant.getProduct().getProductImages() != null && 
+                    !variant.getProduct().getProductImages().isEmpty()) {
+                imageUrl = variant.getProduct().getProductImages().iterator().next().getUrl();
+            }
+            
+            orderItemResponses.add(CartItemDto.builder()
+                    .itemId(cartItem.getId())
                     .variantId(variant.getId())
+                    .productId(variant.getProduct() != null ? variant.getProduct().getId() : null)
                     .productName(variant.getProduct() != null ? variant.getProduct().getName() : null)
-                    .color(variant.getColor())
-                    .size(variant.getSize())
-                    .price(variant.getPrice())
+                    .image(imageUrl)
+                    .unitPrice(variant.getPrice().longValue())
                     .quantity(cartItem.getQuantity())
-                    .imageUrl(variant.getImage())
+                    .totalPrice(variant.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())).longValue())
                     .build());
         }
         
-        // 8. Clear cart after successful order
-        cartItemRepository.deleteAllByCartId(cart.getId());
+        // 8. Clear cart after successful order using CartService
+        cartService.clearCartForUser(request.getCustomerId());
         log.info("Cart cleared for customer: {}", request.getCustomerId());
         
         // 9. Update promotion quantity
@@ -189,7 +180,7 @@ public class CheckoutService {
         return CheckoutResponse.builder()
                 .orderId(savedOrder.getId())
                 .orderCode(orderCode)
-                .customerId(customer.getCustomerId())
+                .customerId(customer.getUserId())
                 .customerName(customer.getUser().getFirstName() + " " + customer.getUser().getLastName())
                 .customerEmail(customer.getUser().getEmail())
                 .customerPhone(savedOrder.getPhone())
@@ -227,33 +218,35 @@ public class CheckoutService {
         
         // Try percentage promotion first
         if (percentageCode != null && !percentageCode.isBlank()) {
-            PercentagePromotion promo = percentagePromotionRepository.findByCode(percentageCode)
+            Promotion promo = promotionRepository.findByCode(percentageCode)
                     .orElse(null);
             
             if (promo != null && validatePromotion(promo, orderTotal, now)) {
-                BigDecimal discount = orderTotal.multiply(promo.getDiscountPercent())
+                BigDecimal discountPercent = parsePercentage(promo.getValue());
+                BigDecimal discount = orderTotal.multiply(discountPercent)
                         .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
                 
                 result.setPercentagePromotionId(promo.getId());
                 result.setDiscountAmount(discount);
                 result.setPromotionSummary(buildPromotionSummary(promo));
                 
-                log.info("Applied percentage promotion: {} - {}%", promo.getCode(), promo.getDiscountPercent());
+                log.info("Applied percentage promotion: {} - {}", promo.getCode(), promo.getValue());
                 return result;
             }
         }
         
         // Try amount promotion if percentage not applied
         if (amountCode != null && !amountCode.isBlank()) {
-            AmountPromotion promo = amountPromotionRepository.findByCode(amountCode)
+            Promotion promo = promotionRepository.findByCode(amountCode)
                     .orElse(null);
             
             if (promo != null && validatePromotion(promo, orderTotal, now)) {
+                BigDecimal discountAmount = parseAmount(promo.getValue());
                 result.setAmountPromotionId(promo.getId());
-                result.setDiscountAmount(promo.getDiscountAmount());
+                result.setDiscountAmount(discountAmount);
                 result.setPromotionSummary(buildPromotionSummary(promo));
                 
-                log.info("Applied amount promotion: {} - {}", promo.getCode(), promo.getDiscountAmount());
+                log.info("Applied amount promotion: {} - {}", promo.getCode(), promo.getValue());
                 return result;
             }
         }
@@ -261,17 +254,7 @@ public class CheckoutService {
         return result;
     }
 
-    private boolean validatePromotion(PercentagePromotion promo, BigDecimal orderTotal, LocalDateTime now) {
-        if (!promo.getIsActive()) return false;
-        if (promo.getQuantity() == null || promo.getQuantity() <= 0) return false;
-        if (promo.getStartAt() != null && now.isBefore(promo.getStartAt())) return false;
-        if (promo.getEndAt() != null && now.isAfter(promo.getEndAt())) return false;
-        if (promo.getMinOrderValue() != null && orderTotal.compareTo(promo.getMinOrderValue()) < 0) return false;
-        
-        return true;
-    }
-
-    private boolean validatePromotion(AmountPromotion promo, BigDecimal orderTotal, LocalDateTime now) {
+    private boolean validatePromotion(Promotion promo, BigDecimal orderTotal, LocalDateTime now) {
         if (!promo.getIsActive()) return false;
         if (promo.getQuantity() == null || promo.getQuantity() <= 0) return false;
         if (promo.getStartAt() != null && now.isBefore(promo.getStartAt())) return false;
@@ -282,68 +265,62 @@ public class CheckoutService {
     }
 
     private void decreasePromotionQuantity(Long promotionId, boolean isPercentage) {
-        if (isPercentage) {
-            PercentagePromotion promo = percentagePromotionRepository.findById(promotionId).orElse(null);
-            if (promo != null && promo.getQuantity() != null) {
-                promo.setQuantity(promo.getQuantity() - 1);
-                percentagePromotionRepository.save(promo);
-            }
-        } else {
-            AmountPromotion promo = amountPromotionRepository.findById(promotionId).orElse(null);
-            if (promo != null && promo.getQuantity() != null) {
-                promo.setQuantity(promo.getQuantity() - 1);
-                amountPromotionRepository.save(promo);
-            }
+        Promotion promo = promotionRepository.findById(promotionId).orElse(null);
+        if (promo != null && promo.getQuantity() != null) {
+            promo.setQuantity(promo.getQuantity() - 1);
+            promotionRepository.save(promo);
         }
     }
 
-    private PromotionSummary buildPromotionSummary(PercentagePromotion promo) {
+    private PromotionSummary buildPromotionSummary(Promotion promo) {
+        // Parse value để xác định type (giả sử value format: "10%" hoặc "100000")
+        String value = promo.getValue();
+        boolean isPercentage = value != null && value.contains("%");
+        
         return PromotionSummary.builder()
                 .id(promo.getId())
-                .name(promo.getName())
+                .name(promo.getCode()) // Sử dụng code làm name tạm
                 .code(promo.getCode())
-                .type("PERCENTAGE")
-                .discountPercent(promo.getDiscountPercent())
+                .type(isPercentage ? "PERCENTAGE" : "AMOUNT")
+                .discountPercent(isPercentage ? parsePercentage(value) : null)
+                .discountAmount(isPercentage ? null : parseAmount(value))
                 .minOrderValue(promo.getMinOrderValue())
                 .startAt(promo.getStartAt())
                 .endAt(promo.getEndAt())
                 .remainingQuantity(promo.getQuantity())
                 .isActive(promo.getIsActive())
-                .description("Giảm " + promo.getDiscountPercent() + "% cho đơn hàng từ " + 
+                .description("Giảm " + value + " cho đơn hàng từ " + 
                         (promo.getMinOrderValue() != null ? promo.getMinOrderValue() : 0) + "đ")
                 .build();
     }
-
-    private PromotionSummary buildPromotionSummary(AmountPromotion promo) {
-        return PromotionSummary.builder()
-                .id(promo.getId())
-                .name(promo.getName())
-                .code(promo.getCode())
-                .type("AMOUNT")
-                .discountAmount(promo.getDiscountAmount())
-                .minOrderValue(promo.getMinOrderValue())
-                .startAt(promo.getStartAt())
-                .endAt(promo.getEndAt())
-                .remainingQuantity(promo.getQuantity())
-                .isActive(promo.getIsActive())
-                .description("Giảm " + promo.getDiscountAmount() + "đ cho đơn hàng từ " + 
-                        (promo.getMinOrderValue() != null ? promo.getMinOrderValue() : 0) + "đ")
-                .build();
+    
+    private BigDecimal parsePercentage(String value) {
+        try {
+            return new BigDecimal(value.replace("%", "").trim());
+        } catch (NumberFormatException e) {
+            return BigDecimal.ZERO;
+        }
+    }
+    
+    private BigDecimal parseAmount(String value) {
+        try {
+            return new BigDecimal(value.trim());
+        } catch (NumberFormatException e) {
+            return BigDecimal.ZERO;
+        }
     }
 
     private AddressResponse buildAddressResponse(Address address) {
         String fullAddress = String.join(", ", 
                 address.getAddressDetail(),
                 address.getWard(),
-                address.getDistrict(),
                 address.getCity()
         );
         
         return AddressResponse.builder()
                 .id(address.getId())
-                .customerId(address.getCustomer() != null ? address.getCustomer().getCustomerId() : null)
+                .customerId(address.getCustomer() != null ? address.getCustomer().getUserId() : null)
                 .city(address.getCity())
-                .district(address.getDistrict())
                 .ward(address.getWard())
                 .addressDetail(address.getAddressDetail())
                 .fullAddress(fullAddress)

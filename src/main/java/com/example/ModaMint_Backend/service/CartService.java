@@ -6,9 +6,11 @@ import com.example.ModaMint_Backend.dto.response.cart.CartDto;
 import com.example.ModaMint_Backend.dto.response.cart.CartItemDto;
 import com.example.ModaMint_Backend.entity.Cart;
 import com.example.ModaMint_Backend.entity.CartItem;
+import com.example.ModaMint_Backend.entity.Product;
 import com.example.ModaMint_Backend.entity.ProductVariant;
 import com.example.ModaMint_Backend.repository.CartItemRepository;
 import com.example.ModaMint_Backend.repository.CartRepository;
+import com.example.ModaMint_Backend.repository.ProductRepository;
 import com.example.ModaMint_Backend.repository.ProductVariantRepository;
 import com.example.ModaMint_Backend.service.ProductService;
 import lombok.AccessLevel;
@@ -27,6 +29,7 @@ public class CartService {
     CartRepository cartRepository;
     CartItemRepository cartItemRepository;
     ProductVariantRepository productVariantRepository;
+    ProductRepository productRepository;
     ProductService productService;
 
     public CartDto getCart(String userId, String sessionId) {
@@ -46,10 +49,18 @@ public class CartService {
             ProductVariant variant = it.getProductVariant();
             Long productId = variant != null ? variant.getProductId() : null;
             String productName = null;
+            String imageUrl = null;
             BigDecimal unitPrice = BigDecimal.ZERO;
             if (productId != null) {
-                var p = productService.getProductById(productId);
-                productName = p.getName();
+                // Get Product entity directly from repository
+                Product product = productRepository.findById(productId).orElse(null);
+                if (product != null) {
+                    productName = product.getName();
+                    // Get first image from product
+                    if (product.getProductImages() != null && !product.getProductImages().isEmpty()) {
+                        imageUrl = product.getProductImages().iterator().next().getUrl();
+                    }
+                }
             }
             if (variant != null && variant.getPrice() != null) unitPrice = variant.getPrice();
 
@@ -61,7 +72,7 @@ public class CartService {
                     .variantId(it.getVariantId())
                     .productId(productId)
                     .productName(productName)
-                    .image(null)
+                    .image(imageUrl)
                     .unitPrice(unitPrice.longValue())
                     .quantity(it.getQuantity())
                     .totalPrice(total)

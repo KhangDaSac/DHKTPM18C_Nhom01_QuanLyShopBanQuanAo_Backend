@@ -4,6 +4,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @Builder
@@ -18,4 +19,6 @@ public class ProductResponse {
     String description;
     String brandName;
     String categoryName;
+    List<String> images; // Danh sách URL ảnh
+    List<ProductVariantResponse> productVariants; // Danh sách variants
 }
