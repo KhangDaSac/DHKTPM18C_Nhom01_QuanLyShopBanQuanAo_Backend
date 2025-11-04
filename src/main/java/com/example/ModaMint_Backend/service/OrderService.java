@@ -3,6 +3,7 @@ package com.example.ModaMint_Backend.service;
 import com.example.ModaMint_Backend.dto.request.order.OrderRequest;
 import com.example.ModaMint_Backend.dto.response.order.OrderResponse;
 import com.example.ModaMint_Backend.entity.Order;
+import com.example.ModaMint_Backend.enums.OrderStatus;
 import com.example.ModaMint_Backend.exception.AppException;
 import com.example.ModaMint_Backend.exception.ErrorCode;
 import com.example.ModaMint_Backend.mapper.OrderMapper;
@@ -75,6 +76,14 @@ public class OrderService {
                 .stream()
                 .map(orderMapper::toOrderResponse)
                 .toList();
+    }
+
+    public void updateOrderStatus(Long id, OrderStatus status) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+
+        order.setOrderStatus(status); // Truyền trực tiếp enum
+        orderRepository.save(order);
     }
 
     public long getTotalOrderCount() {
