@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -23,6 +24,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.util.List;
 
 @Configuration
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
     @Value("${jwt.signer-key}")
     private String signerKey;
@@ -30,26 +32,36 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .cors(Customizer.withDefaults())
-            .csrf(AbstractHttpConfigurer::disable)
-            .authorizeHttpRequests(auth -> auth
-                // === PUBLIC ENDPOINTS ===
-                .requestMatchers("/auth/**").permitAll()  // Login, logout, refresh
-                .requestMatchers(HttpMethod.POST, "/users").permitAll()  // Đăng ký tài khoản
-                .requestMatchers(HttpMethod.GET, "/products/**").permitAll()  // Xem sản phẩm
-                .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()  // Xem danh mục
-                .requestMatchers(HttpMethod.GET, "/brands/**").permitAll()  // Xem thương hiệu
-                // Allow guest access to carts and creating orders (guest checkout)
-                .requestMatchers("/carts/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/orders").permitAll()
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // CORS
-                
-                // === TẤT CẢ ENDPOINTS KHÁC CẦN AUTHENTICATION ===
-                .anyRequest().authenticated()
-            )
-            .oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
-            );
+
+                .cors(Customizer.withDefaults())
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth
+                        // === PUBLIC ENDPOINTS ===
+                        .requestMatchers("/auth/**").permitAll()  // Login, logout, refresh
+                        .requestMatchers(HttpMethod.POST, "/users").permitAll()  // Đăng ký tài khoản
+                        .requestMatchers(HttpMethod.GET, "/products/**").permitAll()  // Xem sản phẩm
+                        .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()  // Xem danh mục
+                        .requestMatchers(HttpMethod.GET, "/brands/**").permitAll()  // Xem thương hiệu
+                        .requestMatchers(HttpMethod.GET, "/percentage-promotions/**").permitAll()  // Xem khuyến mãi %
+                        .requestMatchers(HttpMethod.GET, "/amount-promotions/**").permitAll()  // Xem khuyến mãi giá cố định
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // CORS
+                        
+                        // === CART ENDPOINTS ===
+                        // Cho phép cả guest (sessionId) và user đã đăng nhập (JWT token)
+                        .requestMatchers("/carts/**").permitAll()  // Guest + authenticated users
+                        
+                        // === CHECKOUT & ORDER ENDPOINTS ===
+                        // Checkout cần authentication (JWT) vì cần customerId
+                        .requestMatchers("/checkout/**").authenticated()  // Yêu cầu đăng nhập
+                        .requestMatchers(HttpMethod.POST, "/orders").permitAll()  // Guest checkout (nếu có)
+
+                        // === TẤT CẢ ENDPOINTS KHÁC CẦN AUTHENTICATION ===
+                        .anyRequest().authenticated()
+                )
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                );
+
 
         return http.build();
     }

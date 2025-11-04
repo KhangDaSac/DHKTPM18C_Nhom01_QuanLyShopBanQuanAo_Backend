@@ -20,8 +20,10 @@ public class Address {
     Long id;
 
     String city;
+    String district; // Thêm field district
     String ward;
     String addressDetail;
+    String fullAddress; // Thêm field fullAddress (city + district + ward + addressDetail)
 
     @ManyToOne
     @JoinColumn(name = "customer_id")

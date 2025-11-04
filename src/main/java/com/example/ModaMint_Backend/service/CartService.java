@@ -6,17 +6,22 @@ import com.example.ModaMint_Backend.dto.response.cart.CartDto;
 import com.example.ModaMint_Backend.dto.response.cart.CartItemDto;
 import com.example.ModaMint_Backend.entity.Cart;
 import com.example.ModaMint_Backend.entity.CartItem;
+import com.example.ModaMint_Backend.entity.Customer;
 import com.example.ModaMint_Backend.entity.Product;
 import com.example.ModaMint_Backend.entity.ProductVariant;
+import com.example.ModaMint_Backend.entity.User;
 import com.example.ModaMint_Backend.repository.CartItemRepository;
 import com.example.ModaMint_Backend.repository.CartRepository;
+import com.example.ModaMint_Backend.repository.CustomerRepository;
 import com.example.ModaMint_Backend.repository.ProductRepository;
 import com.example.ModaMint_Backend.repository.ProductVariantRepository;
+import com.example.ModaMint_Backend.repository.UserRepository;
 import com.example.ModaMint_Backend.service.ProductService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -31,6 +36,8 @@ public class CartService {
     ProductVariantRepository productVariantRepository;
     ProductRepository productRepository;
     ProductService productService;
+    CustomerRepository customerRepository;
+    UserRepository userRepository;
 
     public CartDto getCart(String userId, String sessionId) {
         Cart cart = null;
@@ -93,33 +100,36 @@ public class CartService {
                 .build();
     }
 
+    @Transactional
     public CartDto addItem(String userId, AddCartItemRequest req) {
-        // find or create cart
+        System.out.println("DEBUG addItem: userId=" + userId + ", productId=" + req.getProductId() + ", variantId=" + req.getVariantId());
+        
+        if (userId != null) {
+            ensureCustomerExists(userId);
+        }
+
         Cart cart = null;
         if (userId != null) {
             cart = cartRepository.findByCustomerId(userId).orElse(null);
+            System.out.println("DEBUG: Cart found by customerId: " + (cart != null ? cart.getId() : "null"));
         }
         if (cart == null && req.getSessionId() != null) {
             cart = cartRepository.findBySessionId(req.getSessionId()).orElse(null);
+            System.out.println("DEBUG: Cart found by sessionId: " + (cart != null ? cart.getId() : "null"));
         }
         if (cart == null) {
-            // create new cart; if no sessionId provided, generate one so client can persist it
             String session = req.getSessionId();
             if (session == null || session.isBlank()) {
                 session = java.util.UUID.randomUUID().toString();
             }
             cart = Cart.builder().customerId(userId).sessionId(session).build();
             cart = cartRepository.save(cart);
+            System.out.println("DEBUG: New cart created with id: " + cart.getId() + ", customerId: " + cart.getCustomerId());
         }
 
         Long variantId = req.getVariantId();
         Integer qty = req.getQuantity() != null ? req.getQuantity() : 1;
 
-        // Resolve variant: prefer explicit variantId; if not found, try productId -> default variant
-        // Log inputs for debugging
-        try {
-            System.out.println("CartService.addItem request: variantId=" + req.getVariantId() + ", productId=" + req.getProductId() + ", sessionId=" + req.getSessionId());
-        } catch (Exception e) {}
         ProductVariant variant = null;
         if (variantId != null) {
             variant = productVariantRepository.findById(variantId).orElse(null);
@@ -127,7 +137,6 @@ public class CartService {
         if (variant == null && req.getProductId() != null) {
             variant = productVariantRepository.findFirstByProductIdOrderByIdAsc(req.getProductId()).orElse(null);
         }
-        // It's possible frontend passed productId in the variantId slot (older behavior). Try that too.
         if (variant == null && variantId != null) {
             variant = productVariantRepository.findFirstByProductIdOrderByIdAsc(variantId).orElse(null);
         }
@@ -138,10 +147,6 @@ public class CartService {
 
         Long resolvedVariantId = variant.getId();
 
-        try {
-            System.out.println("CartService.addItem resolved variantId=" + resolvedVariantId + ", productId=" + variant.getProductId() + ", qty=" + qty + ", cartSession=" + cart.getSessionId());
-        } catch (Exception e) {}
-
         var existing = cartItemRepository.findByCartIdAndVariantId(cart.getId(), resolvedVariantId);
         CartItem item;
         if (existing.isPresent()) {
@@ -150,15 +155,8 @@ public class CartService {
         } else {
             item = CartItem.builder().cartId(cart.getId()).variantId(resolvedVariantId).quantity(qty).build();
         }
-    cartItemRepository.save(item);
+        cartItemRepository.save(item);
 
-        // Log cart items count for debugging
-        try {
-            var c = getCart(null, cart.getSessionId());
-            System.out.println("CartService.addItem returning cart with session=" + cart.getSessionId() + " itemsCount=" + (c.getItems() != null ? c.getItems().size() : 0));
-        } catch (Exception e) {}
-
-        // Return the full cart DTO so client can persist sessionId and show updated cart
         return getCart(userId, cart.getSessionId());
     }
 
@@ -189,5 +187,31 @@ public class CartService {
             var items = cartItemRepository.findByCartId(cart.getId());
             cartItemRepository.deleteAll(items);
         });
+    }
+
+    private void ensureCustomerExists(String userId) {
+        System.out.println("DEBUG: Checking customer for userId: " + userId);
+        
+        if (customerRepository.existsById(userId)) {
+            System.out.println("DEBUG: Customer exists for userId: " + userId);
+            return;
+        }
+
+        System.out.println("DEBUG: Customer NOT exists, creating new customer for userId: " + userId);
+        
+        User user = userRepository.findById(userId).orElse(null);
+        if (user != null) {
+            System.out.println("DEBUG: User found: " + user.getUsername() + ", creating Customer...");
+            Customer customer = Customer.builder()
+                    .userId(userId)
+                    .user(user)
+                    .build();
+            customerRepository.save(customer);
+            customerRepository.flush();
+            System.out.println("DEBUG: Customer created and flushed successfully for userId: " + userId);
+        } else {
+            System.out.println("ERROR: User not found for userId: " + userId);
+            throw new IllegalStateException("User not found for userId: " + userId);
+        }
     }
 }

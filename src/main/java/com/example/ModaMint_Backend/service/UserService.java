@@ -3,12 +3,14 @@ package com.example.ModaMint_Backend.service;
 import com.example.ModaMint_Backend.dto.request.user.UserCreationRequest;
 import com.example.ModaMint_Backend.dto.request.user.UserUpdateRequest;
 import com.example.ModaMint_Backend.dto.response.user.UserResponse;
+import com.example.ModaMint_Backend.entity.Customer;
 import com.example.ModaMint_Backend.entity.Role;
 import com.example.ModaMint_Backend.entity.User;
 import com.example.ModaMint_Backend.enums.RoleName;
 import com.example.ModaMint_Backend.exception.AppException;
 import com.example.ModaMint_Backend.exception.ErrorCode;
 import com.example.ModaMint_Backend.mapper.UserMapper;
+import com.example.ModaMint_Backend.repository.CustomerRepository;
 import com.example.ModaMint_Backend.repository.RoleRepository;
 import com.example.ModaMint_Backend.repository.UserRepository;
 import lombok.AccessLevel;
@@ -29,7 +31,8 @@ public class UserService {
     UserRepository userRepository;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
-    private final RoleRepository roleRepository;
+    RoleRepository roleRepository;
+    CustomerRepository customerRepository;
 
     // Ảnh mặc định cố định
     private static final String DEFAULT_IMAGE_URL = "https://res.cloudinary.com/dhjksobmf/image/upload/v1729402353/default-avatar_c2opdo.png";
@@ -70,6 +73,19 @@ public class UserService {
         user.setRoles(roleEntities);
 
         User savedUser = userRepository.save(user);
+        
+        // Tự động tạo Customer record nếu user có role CUSTOMER
+        boolean hasCustomerRole = roleEntities.stream()
+                .anyMatch(role -> role.getName() == RoleName.CUSTOMER);
+        
+        if (hasCustomerRole) {
+            Customer customer = Customer.builder()
+                    .userId(savedUser.getId())
+                    .user(savedUser)
+                    .build();
+            customerRepository.save(customer);
+        }
+        
         return userMapper.toUserResponse(savedUser);
     }
 
