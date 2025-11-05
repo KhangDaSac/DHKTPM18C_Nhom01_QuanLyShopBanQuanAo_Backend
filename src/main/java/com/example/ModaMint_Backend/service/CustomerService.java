@@ -28,33 +28,33 @@ public class CustomerService {
     private final CustomerMapper customerMapper;
 
     public CustomerResponse createCustomer(CustomerRequest request) {
-        log.info("Creating customer with userId: {}", request.getUserId());
+        log.info("Creating customer with customerId: {}", request.getCustomerId());
         
-        // Check if user exists
-        User user = userRepository.findById(request.getUserId())
+        // Check if user exists (customerId maps to user.id via @MapsId)
+        User user = userRepository.findById(request.getCustomerId())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         
         // Check if customer already exists
-        if (customerRepository.existsByUserId(request.getUserId())) {
+        if (customerRepository.existsByCustomerId(request.getCustomerId())) {
             throw new AppException(ErrorCode.CUSTOMER_ALREADY_EXISTS);
         }
         
         Customer customer = Customer.builder()
-                .userId(request.getUserId())
+                .customerId(request.getCustomerId())
                 .user(user)
                 .build();
         
         Customer savedCustomer = customerRepository.save(customer);
-        log.info("Customer created successfully with userId: {}", savedCustomer.getUserId());
+        log.info("Customer created successfully with customerId: {}", savedCustomer.getCustomerId());
         
         return customerMapper.toCustomerResponse(savedCustomer);
     }
 
     @Transactional(readOnly = true)
-    public CustomerResponse getCustomerById(String userId) {
-        log.info("Getting customer by userId: {}", userId);
+    public CustomerResponse getCustomerById(String customerId) {
+        log.info("Getting customer by customerId: {}", customerId);
         
-        Customer customer = customerRepository.findByUserIdWithUser(userId)
+        Customer customer = customerRepository.findByCustomerIdWithUser(customerId)
                 .orElseThrow(() -> new AppException(ErrorCode.CUSTOMER_NOT_FOUND));
         
         return customerMapper.toCustomerResponse(customer);
@@ -80,38 +80,37 @@ public class CustomerService {
                 .collect(Collectors.toList());
     }
 
-    public CustomerResponse updateCustomer(String userId, CustomerRequest request) {
-        log.info("Updating customer with userId: {}", userId);
+    public CustomerResponse updateCustomer(String customerId, CustomerRequest request) {
+        log.info("Updating customer with customerId: {}", customerId);
         
-        Customer customer = customerRepository.findByUserIdWithUser(userId)
+        Customer customer = customerRepository.findByCustomerIdWithUser(customerId)
                 .orElseThrow(() -> new AppException(ErrorCode.CUSTOMER_NOT_FOUND));
         
-        // Check if new userId exists
-        User user = userRepository.findById(request.getUserId())
+        // Check if new customerId exists (must exist as a User)
+        User user = userRepository.findById(request.getCustomerId())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         
-        // Check if new userId is already used by another customer
-        if (!userId.equals(request.getUserId()) && customerRepository.existsByUserId(request.getUserId())) {
+        // Check if new customerId is already used by another customer
+        if (!customerId.equals(request.getCustomerId()) && customerRepository.existsByCustomerId(request.getCustomerId())) {
             throw new AppException(ErrorCode.CUSTOMER_ALREADY_EXISTS);
         }
         
-        customer.setUserId(request.getUserId());
+        customer.setCustomerId(request.getCustomerId());
         customer.setUser(user);
         
         Customer updatedCustomer = customerRepository.save(customer);
-        log.info("Customer updated successfully with userId: {}", updatedCustomer.getUserId());
+        log.info("Customer updated successfully with customerId: {}", updatedCustomer.getCustomerId());
         
         return customerMapper.toCustomerResponse(updatedCustomer);
     }
 
-    public void deleteCustomer(String userId) {
-        log.info("Deleting customer with userId: {}", userId);
+    public void deleteCustomer(String customerId) {
+        log.info("Deleting customer with customerId: {}", customerId);
         
-        Customer customer = customerRepository.findById(userId)
+        Customer customer = customerRepository.findByCustomerIdWithUser(customerId)
                 .orElseThrow(() -> new AppException(ErrorCode.CUSTOMER_NOT_FOUND));
         
         customerRepository.delete(customer);
-        log.info("Customer deleted successfully with userId: {}", userId);
+        log.info("Customer deleted successfully with customerId: {}", customerId);
     }
-
 }

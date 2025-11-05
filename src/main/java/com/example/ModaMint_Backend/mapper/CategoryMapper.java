@@ -13,8 +13,8 @@ public interface CategoryMapper {
     @Mapping(target = "products", ignore = true)
     Category toCategory(CategoryRequest request);
 
-    @Mapping(target = "productCount", expression = "java(category.getProducts() != null ? category.getProducts().size() : 0)")
     @Mapping(target = "image", source = "image")
+    @Mapping(target = "productCount", expression = "java(category.getProducts() != null ? category.getProducts().size() : 0)")
     CategoryResponse toCategoryResponse(Category category);
 
     @Mapping(target = "id", ignore = true)

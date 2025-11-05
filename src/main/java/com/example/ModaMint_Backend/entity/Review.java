@@ -1,10 +1,12 @@
 package com.example.ModaMint_Backend.entity;
 
+import com.example.ModaMint_Backend.converter.StringSetConverter;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Entity
 @Table(name = "reviews")
@@ -27,6 +29,10 @@ public class Review {
     Integer rating;
 
     String comment;
+
+    @Convert(converter = StringSetConverter.class)
+    @Column(name = "images", columnDefinition = "TEXT")
+    Set<String> images;
 
     @CreationTimestamp
     @Column(name = "create_at")

@@ -4,6 +4,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
 @Data
 @Builder
@@ -16,6 +17,8 @@ public class ProductResponse {
     BigDecimal price;
     Boolean active;
     String description;
+    Set<String> images;
     String brandName;
     String categoryName;
+    Integer quantity; // Tổng số lượng từ tất cả variants
 }

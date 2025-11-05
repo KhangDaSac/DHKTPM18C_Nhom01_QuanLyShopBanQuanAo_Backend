@@ -27,6 +27,7 @@ public class CategoryService {
     // Create - Tạo danh mục mới
     public CategoryResponse createCategory(CategoryRequest request) {
         Category category = categoryMapper.toCategory(request);
+        category.setParentId(request.getParentId());
         Category savedCategory = categoryRepository.save(category);
         return categoryMapper.toCategoryResponse(savedCategory);
     }
@@ -58,6 +59,11 @@ public class CategoryService {
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
 
         categoryMapper.updateCategory(request, category);
+        // Cập nhật parentId trực tiếp (không load entity)
+        if (request.getParentId() != null && id.equals(request.getParentId())) {
+            throw new AppException(ErrorCode.INVALID_INPUT);
+        }
+        category.setParentId(request.getParentId());
         Category updatedCategory = categoryRepository.save(category);
         return categoryMapper.toCategoryResponse(updatedCategory);
     }
@@ -120,16 +126,13 @@ public class CategoryService {
                 .count();
     }
 
-
     //QuocHuy
     public List<CategoryResponse> getTopActiveLeafCategoriesByProductCount() {
-        // 1. Tạo Pageable để yêu cầu trang đầu tiên (0) và 8 phần tử (size 8).
-        Pageable top8Pageable = PageRequest.of(0, 8); // <-- THAY ĐỔI TỪ 10 -> 8
 
-        // 2. Gọi phương thức repository (đã được cập nhật query)
+        Pageable top8Pageable = PageRequest.of(0, 8);
+
         Page<Category> categoryPage = categoryRepository.findTopLeafCategoriesByProductCount(top8Pageable);
 
-        // 3. Chuyển đổi Page<Category> thành List<CategoryResponse>
         return categoryPage.getContent()
                 .stream()
                 .map(categoryMapper::toCategoryResponse)

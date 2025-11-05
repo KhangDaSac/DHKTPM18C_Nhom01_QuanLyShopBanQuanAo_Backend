@@ -1,5 +1,6 @@
 package com.example.ModaMint_Backend.entity;
 
+import com.example.ModaMint_Backend.converter.StringSetConverter;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -28,6 +29,10 @@ public class Product {
 
     String description;
 
+    @Convert(converter = StringSetConverter.class)
+    @Column(name = "images", columnDefinition = "TEXT")
+    Set<String> images;
+
     Boolean active = true;
 
     @CreationTimestamp
@@ -48,9 +53,6 @@ public class Product {
 
     @OneToMany(mappedBy = "product")
     Set<ProductVariant> productVariants;
-
-    @OneToMany(mappedBy = "product")
-    Set<ProductImage> productImages;
 
     @OneToMany(mappedBy = "product")
     Set<Review> reviews;

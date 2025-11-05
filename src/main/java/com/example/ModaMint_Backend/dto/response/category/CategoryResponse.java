@@ -12,6 +12,7 @@ public class CategoryResponse {
     Long id;
     String name;
     Boolean isActive;
-    Integer productCount;// Số lượng sản phẩm trong danh mục
+    Integer productCount; // Số lượng sản phẩm trong danh mục
+    Long parentId;
     String image;
 }
