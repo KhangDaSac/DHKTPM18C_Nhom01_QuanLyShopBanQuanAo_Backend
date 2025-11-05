@@ -1,5 +1,7 @@
 package com.example.ModaMint_Backend.entity;
 
+import com.example.ModaMint_Backend.entity.Order;
+import com.example.ModaMint_Backend.entity.ProductVariant;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;

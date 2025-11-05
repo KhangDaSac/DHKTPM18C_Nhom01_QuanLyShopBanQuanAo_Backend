@@ -1,5 +1,8 @@
 package com.example.ModaMint_Backend.entity;
 
+import com.example.ModaMint_Backend.entity.CartItem;
+import com.example.ModaMint_Backend.entity.OrderItem;
+import com.example.ModaMint_Backend.entity.Product;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -22,6 +25,8 @@ public class ProductVariant {
 
     String size;
     String color;
+    
+    String image;               // Hình ảnh của variant này
 
     BigDecimal price;           // Giá của variant này
     BigDecimal discount;       // Giảm giá của variant này
@@ -37,6 +42,8 @@ public class ProductVariant {
     @ManyToOne
     @JoinColumn(name = "product_id", insertable = false, updatable = false)
     Product product;
+
+
 
 
     @OneToMany(mappedBy = "productVariant")

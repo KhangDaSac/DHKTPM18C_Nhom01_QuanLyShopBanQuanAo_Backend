@@ -24,7 +24,9 @@ public class CheckoutController {
     /**
      * Lấy danh sách mã giảm giá khả dụng
      * GET /api/v1/checkout/promotions?customerId=xxx
+     * NOTE: Temporarily disabled - Promotion entity has been removed
      */
+    /*
     @GetMapping("/promotions")
     @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
     public ApiResponse<List<PromotionSummary>> getAvailablePromotions(
@@ -37,6 +39,7 @@ public class CheckoutController {
                 .result(checkoutService.getAvailablePromotions(customerId))
                 .build();
     }
+    */
 
     /**
      * Thực hiện checkout và tạo đơn hàng

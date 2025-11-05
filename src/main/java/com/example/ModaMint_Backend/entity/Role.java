@@ -1,5 +1,7 @@
 package com.example.ModaMint_Backend.entity;
 
+import com.example.ModaMint_Backend.entity.Permission;
+import com.example.ModaMint_Backend.entity.User;
 import com.example.ModaMint_Backend.enums.RoleName;
 import jakarta.persistence.*;
 import lombok.*;

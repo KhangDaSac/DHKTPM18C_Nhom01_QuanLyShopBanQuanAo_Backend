@@ -1,5 +1,6 @@
 package com.example.ModaMint_Backend.entity;
 
+import com.example.ModaMint_Backend.entity.Conversation;
 import com.example.ModaMint_Backend.enums.SenderType;
 import jakarta.persistence.*;
 import lombok.*;

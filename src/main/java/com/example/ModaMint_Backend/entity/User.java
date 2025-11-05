@@ -1,5 +1,8 @@
 package com.example.ModaMint_Backend.entity;
 
+import com.example.ModaMint_Backend.entity.Conversation;
+import com.example.ModaMint_Backend.entity.Customer;
+import com.example.ModaMint_Backend.entity.Role;
 import com.example.ModaMint_Backend.enums.Gender;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;

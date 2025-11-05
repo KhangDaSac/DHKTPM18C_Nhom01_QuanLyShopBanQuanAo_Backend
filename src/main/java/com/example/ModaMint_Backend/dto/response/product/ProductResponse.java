@@ -21,4 +21,5 @@ public class ProductResponse {
     String categoryName;
     List<String> images; // Danh sách URL ảnh
     List<ProductVariantResponse> productVariants; // Danh sách variants
+    Integer quantity; // Tổng số lượng từ tất cả variants
 }

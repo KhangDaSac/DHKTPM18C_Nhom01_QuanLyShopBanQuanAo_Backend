@@ -33,20 +33,12 @@ public class AddressService {
         Customer customer = customerRepository.findById(request.getCustomerId())
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
         
-        // Build full address
-        String fullAddress = String.format("%s, %s, %s, %s",
-                request.getAddressDetail(),
-                request.getWard(),
-                request.getDistrict(),
-                request.getCity());
-        
         Address address = Address.builder()
                 .customer(customer)
                 .city(request.getCity())
                 .district(request.getDistrict())
                 .ward(request.getWard())
                 .addressDetail(request.getAddressDetail())
-                .fullAddress(fullAddress)
                 .build();
         
         address = addressRepository.save(address);
@@ -79,14 +71,21 @@ public class AddressService {
     }
     
     private AddressResponse mapToResponse(Address address) {
+        // Build full address dynamically
+        String fullAddress = String.format("%s, %s, %s, %s",
+                address.getAddressDetail(),
+                address.getWard(),
+                address.getDistrict(),
+                address.getCity());
+        
         return AddressResponse.builder()
                 .id(address.getId())
-                .customerId(address.getCustomer().getUserId()) // Customer sử dụng userId thay vì id
+                .customerId(address.getCustomer().getCart().getCustomerId()) // Customer sử dụng userId thay vì id
                 .city(address.getCity())
                 .district(address.getDistrict())
                 .ward(address.getWard())
                 .addressDetail(address.getAddressDetail())
-                .fullAddress(address.getFullAddress())
+                .fullAddress(fullAddress)
                 .build();
     }
 }

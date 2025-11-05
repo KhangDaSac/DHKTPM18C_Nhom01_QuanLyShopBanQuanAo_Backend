@@ -44,9 +44,10 @@ public class CartService {
         if (userId != null) {
             cart = cartRepository.findByCustomerId(userId).orElse(null);
         }
-        if (cart == null && sessionId != null) {
-            cart = cartRepository.findBySessionId(sessionId).orElse(null);
-        }
+        // sessionId support removed as Cart entity doesn't have sessionId field
+        // if (cart == null && sessionId != null) {
+        //     cart = cartRepository.findBySessionId(sessionId).orElse(null);
+        // }
         if (cart == null) {
             return CartDto.builder().items(List.of()).subtotal(0L).shipping(0L).total(0L).build();
         }
@@ -64,8 +65,8 @@ public class CartService {
                 if (product != null) {
                     productName = product.getName();
                     // Get first image from product
-                    if (product.getProductImages() != null && !product.getProductImages().isEmpty()) {
-                        imageUrl = product.getProductImages().iterator().next().getUrl();
+                    if (product.getImages() != null && !product.getImages().isEmpty()) {
+                        imageUrl = product.getImages().iterator().next();
                     }
                 }
             }
@@ -92,7 +93,7 @@ public class CartService {
 
         return CartDto.builder()
                 .id(cart.getId())
-                .sessionId(cart.getSessionId())
+                .sessionId(null) // Cart entity doesn't have sessionId field
                 .items(itemDtos)
                 .subtotal(subtotal)
                 .shipping(shipping)
@@ -113,16 +114,13 @@ public class CartService {
             cart = cartRepository.findByCustomerId(userId).orElse(null);
             System.out.println("DEBUG: Cart found by customerId: " + (cart != null ? cart.getId() : "null"));
         }
-        if (cart == null && req.getSessionId() != null) {
-            cart = cartRepository.findBySessionId(req.getSessionId()).orElse(null);
-            System.out.println("DEBUG: Cart found by sessionId: " + (cart != null ? cart.getId() : "null"));
-        }
+        // Note: sessionId support removed as Cart entity doesn't have sessionId field
+        // if (cart == null && req.getSessionId() != null) {
+        //     cart = cartRepository.findBySessionId(req.getSessionId()).orElse(null);
+        //     System.out.println("DEBUG: Cart found by sessionId: " + (cart != null ? cart.getId() : "null"));
+        // }
         if (cart == null) {
-            String session = req.getSessionId();
-            if (session == null || session.isBlank()) {
-                session = java.util.UUID.randomUUID().toString();
-            }
-            cart = Cart.builder().customerId(userId).sessionId(session).build();
+            cart = Cart.builder().customerId(userId).build();
             cart = cartRepository.save(cart);
             System.out.println("DEBUG: New cart created with id: " + cart.getId() + ", customerId: " + cart.getCustomerId());
         }
@@ -135,10 +133,12 @@ public class CartService {
             variant = productVariantRepository.findById(variantId).orElse(null);
         }
         if (variant == null && req.getProductId() != null) {
-            variant = productVariantRepository.findFirstByProductIdOrderByIdAsc(req.getProductId()).orElse(null);
+            List<ProductVariant> variants = productVariantRepository.findByProductId(req.getProductId());
+            variant = variants.isEmpty() ? null : variants.get(0);
         }
         if (variant == null && variantId != null) {
-            variant = productVariantRepository.findFirstByProductIdOrderByIdAsc(variantId).orElse(null);
+            // variantId was already checked above, so just double-check with findById
+            variant = productVariantRepository.findById(variantId).orElse(null);
         }
 
         if (variant == null) {
@@ -157,7 +157,7 @@ public class CartService {
         }
         cartItemRepository.save(item);
 
-        return getCart(userId, cart.getSessionId());
+        return getCart(userId, null); // sessionId removed from Cart entity
     }
 
     public CartItemDto updateItemQuantity(Long itemId, UpdateCartItemRequest req) {
@@ -203,7 +203,7 @@ public class CartService {
         if (user != null) {
             System.out.println("DEBUG: User found: " + user.getUsername() + ", creating Customer...");
             Customer customer = Customer.builder()
-                    .userId(userId)
+                    .customerId(userId)
                     .user(user)
                     .build();
             customerRepository.save(customer);

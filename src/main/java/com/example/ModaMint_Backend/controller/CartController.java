@@ -1,12 +1,14 @@
 package com.example.ModaMint_Backend.controller;
 
+
 import com.example.ModaMint_Backend.dto.request.cart.AddCartItemRequest;
-import com.example.ModaMint_Backend.dto.request.cart.UpdateCartItemRequest;
+import com.example.ModaMint_Backend.dto.request.cartitem.CartItemRequest;
 import com.example.ModaMint_Backend.dto.response.ApiResponse;
 import com.example.ModaMint_Backend.dto.response.cart.CartDto;
 import com.example.ModaMint_Backend.dto.response.cart.CartItemDto;
 import com.example.ModaMint_Backend.entity.User;
 import com.example.ModaMint_Backend.repository.UserRepository;
+import com.example.ModaMint_Backend.dto.response.cart.CartResponse;
 import com.example.ModaMint_Backend.service.CartService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,6 +16,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.access.prepost.PreAuthorize;
+
+
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -31,7 +36,7 @@ public class CartController {
                 Jwt jwt = (Jwt) auth.getPrincipal();
                 String username = jwt.getSubject(); // 'sub' claim contains username
                 System.out.println("DEBUG: Extracted username from JWT: " + username);
-                
+
                 // Tìm user theo username để lấy userId
                 User user = userRepository.findByUsername(username).orElse(null);
                 if (user != null) {
@@ -55,9 +60,9 @@ public class CartController {
         if (userId == null) {
             userId = userIdHeader;
         }
-        
+
         System.out.println("DEBUG: CartController.getCart - userId from JWT: " + getUserIdFromAuth() + ", from header: " + userIdHeader + ", final userId: " + userId + ", sessionId: " + sessionId);
-        
+
         CartDto cart = cartService.getCart(userId, sessionId);
         ApiResponse<CartDto> resp = ApiResponse.<CartDto>builder().code(1000).message("Lấy giỏ hàng thành công").result(cart).build();
         return ResponseEntity.ok(resp);
@@ -72,9 +77,9 @@ public class CartController {
             if (userId == null) {
                 userId = userIdHeader;
             }
-            
+
             System.out.println("DEBUG: CartController.addItem - userId from JWT: " + getUserIdFromAuth() + ", from header: " + userIdHeader + ", final userId: " + userId);
-            
+
             CartDto dto = cartService.addItem(userId, req);
             ApiResponse<CartDto> resp = ApiResponse.<CartDto>builder().code(1000).message("Thêm vào giỏ hàng thành công").result(dto).build();
             return ResponseEntity.status(HttpStatus.CREATED).body(resp);
@@ -92,18 +97,22 @@ public class CartController {
         }
     }
 
-    @PutMapping("/items/{itemId}")
-    public ResponseEntity<ApiResponse<CartItemDto>> updateItem(@PathVariable Long itemId, @RequestBody UpdateCartItemRequest req) {
-        CartItemDto dto = cartService.updateItemQuantity(itemId, req);
-        ApiResponse<CartItemDto> resp = ApiResponse.<CartItemDto>builder().code(1000).message("Cập nhật số lượng thành công").result(dto).build();
-        return ResponseEntity.ok(resp);
+    @DeleteMapping("/remove/{variantId}")
+    public ApiResponse<Void> removeItem(
+            @RequestParam String customerId,
+            @PathVariable Long variantId
+    ) {
+//        cartService.removeItem(customerId, variantId);
+        return ApiResponse.<Void>builder().message("Item removed successfully").build();
     }
 
-    @DeleteMapping("/items/{itemId}")
-    public ResponseEntity<ApiResponse<Void>> deleteItem(@PathVariable Long itemId) {
-        cartService.removeItem(itemId);
-        ApiResponse<Void> resp = ApiResponse.<Void>builder().code(1000).message("Xóa item thành công").result(null).build();
-        return ResponseEntity.ok(resp);
+    @DeleteMapping("/remove/{variantId}/complete")
+    public ApiResponse<Void> removeItemCompletely(
+            @RequestParam String customerId,
+            @PathVariable Long variantId
+    ) {
+//        cartService.removeItemCompletely(customerId, variantId);
+        return ApiResponse.<Void>builder().message("Item completely removed successfully").build();
     }
 
     @DeleteMapping
@@ -113,7 +122,7 @@ public class CartController {
         if (userId == null) {
             userId = userIdHeader;
         }
-        
+
         cartService.clearCartForUser(userId == null ? "" : userId);
         ApiResponse<Void> resp = ApiResponse.<Void>builder().code(1000).message("Giỏ hàng đã được làm trống").result(null).build();
         return ResponseEntity.ok(resp);

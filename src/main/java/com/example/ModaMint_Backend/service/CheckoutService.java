@@ -33,14 +33,17 @@ public class    CheckoutService {
     private final CustomerRepository customerRepository;
     private final AddressRepository addressRepository;
     private final ProductVariantRepository productVariantRepository;
-    private final PromotionRepository promotionRepository;
+    // Promotion entity has been removed
+    // private final PromotionRepository promotionRepository;
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final CartService cartService;
 
     /**
      * Lấy danh sách mã giảm giá khả dụng cho đơn hàng
+     * NOTE: Promotion entity has been removed, this method is temporarily disabled
      */
+    /*
     public List<PromotionSummary> getAvailablePromotions(String customerId) {
         log.info("Getting available promotions for customer: {}", customerId);
         
@@ -65,6 +68,7 @@ public class    CheckoutService {
         log.info("Found {} available promotions", promotions.size());
         return promotions;
     }
+    */
 
     /**
      * Thực hiện checkout và tạo đơn hàng
@@ -81,9 +85,9 @@ public class    CheckoutService {
         Address address = addressRepository.findById(request.getShippingAddressId())
                 .orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_FOUND));
         
-        if (!address.getCustomer().getUserId().equals(request.getCustomerId())) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        }
+//        if (!address.getCustomer().getUserId().equals(request.getCustomerId())) {
+//            throw new AppException(ErrorCode.UNAUTHORIZED);
+//        }
         
         // 3. Get cart items
         Cart cart = cartRepository.findByCustomerId(request.getCustomerId())
@@ -99,14 +103,14 @@ public class    CheckoutService {
         BigDecimal subtotal = calculateCartTotal(cart.getId());
         BigDecimal shippingFee = BigDecimal.valueOf(30000); // Fixed shipping fee
         
-        // 5. Apply promotion
-        PromotionResult promotionResult = applyPromotion(
-                request.getPercentagePromotionCode(),
-                request.getAmountPromotionCode(),
-                subtotal
-        );
+        // 5. Apply promotion - DISABLED: Promotion entity removed
+        // PromotionResult promotionResult = applyPromotion(
+        //         request.getPercentagePromotionCode(),
+        //         request.getAmountPromotionCode(),
+        //         subtotal
+        // );
         
-        BigDecimal discountAmount = promotionResult.getDiscountAmount();
+        BigDecimal discountAmount = BigDecimal.ZERO; // No promotion applied
         BigDecimal totalAmount = subtotal.add(shippingFee).subtract(discountAmount);
         
         // 6. Create order
@@ -117,8 +121,8 @@ public class    CheckoutService {
                 .customerId(request.getCustomerId())
                 .totalAmount(subtotal.add(shippingFee)) // Tổng trước khi giảm
                 .subTotal(totalAmount) // Tổng sau khi giảm
-                .promotionId(promotionResult.getPercentagePromotionId() != null ? 
-                        promotionResult.getPercentagePromotionId() : promotionResult.getAmountPromotionId())
+//                .promotionId(promotionResult.getPercentagePromotionId() != null ?
+//                        promotionResult.getPercentagePromotionId() : promotionResult.getAmountPromotionId())
                 .promotionValue(discountAmount)
                 .orderStatus(OrderStatus.PENDING)
                 .paymentMethod(request.getPaymentMethod())
@@ -146,18 +150,18 @@ public class    CheckoutService {
             orderItemRepository.save(orderItem);
             
             // Add to response
-            String imageUrl = null;
-            if (variant.getProduct() != null && variant.getProduct().getProductImages() != null && 
-                    !variant.getProduct().getProductImages().isEmpty()) {
-                imageUrl = variant.getProduct().getProductImages().iterator().next().getUrl();
-            }
+//            String imageUrl = null;
+//            if (variant.getProduct() != null && variant.getProduct().getProductImages() != null &&
+//                    !variant.getProduct().getProductImages().isEmpty()) {
+//                imageUrl = variant.getProduct().getProductImages().iterator().next().getUrl();
+//            }
             
             orderItemResponses.add(CartItemDto.builder()
                     .itemId(cartItem.getId())
                     .variantId(variant.getId())
                     .productId(variant.getProduct() != null ? variant.getProduct().getId() : null)
                     .productName(variant.getProduct() != null ? variant.getProduct().getName() : null)
-                    .image(imageUrl)
+//                    .image(imageUrl)
                     .unitPrice(variant.getPrice().longValue())
                     .quantity(cartItem.getQuantity())
                     .totalPrice(variant.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())).longValue())
@@ -168,19 +172,19 @@ public class    CheckoutService {
         cartService.clearCartForUser(request.getCustomerId());
         log.info("Cart cleared for customer: {}", request.getCustomerId());
         
-        // 9. Update promotion quantity
-        if (promotionResult.getPercentagePromotionId() != null) {
-            decreasePromotionQuantity(promotionResult.getPercentagePromotionId(), true);
-        }
-        if (promotionResult.getAmountPromotionId() != null) {
-            decreasePromotionQuantity(promotionResult.getAmountPromotionId(), false);
-        }
+        // 9. Update promotion quantity - DISABLED: Promotion entity removed
+        // if (promotionResult.getPercentagePromotionId() != null) {
+        //     decreasePromotionQuantity(promotionResult.getPercentagePromotionId(), true);
+        // }
+        // if (promotionResult.getAmountPromotionId() != null) {
+        //     decreasePromotionQuantity(promotionResult.getAmountPromotionId(), false);
+        // }
         
         // 10. Build response
         return CheckoutResponse.builder()
                 .orderId(savedOrder.getId())
                 .orderCode(orderCode)
-                .customerId(customer.getUserId())
+//                .customerId(customer.getUserId())
                 .customerName(customer.getUser().getFirstName() + " " + customer.getUser().getLastName())
                 .customerEmail(customer.getUser().getEmail())
                 .customerPhone(savedOrder.getPhone())
@@ -188,7 +192,7 @@ public class    CheckoutService {
                 .orderItems(orderItemResponses)
                 .subtotal(subtotal)
                 .shippingFee(shippingFee)
-                .appliedPromotion(promotionResult.getPromotionSummary())
+                .appliedPromotion(null) // Promotion disabled
                 .discountAmount(discountAmount)
                 .totalAmount(totalAmount)
                 .paymentMethod(request.getPaymentMethod().toString())
@@ -210,6 +214,7 @@ public class    CheckoutService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    /* DISABLED: Promotion entity has been removed
     private PromotionResult applyPromotion(String percentageCode, String amountCode, BigDecimal orderTotal) {
         PromotionResult result = new PromotionResult();
         result.setDiscountAmount(BigDecimal.ZERO);
@@ -293,6 +298,7 @@ public class    CheckoutService {
                         (promo.getMinOrderValue() != null ? promo.getMinOrderValue() : 0) + "đ")
                 .build();
     }
+    */
     
     private BigDecimal parsePercentage(String value) {
         try {
@@ -319,7 +325,7 @@ public class    CheckoutService {
         
         return AddressResponse.builder()
                 .id(address.getId())
-                .customerId(address.getCustomer() != null ? address.getCustomer().getUserId() : null)
+                .customerId(address.getCustomer() != null ? address.getCustomer().getCustomerId() : null)
                 .city(address.getCity())
                 .ward(address.getWard())
                 .addressDetail(address.getAddressDetail())

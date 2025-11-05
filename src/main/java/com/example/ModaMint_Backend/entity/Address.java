@@ -1,5 +1,7 @@
 package com.example.ModaMint_Backend.entity;
 
+import com.example.ModaMint_Backend.entity.Customer;
+import com.example.ModaMint_Backend.entity.Order;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -20,10 +22,9 @@ public class Address {
     Long id;
 
     String city;
-    String district; // Thêm field district
+    String district;
     String ward;
     String addressDetail;
-    String fullAddress; // Thêm field fullAddress (city + district + ward + addressDetail)
 
     @ManyToOne
     @JoinColumn(name = "customer_id")

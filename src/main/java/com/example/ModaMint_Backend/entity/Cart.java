@@ -1,5 +1,7 @@
 package com.example.ModaMint_Backend.entity;
 
+import com.example.ModaMint_Backend.entity.CartItem;
+import com.example.ModaMint_Backend.entity.Customer;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -19,9 +21,6 @@ public class Cart {
 
     @Column(name = "customer_id")
     String customerId;
-
-    @Column(name = "session_id")
-    String sessionId;
 
     @UpdateTimestamp
     @Column(name = "update_at")

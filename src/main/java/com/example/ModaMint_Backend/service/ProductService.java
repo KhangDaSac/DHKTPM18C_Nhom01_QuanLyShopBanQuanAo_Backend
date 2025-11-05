@@ -9,13 +9,16 @@ import com.example.ModaMint_Backend.mapper.ProductMapper;
 import com.example.ModaMint_Backend.repository.BrandRepository;
 import com.example.ModaMint_Backend.repository.CategoryRepository;
 import com.example.ModaMint_Backend.repository.ProductRepository;
+import com.example.ModaMint_Backend.specification.ProductSpecification;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -155,6 +158,33 @@ public class ProductService {
         return productRepository.findAll()
                 .stream()
                 .filter(product -> product.getName().toLowerCase().contains(name.toLowerCase()))
+                .map(productMapper::toProductResponse)
+                .toList();
+    }
+    /**
+     * Filter products theo nhiều điều kiện
+     * @param brandId - ID của brand (nullable)
+     * @param categoryId - ID của category (nullable)
+     * @param minPrice - Giá tối thiểu (nullable)
+     * @param maxPrice - Giá tối đa (nullable)
+     * @param colors - Danh sách màu sắc (nullable)
+     * @param sizes - Danh sách size (nullable)
+     * @return List<ProductResponse>
+     */
+    public List<ProductResponse> filterProducts(
+            Long brandId,
+            Long categoryId,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            List<String> colors,
+            List<String> sizes
+    ) {
+        Specification<Product> spec = ProductSpecification.filterProducts(
+                brandId, categoryId, minPrice, maxPrice, colors, sizes
+        );
+
+        return productRepository.findAll(spec)
+                .stream()
                 .map(productMapper::toProductResponse)
                 .toList();
     }

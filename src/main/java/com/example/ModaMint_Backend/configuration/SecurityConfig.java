@@ -24,7 +24,6 @@ import javax.crypto.spec.SecretKeySpec;
 import java.util.List;
 
 @Configuration
-@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
     @Value("${jwt.signer-key}")
     private String signerKey;
@@ -45,11 +44,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/percentage-promotions/**").permitAll()  // Xem khuyến mãi %
                         .requestMatchers(HttpMethod.GET, "/amount-promotions/**").permitAll()  // Xem khuyến mãi giá cố định
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // CORS
-                        
+
                         // === CART ENDPOINTS ===
                         // Cho phép cả guest (sessionId) và user đã đăng nhập (JWT token)
                         .requestMatchers("/carts/**").permitAll()  // Guest + authenticated users
-                        
+
                         // === CHECKOUT & ORDER ENDPOINTS ===
                         // Checkout cần authentication (JWT) vì cần customerId
                         .requestMatchers("/checkout/**").authenticated()  // Yêu cầu đăng nhập

@@ -12,8 +12,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -48,6 +50,7 @@ public class ProductController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<ProductResponse> createProduct(@RequestBody @Valid ProductRequest request) {
         return ApiResponse.<ProductResponse>builder()
                 .result(productService.createProduct(request))
@@ -56,6 +59,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<ProductResponse> updateProduct(
             @PathVariable Long id,
             @RequestBody @Valid ProductRequest request) {
@@ -66,6 +70,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<String> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
         return ApiResponse.<String>builder()
@@ -75,6 +80,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}/restore")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<ProductResponse> restoreProduct(@PathVariable Long id) {
         return ApiResponse.<ProductResponse>builder()
                 .result(productService.restoreProduct(id))
@@ -83,6 +89,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}/permanent")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<String> permanentDeleteProduct(@PathVariable Long id) {
         productService.permanentDeleteProduct(id);
         return ApiResponse.<String>builder()
@@ -147,6 +154,20 @@ public class ProductController {
         return ApiResponse.<Long>builder()
                 .result(productService.getActiveProductCount())
                 .message("Lấy số lượng sản phẩm đang hoạt động thành công")
+                .build();
+    }
+    @GetMapping("/filter")
+    public ApiResponse<List<ProductResponse>> filterProducts(
+            @RequestParam(required = false) Long brandId,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) List<String> colors,
+            @RequestParam(required = false) List<String> sizes
+    ) {
+        return ApiResponse.<List<ProductResponse>>builder()
+                .result(productService.filterProducts(brandId, categoryId, minPrice, maxPrice, colors, sizes))
+                .message("Lọc sản phẩm thành công")
                 .build();
     }
 }
