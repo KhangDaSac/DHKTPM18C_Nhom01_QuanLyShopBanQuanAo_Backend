@@ -17,6 +17,8 @@ public class AmountPromotion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
+    String name; // Tên khuyến mãi ví dụ: "Khuyến mãi năm mới"
+
     String code; // Mã khuyến mãi ví dụ: "SALE5000"
 
     @Column(name = "discount_amount")

@@ -26,6 +26,7 @@ public class CategoryService {
     // Create - Tạo danh mục mới
     public CategoryResponse createCategory(CategoryRequest request) {
         Category category = categoryMapper.toCategory(request);
+        category.setParentId(request.getParentId());
         Category savedCategory = categoryRepository.save(category);
         return categoryMapper.toCategoryResponse(savedCategory);
     }
@@ -57,6 +58,11 @@ public class CategoryService {
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
 
         categoryMapper.updateCategory(request, category);
+        // Cập nhật parentId trực tiếp (không load entity)
+        if (request.getParentId() != null && id.equals(request.getParentId())) {
+            throw new AppException(ErrorCode.INVALID_INPUT);
+        }
+        category.setParentId(request.getParentId());
         Category updatedCategory = categoryRepository.save(category);
         return categoryMapper.toCategoryResponse(updatedCategory);
     }
