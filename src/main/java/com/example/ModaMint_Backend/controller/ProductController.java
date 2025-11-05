@@ -15,6 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -153,6 +154,20 @@ public class ProductController {
         return ApiResponse.<Long>builder()
                 .result(productService.getActiveProductCount())
                 .message("Lấy số lượng sản phẩm đang hoạt động thành công")
+                .build();
+    }
+    @GetMapping("/filter")
+    public ApiResponse<List<ProductResponse>> filterProducts(
+            @RequestParam(required = false) Long brandId,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) List<String> colors,
+            @RequestParam(required = false) List<String> sizes
+    ) {
+        return ApiResponse.<List<ProductResponse>>builder()
+                .result(productService.filterProducts(brandId, categoryId, minPrice, maxPrice, colors, sizes))
+                .message("Lọc sản phẩm thành công")
                 .build();
     }
 }

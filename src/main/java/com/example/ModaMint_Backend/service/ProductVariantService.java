@@ -1,6 +1,7 @@
 package com.example.ModaMint_Backend.service;
 
 import com.example.ModaMint_Backend.dto.request.productvariant.ProductVariantRequest;
+import com.example.ModaMint_Backend.dto.response.productvariant.ProductVariantColorResponse;
 import com.example.ModaMint_Backend.dto.response.productvariant.ProductVariantResponse;
 import com.example.ModaMint_Backend.entity.ProductVariant;
 import com.example.ModaMint_Backend.exception.AppException;
@@ -15,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -72,5 +74,12 @@ public class ProductVariantService {
 
     public long getTotalProductVariantCount() {
         return productVariantRepository.count();
+    }
+    public List<ProductVariantColorResponse> getTopColors(int limit) {
+        List<Object[]> results = productVariantRepository.findTopColors();
+        return results.stream()
+                .limit(limit)  // Limit top 4
+                .map(row -> new ProductVariantColorResponse((String) row[0], (Long) row[1]))
+                .collect(Collectors.toList());
     }
 }

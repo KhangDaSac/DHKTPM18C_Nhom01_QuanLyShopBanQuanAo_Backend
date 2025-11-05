@@ -44,6 +44,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/brands/**").permitAll()  // Xem thương hiệu
                         .requestMatchers(HttpMethod.GET, "/percentage-promotions/**").permitAll()  // Xem khuyến mãi %
                         .requestMatchers(HttpMethod.GET, "/amount-promotions/**").permitAll()  // Xem khuyến mãi giá cố định
+                        .requestMatchers(HttpMethod.GET, "/product-variants/colors").permitAll()  // Lấy màu
                         .requestMatchers(HttpMethod.POST, "/cart/**").hasRole("CUSTOMER") // bắt buộc CUSTOMER// Xem giỏ hàng
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // CORS
 
