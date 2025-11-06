@@ -60,8 +60,11 @@ public class VnPayService {
         vnp_Params.put("vnp_ReturnUrl", vnp_ReturnUrl);
         vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
 
-        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+        //Sử dụng timezone Việt Nam
+        TimeZone vietnamTimeZone = TimeZone.getTimeZone("Asia/Ho_Chi_Minh");
+        Calendar cld = Calendar.getInstance(vietnamTimeZone);
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        formatter.setTimeZone(vietnamTimeZone);
         String vnp_CreateDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
 
@@ -69,34 +72,38 @@ public class VnPayService {
         String vnp_ExpireDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
 
-        // Billing (adapt based on your form; if not present, omit or handle)
-        vnp_Params.put("vnp_Bill_Mobile", req.getParameter("txt_billing_mobile") != null ? req.getParameter("txt_billing_mobile") : "");
-        vnp_Params.put("vnp_Bill_Email", req.getParameter("txt_billing_email") != null ? req.getParameter("txt_billing_email") : "");
-        String fullName = req.getParameter("txt_billing_fullname") != null ? req.getParameter("txt_billing_fullname").trim() : "";
-        if (!fullName.isEmpty()) {
-            int idx = fullName.indexOf(' ');
-            if (idx != -1) {
-                String firstName = fullName.substring(0, idx);
-                String lastName = fullName.substring(fullName.lastIndexOf(' ') + 1);
-                vnp_Params.put("vnp_Bill_FirstName", firstName);
-                vnp_Params.put("vnp_Bill_LastName", lastName);
+        // Billing information - simplified for frontend requests
+        vnp_Params.put("vnp_Bill_Mobile", getSafeParameter(req, "txt_billing_mobile"));
+        vnp_Params.put("vnp_Bill_Email", getSafeParameter(req, "txt_billing_email"));
+
+        String fullName = getSafeParameter(req, "txt_billing_fullname");
+        if (fullName != null && !fullName.trim().isEmpty()) {
+            String[] nameParts = fullName.trim().split("\\s+", 2);
+            if (nameParts.length >= 2) {
+                vnp_Params.put("vnp_Bill_FirstName", nameParts[0]);
+                vnp_Params.put("vnp_Bill_LastName", nameParts[nameParts.length - 1]);
+            } else {
+                vnp_Params.put("vnp_Bill_FirstName", fullName);
+                vnp_Params.put("vnp_Bill_LastName", "");
             }
-        }
-        vnp_Params.put("vnp_Bill_Address", req.getParameter("txt_inv_addr1") != null ? req.getParameter("txt_inv_addr1") : "");
-        vnp_Params.put("vnp_Bill_City", req.getParameter("txt_bill_city") != null ? req.getParameter("txt_bill_city") : "");
-        vnp_Params.put("vnp_Bill_Country", req.getParameter("txt_bill_country") != null ? req.getParameter("txt_bill_country") : "");
-        if (req.getParameter("txt_bill_state") != null && !req.getParameter("txt_bill_state").isEmpty()) {
-            vnp_Params.put("vnp_Bill_State", req.getParameter("txt_bill_state"));
+        } else {
+            vnp_Params.put("vnp_Bill_FirstName", "");
+            vnp_Params.put("vnp_Bill_LastName", "");
         }
 
-        // Invoice (adapt based on your form; if not present, omit or handle)
-        vnp_Params.put("vnp_Inv_Phone", req.getParameter("txt_inv_mobile") != null ? req.getParameter("txt_inv_mobile") : "");
-        vnp_Params.put("vnp_Inv_Email", req.getParameter("txt_inv_email") != null ? req.getParameter("txt_inv_email") : "");
-        vnp_Params.put("vnp_Inv_Customer", req.getParameter("txt_inv_customer") != null ? req.getParameter("txt_inv_customer") : "");
-        vnp_Params.put("vnp_Inv_Address", req.getParameter("txt_inv_addr1") != null ? req.getParameter("txt_inv_addr1") : "");
-        vnp_Params.put("vnp_Inv_Company", req.getParameter("txt_inv_company") != null ? req.getParameter("txt_inv_company") : "");
-        vnp_Params.put("vnp_Inv_Taxcode", req.getParameter("txt_inv_taxcode") != null ? req.getParameter("txt_inv_taxcode") : "");
-        vnp_Params.put("vnp_Inv_Type", req.getParameter("cbo_inv_type") != null ? req.getParameter("cbo_inv_type") : "");
+        vnp_Params.put("vnp_Bill_Address", getSafeParameter(req, "txt_inv_addr1"));
+        vnp_Params.put("vnp_Bill_City", getSafeParameter(req, "txt_bill_city"));
+        vnp_Params.put("vnp_Bill_Country", getSafeParameter(req, "txt_bill_country"));
+        vnp_Params.put("vnp_Bill_State", getSafeParameter(req, "txt_bill_state"));
+
+        // Invoice information
+        vnp_Params.put("vnp_Inv_Phone", getSafeParameter(req, "txt_inv_mobile"));
+        vnp_Params.put("vnp_Inv_Email", getSafeParameter(req, "txt_inv_email"));
+        vnp_Params.put("vnp_Inv_Customer", getSafeParameter(req, "txt_inv_customer"));
+        vnp_Params.put("vnp_Inv_Address", getSafeParameter(req, "txt_inv_addr1"));
+        vnp_Params.put("vnp_Inv_Company", getSafeParameter(req, "txt_inv_company"));
+        vnp_Params.put("vnp_Inv_Taxcode", getSafeParameter(req, "txt_inv_taxcode"));
+        vnp_Params.put("vnp_Inv_Type", getSafeParameter(req, "cbo_inv_type"));
 
         // Build data to hash and querystring
         List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
@@ -111,19 +118,13 @@ public class VnPayService {
                 // Build hash data
                 hashData.append(fieldName);
                 hashData.append('=');
-                try {
-                    hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
-                } catch (UnsupportedEncodingException e) {
-                    // Handle exception
-                }
+                hashData.append(urlEncode(fieldValue));
+
                 // Build query
-                try {
-                    query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()));
-                    query.append('=');
-                    query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
-                } catch (UnsupportedEncodingException e) {
-                    // Handle exception
-                }
+                query.append(urlEncode(fieldName));
+                query.append('=');
+                query.append(urlEncode(fieldValue));
+
                 if (itr.hasNext()) {
                     query.append('&');
                     hashData.append('&');
@@ -134,7 +135,26 @@ public class VnPayService {
         String queryUrl = query.toString();
         String vnp_SecureHash = hmacSHA512(vnp_HashSecret, hashData.toString());
         queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
-        return vnp_PayUrl + "?" + queryUrl;
+
+        String finalUrl = vnp_PayUrl + "?" + queryUrl;
+        System.out.println("🔗 Final VNPay URL: " + finalUrl);
+
+        return finalUrl;
+    }
+
+    // Helper method to safely get parameters
+    private String getSafeParameter(HttpServletRequest req, String paramName) {
+        String value = req.getParameter(paramName);
+        return value != null ? value : "";
+    }
+
+    // Helper method for URL encoding
+    private String urlEncode(String value) {
+        try {
+            return URLEncoder.encode(value, StandardCharsets.US_ASCII.toString());
+        } catch (UnsupportedEncodingException e) {
+            return value;
+        }
     }
 
     // Utility methods from Config
@@ -152,6 +172,10 @@ public class VnPayService {
         String ipAddress = request.getHeader("X-FORWARDED-FOR");
         if (ipAddress == null) {
             ipAddress = request.getRemoteAddr();
+        }
+        // For local development, use a valid IP
+        if (ipAddress == null || ipAddress.isEmpty() || ipAddress.equals("0:0:0:0:0:0:0:1")) {
+            ipAddress = "127.0.0.1";
         }
         return ipAddress;
     }
@@ -174,47 +198,54 @@ public class VnPayService {
             return sb.toString();
 
         } catch (Exception ex) {
+            System.err.println("HMAC SHA512 Error: " + ex.getMessage());
             return "";
         }
     }
 
-    // The orderReturn method is not provided in the servlet code, so you'll need to implement it separately based on VNPAY docs.
-    // For example:
     public int orderReturn(HttpServletRequest request) {
-        // Implement verification logic here, check vnp_SecureHash, etc.
-        // Return 1 for success, 0 for failure
-        // This is placeholder; adapt from VNPAY querydr or refund examples if needed.
+        System.out.println("=== VNPay Return Debug ===");
+
         Map<String, String> fields = new HashMap<>();
-        for (Enumeration<String> params = request.getParameterNames(); params.hasMoreElements();) {
-            String fieldName = null;
-            String fieldValue = null;
-            try {
-                fieldName = URLEncoder.encode(params.nextElement(), StandardCharsets.US_ASCII.toString());
-                fieldValue = URLEncoder.encode(request.getParameter(fieldName), StandardCharsets.US_ASCII.toString());
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-            if ((fieldValue != null) && (fieldValue.length() > 0)) {
-                fields.put(fieldName, fieldValue);
-            }
+        Enumeration<String> paramNames = request.getParameterNames();
+
+        // Log all parameters for debugging
+        while (paramNames.hasMoreElements()) {
+            String paramName = paramNames.nextElement();
+            String paramValue = request.getParameter(paramName);
+            fields.put(paramName, paramValue);
+            System.out.println("📋 " + paramName + " = " + paramValue);
         }
 
         String vnp_SecureHash = request.getParameter("vnp_SecureHash");
-        if (fields.containsKey("vnp_SecureHashType")) {
-            fields.remove("vnp_SecureHashType");
-        }
-        if (fields.containsKey("vnp_SecureHash")) {
-            fields.remove("vnp_SecureHash");
-        }
+        System.out.println("Received SecureHash: " + vnp_SecureHash);
+
+        // Remove hash fields before signing
+        fields.remove("vnp_SecureHashType");
+        fields.remove("vnp_SecureHash");
+
         String signValue = hashAllFields(fields);
-        if (signValue.equals(vnp_SecureHash)) {
-            if ("00".equals(request.getParameter("vnp_TransactionStatus"))) {
-                return 1; // Success
+        System.out.println("Calculated SecureHash: " + signValue);
+
+        boolean hashValid = signValue.equals(vnp_SecureHash);
+        System.out.println("Hash validation: " + hashValid);
+
+        if (hashValid) {
+            String transactionStatus = request.getParameter("vnp_TransactionStatus");
+            String responseCode = request.getParameter("vnp_ResponseCode");
+            System.out.println("Transaction Status: " + transactionStatus);
+            System.out.println("Response Code: " + responseCode);
+
+            if ("00".equals(transactionStatus) && "00".equals(responseCode)) {
+                System.out.println("Payment SUCCESS");
+                return 1;
             } else {
-                return 0; // Failure
+                System.out.println("Payment FAILED - Status: " + transactionStatus + ", Response: " + responseCode);
+                return 0;
             }
         } else {
-            return 0; // Invalid signature
+            System.out.println("INVALID SIGNATURE");
+            return 0;
         }
     }
 
@@ -223,18 +254,17 @@ public class VnPayService {
         Collections.sort(fieldNames);
         StringBuilder sb = new StringBuilder();
         Iterator<String> itr = fieldNames.iterator();
+
         while (itr.hasNext()) {
             String fieldName = itr.next();
             String fieldValue = fields.get(fieldName);
-            sb.append(fieldName);
-            sb.append("=");
-            try {
-                sb.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-            if (itr.hasNext()) {
-                sb.append("&");
+            if (fieldValue != null && !fieldValue.isEmpty()) {
+                sb.append(fieldName);
+                sb.append("=");
+                sb.append(urlEncode(fieldValue));
+                if (itr.hasNext()) {
+                    sb.append("&");
+                }
             }
         }
         return hmacSHA512(vnp_HashSecret, sb.toString());

@@ -36,6 +36,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         // === PUBLIC ENDPOINTS ===
+
                         .requestMatchers("/auth/**").permitAll()  // Login, logout, refresh
                         .requestMatchers(HttpMethod.POST, "/users").permitAll()  // Đăng ký tài khoản
                         .requestMatchers(HttpMethod.GET, "/products/**").permitAll()  // Xem sản phẩm
@@ -43,6 +44,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/brands/**").permitAll()  // Xem thương hiệu
                         .requestMatchers(HttpMethod.GET, "/percentage-promotions/**").permitAll()  // Xem khuyến mãi %
                         .requestMatchers(HttpMethod.GET, "/amount-promotions/**").permitAll()  // Xem khuyến mãi giá cố định
+                        .requestMatchers(HttpMethod.GET, "/product-variants/colors").permitAll()  // Xem màu
+                        .requestMatchers(HttpMethod.POST, "/payment/create-payment").permitAll()  // Thanh toán
+                        .requestMatchers(HttpMethod.GET, "/payment/vnpay-return").permitAll()  //Url trả về
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // CORS
 
                         // === CART ENDPOINTS ===

@@ -10,64 +10,58 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
-@Controller
+import java.util.HashMap;
+import java.util.Map;
+
+@RestController
 @RequiredArgsConstructor
 @RequestMapping("/payment")
 public class PaymentController {
 
     private final VnPayService vnPayService;
-    private final OrderService orderService; // Inject OrderService
+    private final OrderService orderService;
 
-    // Hiển thị trang đặt hàng
-    @GetMapping
-    public String showOrderPage(){
-        return "order"; // Trả về file order.html
-    }
-
-    // Xử lý tạo URL thanh toán (sửa để trả về JSON cho frontend axios)
+    // Xử lý tạo URL thanh toán
     @PostMapping("/create-payment")
     public ResponseEntity<?> createPayment(HttpServletRequest request,
                                            @RequestBody PaymentRequest paymentRequest) { // Sử dụng RequestBody để nhận từ frontend
         long amount = paymentRequest.getAmount();
         String orderInfo = paymentRequest.getOrderInfo();
-        // Nhân amount với 100 vì VNPAY tính theo đơn vị xu
-        String vnpayUrl = vnPayService.createPaymentUrl(request, amount * 100, orderInfo);
+
+        String vnpayUrl = vnPayService.createPaymentUrl(request, amount, orderInfo);
         return ResponseEntity.ok(new PaymentResponse(vnpayUrl)); // Trả về { paymentUrl: vnpayUrl }
     }
 
     // Xử lý kết quả trả về từ VNPAY
     @GetMapping("/vnpay-return")
-    public String handleVnpayReturn(HttpServletRequest request, Model model) {
-        int status = vnPayService.orderReturn(request);
-        String statusText = status == 1 ? "Thành công" : "Thất bại";
+    public  ResponseEntity<?> handleVnpayReturn(HttpServletRequest request) {
+        try {
+            int status = vnPayService.orderReturn(request);
+            String orderInfo = request.getParameter("vnp_OrderInfo");
+            String orderId = extractOrderIdFromOrderInfo(orderInfo);
 
-        String orderInfo = request.getParameter("vnp_OrderInfo");
-        String orderId = extractOrderIdFromOrderInfo(orderInfo);
+            // Update order status
+            if (status == 1) {
+                orderService.updateOrderStatus(Long.valueOf(orderId), OrderStatus.PREPARING);
+            } else {
+                orderService.updateOrderStatus(Long.valueOf(orderId), OrderStatus.CANCELLED);
+            }
 
-        // Update order status với enum
-        if (status == 1) {
-            orderService.updateOrderStatus(Long.valueOf(orderId), OrderStatus.PREPARING);
-        } else {
-            orderService.updateOrderStatus(Long.valueOf(orderId), OrderStatus.CANCELLED);
+            // Trả về JSON response cho frontend
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", status == 1);
+            response.put("orderId", orderId);
+            response.put("message", status == 1 ? "Thanh toán thành công" : "Thanh toán thất bại");
+            response.put("transactionId", request.getParameter("vnp_TransactionNo"));
+            response.put("amount", request.getParameter("vnp_Amount"));
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Lỗi xử lý kết quả thanh toán: " + e.getMessage());
         }
-
-        String paymentTime = request.getParameter("vnp_PayDate");
-        String transactionId = request.getParameter("vnp_TransactionNo");
-        String totalPrice = request.getParameter("vnp_Amount");
-
-        model.addAttribute("orderId", orderId);
-        model.addAttribute("totalPrice", Long.parseLong(totalPrice) / 100);
-        model.addAttribute("paymentTime", paymentTime);
-        model.addAttribute("transactionId", transactionId);
-        model.addAttribute("status", statusText);
-
-        return "payment-result";
     }
 
     // Hàm extract orderId từ orderInfo (ví dụ)
