@@ -1,15 +1,16 @@
 package com.example.ModaMint_Backend.controller;
 
-import com.example.ModaMint_Backend.dto.request.chat.ChatRequest;
-import com.example.ModaMint_Backend.dto.response.ApiResponse;
-import com.example.ModaMint_Backend.dto.response.chat.ChatAIResponse;
+import com.example.ModaMint_Backend.dto.response.chat.Message;
 import com.example.ModaMint_Backend.service.ChatService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
@@ -38,4 +39,15 @@ public class ChatController {
     public ResponseEntity<Map<String, String>> ping() {
         return ResponseEntity.ok(Map.of("status", "Chat API is running!"));
     }
-}
+
+    @MessageMapping("/chat.sendMessage")
+    @SendTo("/topic/public")
+    public Message sendMessage(@Payload Message message) {
+        return message;
+    }
+
+    public Message addUser(@Payload Message message, SimpMessageHeaderAccessor headerAccessor) {
+        headerAccessor.getSessionAttributes().put("username", message.getSenderType());
+        return message;
+    }
+ }
