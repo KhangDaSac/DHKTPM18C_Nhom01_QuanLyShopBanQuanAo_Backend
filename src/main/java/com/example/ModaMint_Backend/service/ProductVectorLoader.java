@@ -27,7 +27,6 @@ public class ProductVectorLoader {
     public void loadProductsToVectorDB() {
         if (vectorStore.similaritySearch("product").isEmpty()) {
             List<Product> products = productRepository.findAll();
-            System.out.println( products);
             List<Document> documents = products.stream()
                     .map(p -> {
                         String variantsText = p.getProductVariants().stream()
@@ -51,9 +50,9 @@ public class ProductVectorLoader {
                     .toList();
 
             vectorStore.add(documents);
-            System.out.println("✅ Loaded " + documents.size() + " products into VectorDB.");
+            System.out.println("Loaded " + documents.size() + " products into VectorDB.");
         } else {
-            System.out.println("✅ VectorDB already initialized, skipping reload.");
+            System.out.println("VectorDB already initialized, skipping reload.");
         }
     }
 }
