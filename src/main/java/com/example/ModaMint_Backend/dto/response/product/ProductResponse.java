@@ -4,6 +4,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Data
@@ -21,4 +22,7 @@ public class ProductResponse {
     String brandName;
     String categoryName;
     Integer quantity; // Tổng số lượng từ tất cả variants
+
+    LocalDateTime createAt;
+    LocalDateTime updateAt;
 }

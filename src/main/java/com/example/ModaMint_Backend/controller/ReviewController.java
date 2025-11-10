@@ -116,4 +116,11 @@ public class ReviewController {
                 .message("Lấy tổng số lượng đánh giá thành công")
                 .build();
     }
+    @GetMapping("/latest")
+    public ApiResponse<List<ReviewResponse>> getLatest10Reviews() {
+        return ApiResponse.<List<ReviewResponse>>builder()
+                .result(reviewService.getLatest10Reviews())
+                .message("Lấy 10 đánh giá mới nhất thành công")
+                .build();
+    }
 }

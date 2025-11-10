@@ -170,4 +170,47 @@ public class ProductController {
                 .message("Lọc sản phẩm thành công")
                 .build();
     }
+
+    @GetMapping("/best-selling")
+    public ApiResponse<List<ProductResponse>> getBestSellingProducts() {
+        return ApiResponse.<List<ProductResponse>>builder()
+                .result(productService.getTop10BestSellingProducts())
+                .message("Lấy 10 sản phẩm bán chạy nhất thành công")
+                .build();
+    }
+    @GetMapping("/worst-selling")
+    public ApiResponse<List<ProductResponse>> getWorstSellingProducts() {
+        return ApiResponse.<List<ProductResponse>>builder()
+                .result(productService.getTop10WorstSellingProducts())
+                .message("Lấy 10 sản phẩm bán ít nhất thành công")
+                .build();
+    }
+    @GetMapping("/category/female")
+    public ApiResponse<List<ProductResponse>> getTop10FemaleCategoryProducts() {
+        return ApiResponse.<List<ProductResponse>>builder()
+                .result(productService.getTop10ProductsForFemaleCategory())
+                .message("Lấy 10 sản phẩm thuộc danh mục 'nữ' thành công")
+                .build();
+    }
+    @GetMapping("/category/male")
+    public ApiResponse<List<ProductResponse>> getTop10MaleCategoryProducts() {
+        return ApiResponse.<List<ProductResponse>>builder()
+                .result(productService.getTop10ProductsForMaleCategory())
+                .message("Lấy 10 sản phẩm thuộc danh mục 'nam' thành công")
+                .build();
+    }
+    @GetMapping("/random")
+    public ApiResponse<List<ProductResponse>> getRandomProducts() {
+        return ApiResponse.<List<ProductResponse>>builder()
+                .result(productService.getTop20RandomActiveProducts())
+                .message("Lấy 20 sản phẩm ngẫu nhiên thành công")
+                .build();
+    }
+    @GetMapping("/top-brands")
+    public ApiResponse<List<ProductResponse>> getProductsFromTop5Brands() {
+        return ApiResponse.<List<ProductResponse>>builder()
+                .result(productService.getProductsFromTop5Brands())
+                .message("Lấy sản phẩm từ top 5 thương hiệu thành công")
+                .build();
+    }
 }

@@ -14,11 +14,13 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -185,6 +187,71 @@ public class ProductService {
 
         return productRepository.findAll(spec)
                 .stream()
+                .map(productMapper::toProductResponse)
+                .toList();
+    }
+
+    public List<ProductResponse> getTop10BestSellingProducts() {
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Page<Product> productPage = productRepository.findBestSellingProducts(pageable);
+
+        return productPage.getContent()
+                .stream()
+                .map(productMapper::toProductResponse)
+                .toList();
+    }
+
+    public List<ProductResponse> getTop10WorstSellingProducts() {
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Page<Product> productPage = productRepository.findWorstSellingProducts(pageable);
+
+        return productPage.getContent()
+                .stream()
+                .map(productMapper::toProductResponse)
+                .toList();
+    }
+
+    public List<ProductResponse> getTop10ProductsForFemaleCategory() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Product> productPage = productRepository.findByCategoryNameContainingIgnoreCaseAndActiveTrue("nữ", pageable);
+
+        return productPage.getContent()
+                .stream()
+                .map(productMapper::toProductResponse)
+                .toList();
+    }
+
+    public List<ProductResponse> getTop10ProductsForMaleCategory() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Product> productPage = productRepository.findByCategoryNameContainingIgnoreCaseAndActiveTrue("nam", pageable);
+
+        return productPage.getContent()
+                .stream()
+                .map(productMapper::toProductResponse)
+                .toList();
+    }
+    public List<ProductResponse> getTop20RandomActiveProducts() {
+        Pageable pageable = PageRequest.of(0, 20);
+
+        Page<Product> productPage = productRepository.findRandomActiveProducts(pageable);
+
+        return productPage.getContent()
+                .stream()
+                .map(productMapper::toProductResponse)
+                .toList();
+    }
+    public List<ProductResponse> getProductsFromTop5Brands() {
+        Pageable top5Pageable = PageRequest.of(0, 5);
+
+        List<Long> top5BrandIds = productRepository.findTopBrandIdsByProductCount(top5Pageable).getContent();
+
+        if (top5BrandIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Product> products = productRepository.findByActiveTrueAndBrandIdIn(top5BrandIds);
+        return products.stream()
                 .map(productMapper::toProductResponse)
                 .toList();
     }

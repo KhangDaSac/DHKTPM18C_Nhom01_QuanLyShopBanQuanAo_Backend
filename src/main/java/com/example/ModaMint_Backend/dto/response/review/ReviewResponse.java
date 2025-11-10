@@ -21,6 +21,10 @@ public class ReviewResponse {
     Integer rating;
     String comment;
     LocalDateTime createAt;
-
     Set<String> images;
+
+    String firstName;
+    String lastName;
+    String image;
+    String productImage;
 }
