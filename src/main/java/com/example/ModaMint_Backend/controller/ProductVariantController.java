@@ -2,6 +2,7 @@ package com.example.ModaMint_Backend.controller;
 
 import com.example.ModaMint_Backend.dto.request.productvariant.ProductVariantRequest;
 import com.example.ModaMint_Backend.dto.response.ApiResponse;
+import com.example.ModaMint_Backend.dto.response.productvariant.ProductVariantColorResponse;
 import com.example.ModaMint_Backend.dto.response.productvariant.ProductVariantResponse;
 import com.example.ModaMint_Backend.service.ProductVariantService;
 import jakarta.validation.Valid;
@@ -102,6 +103,14 @@ public class ProductVariantController {
         return ApiResponse.<Long>builder()
                 .result(productVariantService.getTotalProductVariantCount())
                 .message("Lấy tổng số lượng biến thể sản phẩm thành công")
+                .build();
+    }
+
+    @GetMapping("/colors")
+    public ApiResponse<List<ProductVariantColorResponse>> getTopColors() {
+        return ApiResponse.<List<ProductVariantColorResponse>>builder()
+                .result(productVariantService.getTopColors(4))  // Hardcode limit 4, hoặc làm param nếu cần
+                .message("Lấy danh sách màu phổ biến thành công")
                 .build();
     }
 }

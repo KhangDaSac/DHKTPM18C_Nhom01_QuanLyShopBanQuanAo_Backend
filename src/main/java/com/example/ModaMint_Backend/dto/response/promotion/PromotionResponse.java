@@ -13,7 +13,6 @@ package com.example.ModaMint_Backend.dto.response.promotion;
  * @version: 1.0
  */
 // (Thay đổi package cho đúng)
-import com.example.ModaMint_Backend.enums.PromotionType;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,7 +32,6 @@ public class PromotionResponse {
     Long id;
     String code;
     String value; // "10%" hoặc "100000"
-    PromotionType type; // PERCENT hoặc AMOUNT
     BigDecimal minOrderValue;
     LocalDateTime startAt;
     LocalDateTime endAt;

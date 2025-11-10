@@ -41,6 +41,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/users").permitAll()  // Đăng ký tài khoản
                         .requestMatchers(HttpMethod.GET, "/products/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/product-variants/**").permitAll()// Xem sản phẩm
+                        .requestMatchers(HttpMethod.GET, "/products/**").permitAll()  // Xem sản phẩm
                         .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()  // Xem danh mục
                         .requestMatchers(HttpMethod.GET, "/brands/**").permitAll()  // Xem thương hiệu
                         .requestMatchers(HttpMethod.GET, "/percentage-promotions/**").permitAll()  // Xem khuyến mãi %
@@ -48,6 +49,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/cart/**").hasRole("CUSTOMER") // bắt buộc CUSTOMER// Xem giỏ hàng
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // CORS
+                        .requestMatchers(HttpMethod.GET, "/product-variants/colors").permitAll()  // Lấy màu
+                        .requestMatchers(HttpMethod.POST, "/cart/**").hasRole("CUSTOMER") // bắt buộc CUSTOMER// Xem giỏ hàng
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // CORS
 
                         // === TẤT CẢ ENDPOINTS KHÁC CẦN AUTHENTICATION ===
                         .anyRequest().authenticated()
