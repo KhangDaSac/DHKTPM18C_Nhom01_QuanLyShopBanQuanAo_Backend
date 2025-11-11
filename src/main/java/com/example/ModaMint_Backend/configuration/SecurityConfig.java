@@ -49,7 +49,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/product-variants/colors").permitAll()  // Xem màu
                         .requestMatchers(HttpMethod.POST, "/payment/create-payment").permitAll()  // Thanh toán
                         .requestMatchers(HttpMethod.GET, "/payment/vnpay-return").permitAll()  //Url trả về
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // CORS
 
                         // === CART ENDPOINTS ===
                         // Cho phép cả guest (sessionId) và user đã đăng nhập (JWT token)
@@ -66,6 +65,8 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/reviews/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/reviews/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/chat").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // CORS
                         // === TẤT CẢ ENDPOINTS KHÁC CẦN AUTHENTICATION ===
                         .anyRequest().authenticated()
                 )
