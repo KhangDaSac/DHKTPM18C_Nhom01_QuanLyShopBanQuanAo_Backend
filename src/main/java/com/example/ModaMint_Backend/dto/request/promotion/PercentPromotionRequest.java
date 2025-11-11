@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class PercentagePromotionRequest {
+public class PercentPromotionRequest {
 
     @NotBlank(message = "Tên khuyến mãi không được để trống")
     String name;
@@ -25,6 +25,9 @@ public class PercentagePromotionRequest {
     @DecimalMin(value = "0.01", message = "Phần trăm giảm giá phải lớn hơn 0")
     @DecimalMax(value = "100", message = "Phần trăm giảm giá không được vượt quá 100")
     BigDecimal discountPercent;
+
+    @DecimalMin(value = "0", message = "Giảm giá tối đa phải lớn hơn hoặc bằng 0")
+    BigDecimal maxDiscount;
 
     @NotNull(message = "Giá trị đơn tối thiểu không được để trống")
     @DecimalMin(value = "0", message = "Giá trị đơn tối thiểu phải lớn hơn hoặc bằng 0")
