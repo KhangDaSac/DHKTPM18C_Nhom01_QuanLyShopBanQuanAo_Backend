@@ -42,16 +42,15 @@ public class ChatController {
 
     @MessageMapping("/sendMessage/shop")
     @SendTo("/topic/messages/shop")
-    public ApiResponse<MessageResponse> handleShopMessage(MessageRequest request) {
+    public ApiResponse<MessageResponse> handleShopMessage(@RequestBody MessageRequest request) {
         return ApiResponse.<MessageResponse>builder()
                 .result(chatService.chatWithShop(request))
                 .message("Thành công")
                 .build();
     }
 
-    @MessageMapping("/sendMessage/ai")
-    @SendTo("/topic/messages/ai")
-    public ApiResponse<MessageResponse>  handleAiMessage(MessageRequest request) {
+    @PostMapping("/sendMessage/ai")
+    public ApiResponse<MessageResponse>  handleAiMessage(@RequestBody MessageRequest request) {
         return ApiResponse.<MessageResponse>builder()
                 .result(chatService.chatWithAi(request))
                 .message("Thành công")

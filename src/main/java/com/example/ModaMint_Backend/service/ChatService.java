@@ -62,6 +62,7 @@ public class ChatService {
     }
 
     public MessageResponse chatWithAi(MessageRequest request) {
+        System.out.println("ChatService.chatWithAi called with request: " + request);
         Conversation conversation = conversationRepository.findById(request.getConversationId())
                 .orElseThrow(() -> new AppException(ErrorCode.CONVERSATION_NOT_FOUND));
         productVectorLoader.loadProductsToVectorDB();
