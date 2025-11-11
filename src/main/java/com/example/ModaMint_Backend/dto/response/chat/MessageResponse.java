@@ -1,6 +1,5 @@
 package com.example.ModaMint_Backend.dto.response.chat;
 
-import com.example.ModaMint_Backend.entity.Conversation;
 import com.example.ModaMint_Backend.enums.SenderType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
@@ -14,7 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Message {
+public class MessageResponse {
     Long id;
     String content;
     LocalDateTime timestamp;

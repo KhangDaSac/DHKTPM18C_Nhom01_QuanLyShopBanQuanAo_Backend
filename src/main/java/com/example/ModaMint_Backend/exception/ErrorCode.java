@@ -28,7 +28,15 @@ public enum ErrorCode {
     PROMOTION_NOT_FOUND(2011, "Promotion not found", HttpStatus.NOT_FOUND),
     PRODUCT_IMAGE_NOT_FOUND(2012, "Product image not found", HttpStatus.NOT_FOUND),
     PROMOTION_CODE_EXISTED(2013, "Promotion code already exists", HttpStatus.BAD_REQUEST),
-    INVALID_INPUT(3000, "Invalid input", HttpStatus.BAD_REQUEST);
+    INVALID_INPUT(3000, "Invalid input", HttpStatus.BAD_REQUEST),
+
+
+    CONVERSATION_NOT_FOUND(4001, "Conversation not found", HttpStatus.NOT_FOUND),
+    MESSAGE_NOT_FOUND(4002, "Message not found", HttpStatus.NOT_FOUND)
+    ;
+
+
+
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;
