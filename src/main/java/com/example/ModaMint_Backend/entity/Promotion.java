@@ -9,9 +9,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "promotions")
-@Inheritance(strategy = InheritanceType.JOINED)
-@DiscriminatorColumn(name = "promotion_type", discriminatorType = DiscriminatorType.STRING)
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,7 +18,6 @@ import java.time.LocalDateTime;
 public abstract class Promotion {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "promotion_id")
     Long promotionId;
 

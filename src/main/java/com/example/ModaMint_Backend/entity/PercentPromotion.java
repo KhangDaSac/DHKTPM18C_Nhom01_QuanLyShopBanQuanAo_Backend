@@ -9,7 +9,6 @@ import lombok.experimental.FieldDefaults;
 
 @Entity
 @Table(name = "percent_promotion")
-@PrimaryKeyJoinColumn(name = "promotion_id")
 @Getter
 @Setter
 @NoArgsConstructor
