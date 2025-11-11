@@ -5,6 +5,9 @@ import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 
+import java.util.Set;
+
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -18,4 +21,10 @@ public class ReviewResponse {
     Integer rating;
     String comment;
     LocalDateTime createAt;
+    Set<String> images;
+
+    String firstName;
+    String lastName;
+    String image;
+    String productImage;
 }
