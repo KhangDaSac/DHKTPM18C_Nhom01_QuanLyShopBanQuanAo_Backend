@@ -33,17 +33,15 @@ public class    CheckoutService {
     private final CustomerRepository customerRepository;
     private final AddressRepository addressRepository;
     private final ProductVariantRepository productVariantRepository;
-    // Promotion entity has been removed
-    // private final PromotionRepository promotionRepository;
+    private final PercentPromotionRepository percentPromotionRepository;
+    private final AmountPromotionRepository amountPromotionRepository;
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final CartService cartService;
 
     /**
      * Lấy danh sách mã giảm giá khả dụng cho đơn hàng
-     * NOTE: Promotion entity has been removed, this method is temporarily disabled
      */
-    /*
     public List<PromotionSummary> getAvailablePromotions(String customerId) {
         log.info("Getting available promotions for customer: {}", customerId);
         
@@ -55,24 +53,26 @@ public class    CheckoutService {
         LocalDateTime now = LocalDateTime.now();
         
         List<PromotionSummary> promotions = new ArrayList<>();
-        
-        // Lấy tất cả promotions đang active
-        List<Promotion> activePromotions = promotionRepository.findActivePromotions(now);
-        
-        for (Promotion promo : activePromotions) {
-            if (promo.getMinOrderValue() == null || cartTotal.compareTo(promo.getMinOrderValue()) >= 0) {
-                promotions.add(buildPromotionSummary(promo));
+
+        List<PercentPromotion> percentPromotions = percentPromotionRepository.findByIsActive(true);
+        for (PercentPromotion promo : percentPromotions) {
+            if (isPromotionValid(promo, cartTotal, now)) {
+                promotions.add(buildPercentPromotionSummary(promo));
+            }
+        }
+
+        List<AmountPromotion> amountPromotions = amountPromotionRepository.findByIsActive(true);
+        for (AmountPromotion promo : amountPromotions) {
+            if (isPromotionValid(promo, cartTotal, now)) {
+                promotions.add(buildAmountPromotionSummary(promo));
             }
         }
         
         log.info("Found {} available promotions", promotions.size());
         return promotions;
     }
-    */
 
-    /**
-     * Thực hiện checkout và tạo đơn hàng
-     */
+
     @Transactional
     public CheckoutResponse checkout(CheckoutRequest request) {
         log.info("Processing checkout for customer: {}", request.getCustomerId());
@@ -85,9 +85,9 @@ public class    CheckoutService {
         Address address = addressRepository.findById(request.getShippingAddressId())
                 .orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_FOUND));
         
-//        if (!address.getCustomer().getUserId().equals(request.getCustomerId())) {
-//            throw new AppException(ErrorCode.UNAUTHORIZED);
-//        }
+        if (!address.getCustomer().getUser().getId().equals(request.getCustomerId())) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
         
         // 3. Get cart items
         Cart cart = cartRepository.findByCustomerId(request.getCustomerId())
@@ -103,14 +103,14 @@ public class    CheckoutService {
         BigDecimal subtotal = calculateCartTotal(cart.getId());
         BigDecimal shippingFee = BigDecimal.valueOf(30000); // Fixed shipping fee
         
-        // 5. Apply promotion - DISABLED: Promotion entity removed
-        // PromotionResult promotionResult = applyPromotion(
-        //         request.getPercentagePromotionCode(),
-        //         request.getAmountPromotionCode(),
-        //         subtotal
-        // );
+        // 5. Apply promotion
+        PromotionResult promotionResult = applyPromotion(
+                request.getPercentagePromotionCode(),
+                request.getAmountPromotionCode(),
+                subtotal
+        );
         
-        BigDecimal discountAmount = BigDecimal.ZERO; // No promotion applied
+        BigDecimal discountAmount = promotionResult.getDiscountAmount();
         BigDecimal totalAmount = subtotal.add(shippingFee).subtract(discountAmount);
         
         // 6. Create order
@@ -121,8 +121,8 @@ public class    CheckoutService {
                 .customerId(request.getCustomerId())
                 .totalAmount(subtotal.add(shippingFee)) // Tổng trước khi giảm
                 .subTotal(totalAmount) // Tổng sau khi giảm
-//                .promotionId(promotionResult.getPercentagePromotionId() != null ?
-//                        promotionResult.getPercentagePromotionId() : promotionResult.getAmountPromotionId())
+                .percentPromotionId(promotionResult.getPercentagePromotionId())
+                .amountPromotionId(promotionResult.getAmountPromotionId())
                 .promotionValue(discountAmount)
                 .orderStatus(OrderStatus.PENDING)
                 .paymentMethod(request.getPaymentMethod())
@@ -172,13 +172,13 @@ public class    CheckoutService {
         cartService.clearCartForUser(request.getCustomerId());
         log.info("Cart cleared for customer: {}", request.getCustomerId());
         
-        // 9. Update promotion quantity - DISABLED: Promotion entity removed
-        // if (promotionResult.getPercentagePromotionId() != null) {
-        //     decreasePromotionQuantity(promotionResult.getPercentagePromotionId(), true);
-        // }
-        // if (promotionResult.getAmountPromotionId() != null) {
-        //     decreasePromotionQuantity(promotionResult.getAmountPromotionId(), false);
-        // }
+        // 9. Update promotion quantity
+        if (promotionResult.getPercentagePromotionId() != null) {
+            decreasePromotionQuantity(promotionResult.getPercentagePromotionId(), true);
+        }
+        if (promotionResult.getAmountPromotionId() != null) {
+            decreasePromotionQuantity(promotionResult.getAmountPromotionId(), false);
+        }
         
         // 10. Build response
         return CheckoutResponse.builder()
@@ -192,7 +192,7 @@ public class    CheckoutService {
                 .orderItems(orderItemResponses)
                 .subtotal(subtotal)
                 .shippingFee(shippingFee)
-                .appliedPromotion(null) // Promotion disabled
+                .appliedPromotion(promotionResult.getPromotionSummary())
                 .discountAmount(discountAmount)
                 .totalAmount(totalAmount)
                 .paymentMethod(request.getPaymentMethod().toString())
@@ -214,7 +214,6 @@ public class    CheckoutService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    /* DISABLED: Promotion entity has been removed
     private PromotionResult applyPromotion(String percentageCode, String amountCode, BigDecimal orderTotal) {
         PromotionResult result = new PromotionResult();
         result.setDiscountAmount(BigDecimal.ZERO);
@@ -223,35 +222,39 @@ public class    CheckoutService {
         
         // Try percentage promotion first
         if (percentageCode != null && !percentageCode.isBlank()) {
-            Promotion promo = promotionRepository.findByCode(percentageCode)
+            PercentPromotion promo = percentPromotionRepository.findByCode(percentageCode)
                     .orElse(null);
             
-            if (promo != null && validatePromotion(promo, orderTotal, now)) {
-                BigDecimal discountPercent = parsePercentage(promo.getValue());
-                BigDecimal discount = orderTotal.multiply(discountPercent)
+            if (promo != null && isPromotionValid(promo, orderTotal, now)) {
+                BigDecimal discount = orderTotal.multiply(BigDecimal.valueOf(promo.getPercent()))
                         .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
                 
-                result.setPercentagePromotionId(promo.getId());
-                result.setDiscountAmount(discount);
-                result.setPromotionSummary(buildPromotionSummary(promo));
+                // Apply max discount limit if exists
+                if (promo.getMaxDiscount() > 0 && discount.compareTo(BigDecimal.valueOf(promo.getMaxDiscount())) > 0) {
+                    discount = BigDecimal.valueOf(promo.getMaxDiscount());
+                }
                 
-                log.info("Applied percentage promotion: {} - {}", promo.getCode(), promo.getValue());
+                result.setPercentagePromotionId(promo.getPromotionId());
+                result.setDiscountAmount(discount);
+                result.setPromotionSummary(buildPercentPromotionSummary(promo));
+                
+                log.info("Applied percentage promotion: {} - {}%", promo.getCode(), promo.getPercent());
                 return result;
             }
         }
         
         // Try amount promotion if percentage not applied
         if (amountCode != null && !amountCode.isBlank()) {
-            Promotion promo = promotionRepository.findByCode(amountCode)
+            AmountPromotion promo = amountPromotionRepository.findByCode(amountCode)
                     .orElse(null);
             
-            if (promo != null && validatePromotion(promo, orderTotal, now)) {
-                BigDecimal discountAmount = parseAmount(promo.getValue());
-                result.setAmountPromotionId(promo.getId());
+            if (promo != null && isPromotionValid(promo, orderTotal, now)) {
+                BigDecimal discountAmount = BigDecimal.valueOf(promo.getDiscount());
+                result.setAmountPromotionId(promo.getPromotionId());
                 result.setDiscountAmount(discountAmount);
-                result.setPromotionSummary(buildPromotionSummary(promo));
+                result.setPromotionSummary(buildAmountPromotionSummary(promo));
                 
-                log.info("Applied amount promotion: {} - {}", promo.getCode(), promo.getValue());
+                log.info("Applied amount promotion: {} - {}đ", promo.getCode(), promo.getDiscount());
                 return result;
             }
         }
@@ -259,61 +262,81 @@ public class    CheckoutService {
         return result;
     }
 
-    private boolean validatePromotion(Promotion promo, BigDecimal orderTotal, LocalDateTime now) {
-        if (!promo.getIsActive()) return false;
-        if (promo.getQuantity() == null || promo.getQuantity() <= 0) return false;
-        if (promo.getStartAt() != null && now.isBefore(promo.getStartAt())) return false;
-        if (promo.getEndAt() != null && now.isAfter(promo.getEndAt())) return false;
-        if (promo.getMinOrderValue() != null && orderTotal.compareTo(promo.getMinOrderValue()) < 0) return false;
+    private void decreasePromotionQuantity(Long promotionId, boolean isPercentage) {
+        if (isPercentage) {
+            PercentPromotion promo = percentPromotionRepository.findById(promotionId).orElse(null);
+            if (promo != null && promo.getQuantity() != null && promo.getQuantity() > 0) {
+                promo.setQuantity(promo.getQuantity() - 1);
+                percentPromotionRepository.save(promo);
+                log.info("Decreased quantity for percent promotion: {} to {}", promo.getCode(), promo.getQuantity());
+            }
+        } else {
+            AmountPromotion promo = amountPromotionRepository.findById(promotionId).orElse(null);
+            if (promo != null && promo.getQuantity() != null && promo.getQuantity() > 0) {
+                promo.setQuantity(promo.getQuantity() - 1);
+                amountPromotionRepository.save(promo);
+                log.info("Decreased quantity for amount promotion: {} to {}", promo.getCode(), promo.getQuantity());
+            }
+        }
+    }
+
+    private boolean isPromotionValid(Promotion promo, BigDecimal cartTotal, LocalDateTime now) {
+        // Check if promotion is within valid date range
+        if (promo.getEffective() != null && now.isBefore(promo.getEffective())) {
+            return false;
+        }
+        if (promo.getExpiration() != null && now.isAfter(promo.getExpiration())) {
+            return false;
+        }
+        
+        // Check if quantity is available
+        if (promo.getQuantity() != null && promo.getQuantity() <= 0) {
+            return false;
+        }
+        
+        // Check minimum order value
+        if (promo.getMinOrderValue() != null && cartTotal.compareTo(promo.getMinOrderValue()) < 0) {
+            return false;
+        }
         
         return true;
     }
 
-    private void decreasePromotionQuantity(Long promotionId, boolean isPercentage) {
-        Promotion promo = promotionRepository.findById(promotionId).orElse(null);
-        if (promo != null && promo.getQuantity() != null) {
-            promo.setQuantity(promo.getQuantity() - 1);
-            promotionRepository.save(promo);
-        }
-    }
-
-    private PromotionSummary buildPromotionSummary(Promotion promo) {
-        // Parse value để xác định type (giả sử value format: "10%" hoặc "100000")
-        String value = promo.getValue();
-        boolean isPercentage = value != null && value.contains("%");
-        
+    private PromotionSummary buildPercentPromotionSummary(PercentPromotion promo) {
         return PromotionSummary.builder()
-                .id(promo.getId())
-                .name(promo.getCode()) // Sử dụng code làm name tạm
+                .id(promo.getPromotionId())
+                .name(promo.getName())
                 .code(promo.getCode())
-                .type(isPercentage ? "PERCENTAGE" : "AMOUNT")
-                .discountPercent(isPercentage ? parsePercentage(value) : null)
-                .discountAmount(isPercentage ? null : parseAmount(value))
+                .type("PERCENTAGE")
+                .discountPercent(BigDecimal.valueOf(promo.getPercent()))
+                .discountAmount(null)
                 .minOrderValue(promo.getMinOrderValue())
-                .startAt(promo.getStartAt())
-                .endAt(promo.getEndAt())
+                .startAt(promo.getEffective())
+                .endAt(promo.getExpiration())
                 .remainingQuantity(promo.getQuantity())
                 .isActive(promo.getIsActive())
-                .description("Giảm " + value + " cho đơn hàng từ " + 
-                        (promo.getMinOrderValue() != null ? promo.getMinOrderValue() : 0) + "đ")
+                .description("Giảm " + promo.getPercent() + "% cho đơn hàng từ " + 
+                        (promo.getMinOrderValue() != null ? promo.getMinOrderValue() : 0) + "đ" +
+                        (promo.getMaxDiscount() > 0 ? " (tối đa " + promo.getMaxDiscount() + "đ)" : ""))
                 .build();
     }
-    */
     
-    private BigDecimal parsePercentage(String value) {
-        try {
-            return new BigDecimal(value.replace("%", "").trim());
-        } catch (NumberFormatException e) {
-            return BigDecimal.ZERO;
-        }
-    }
-    
-    private BigDecimal parseAmount(String value) {
-        try {
-            return new BigDecimal(value.trim());
-        } catch (NumberFormatException e) {
-            return BigDecimal.ZERO;
-        }
+    private PromotionSummary buildAmountPromotionSummary(AmountPromotion promo) {
+        return PromotionSummary.builder()
+                .id(promo.getPromotionId())
+                .name(promo.getName())
+                .code(promo.getCode())
+                .type("AMOUNT")
+                .discountPercent(null)
+                .discountAmount(BigDecimal.valueOf(promo.getDiscount()))
+                .minOrderValue(promo.getMinOrderValue())
+                .startAt(promo.getEffective())
+                .endAt(promo.getExpiration())
+                .remainingQuantity(promo.getQuantity())
+                .isActive(promo.getIsActive())
+                .description("Giảm " + promo.getDiscount() + "đ cho đơn hàng từ " + 
+                        (promo.getMinOrderValue() != null ? promo.getMinOrderValue() : 0) + "đ")
+                .build();
     }
 
     private AddressResponse buildAddressResponse(Address address) {

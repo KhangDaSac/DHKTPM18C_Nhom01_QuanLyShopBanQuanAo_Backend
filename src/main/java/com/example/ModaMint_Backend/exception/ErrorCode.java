@@ -32,6 +32,7 @@ public enum ErrorCode {
     CART_EMPTY(2015, "Cart is empty", HttpStatus.BAD_REQUEST),
     ADDRESS_NOT_FOUND(2016, "Address not found", HttpStatus.NOT_FOUND),
     UNAUTHORIZED(2017, "Unauthorized access", HttpStatus.FORBIDDEN),
+    PROMOTION_INVALID(2018, "Promotion is not valid for this order", HttpStatus.BAD_REQUEST),
     INVALID_INPUT(3000, "Invalid input", HttpStatus.BAD_REQUEST);
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

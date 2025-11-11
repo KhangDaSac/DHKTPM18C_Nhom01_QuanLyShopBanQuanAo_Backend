@@ -2,6 +2,7 @@ package com.example.ModaMint_Backend.controller;
 
 
 import com.example.ModaMint_Backend.dto.request.cart.AddCartItemRequest;
+import com.example.ModaMint_Backend.dto.request.cart.UpdateCartItemRequest;
 import com.example.ModaMint_Backend.dto.request.cartitem.CartItemRequest;
 import com.example.ModaMint_Backend.dto.response.ApiResponse;
 import com.example.ModaMint_Backend.dto.response.cart.CartDto;
@@ -94,6 +95,48 @@ public class CartController {
                     .result(null)
                     .build();
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(resp);
+        }
+    }
+
+    @PutMapping("/items/{itemId}")
+    public ResponseEntity<ApiResponse<CartItemDto>> updateItemQuantity(
+            @PathVariable Long itemId,
+            @RequestBody UpdateCartItemRequest req) {
+        try {
+            CartItemDto updated = cartService.updateItemQuantity(itemId, req);
+            ApiResponse<CartItemDto> resp = ApiResponse.<CartItemDto>builder()
+                    .code(1000)
+                    .message("Cập nhật số lượng thành công")
+                    .result(updated)
+                    .build();
+            return ResponseEntity.ok(resp);
+        } catch (Exception ex) {
+            ApiResponse<CartItemDto> resp = ApiResponse.<CartItemDto>builder()
+                    .code(400)
+                    .message("Không thể cập nhật: " + ex.getMessage())
+                    .result(null)
+                    .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(resp);
+        }
+    }
+
+    @DeleteMapping("/items/{itemId}")
+    public ResponseEntity<ApiResponse<Void>> deleteItem(@PathVariable Long itemId) {
+        try {
+            cartService.removeItem(itemId);
+            ApiResponse<Void> resp = ApiResponse.<Void>builder()
+                    .code(1000)
+                    .message("Xóa sản phẩm thành công")
+                    .result(null)
+                    .build();
+            return ResponseEntity.ok(resp);
+        } catch (Exception ex) {
+            ApiResponse<Void> resp = ApiResponse.<Void>builder()
+                    .code(400)
+                    .message("Không thể xóa: " + ex.getMessage())
+                    .result(null)
+                    .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(resp);
         }
     }
 

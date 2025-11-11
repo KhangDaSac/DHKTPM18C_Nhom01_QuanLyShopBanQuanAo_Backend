@@ -8,6 +8,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -50,7 +51,19 @@ public class FavoriteService {
         .build();
     }
 
+    @Transactional
     public void removeFavorite(String userId, Long productId) {
-        favoriteRepository.deleteByUserIdAndProductId(userId, productId);
+        System.out.println("DEBUG: Removing favorite - userId: " + userId + ", productId: " + productId);
+        
+        // Kiểm tra xem favorite có tồn tại không
+        boolean exists = favoriteRepository.existsByUserIdAndProductId(userId, productId);
+        System.out.println("DEBUG: Favorite exists: " + exists);
+        
+        if (exists) {
+            favoriteRepository.deleteByUserIdAndProductId(userId, productId);
+            System.out.println("DEBUG: Favorite deleted successfully");
+        } else {
+            System.out.println("DEBUG: Favorite not found");
+        }
     }
 }

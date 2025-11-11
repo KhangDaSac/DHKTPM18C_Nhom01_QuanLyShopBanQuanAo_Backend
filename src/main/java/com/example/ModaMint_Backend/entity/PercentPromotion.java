@@ -8,15 +8,17 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 @Entity
-@Table(name = "amount_promotion")
+@Table(name = "percent_promotion")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AmountPromotion extends Promotion {
+public class PercentPromotion extends Promotion {
 
-    @Column(name = "discount")
-    double discount;
+    @Column(name = "percent")
+    double percent;
+
+    @Column(name = "max_discount")
+    double maxDiscount;
 }
-
