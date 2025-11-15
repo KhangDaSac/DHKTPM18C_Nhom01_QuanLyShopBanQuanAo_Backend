@@ -65,6 +65,7 @@ public class SecurityConfig {
                         // CORS
                         .requestMatchers(HttpMethod.GET, "/product-variants/colors").permitAll()  // Lấy màu
                         .requestMatchers(HttpMethod.POST, "/cart/**").hasRole("CUSTOMER") // bắt buộc CUSTOMER// Xem giỏ hàng
+                        .requestMatchers(HttpMethod.POST, "/chat").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // CORS
 
                         .requestMatchers(HttpMethod.GET, "/reviews/**").permitAll()

@@ -46,8 +46,6 @@ public class AuthenticationController {
                 .build();
     }
 
-
-
     @PostMapping("/refresh")
     ApiResponse<RefreshResponse> refresh(@CookieValue("refreshToken") String refreshToken)
             throws JOSEException, ParseException {

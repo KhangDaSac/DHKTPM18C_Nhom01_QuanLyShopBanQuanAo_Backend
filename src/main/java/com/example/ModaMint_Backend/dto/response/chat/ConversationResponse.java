@@ -1,20 +1,16 @@
 package com.example.ModaMint_Backend.dto.response.chat;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.util.Set;
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ProductResponse {
+public class ConversationResponse {
     Long id;
-    String name;
-    String brand;
-    String category;
-    String description;
-    String active;
-    Set<ProductVariantResponse> productVariants;
+    Boolean isActive;
 }
