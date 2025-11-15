@@ -169,7 +169,7 @@ public class    CheckoutService {
         }
         
         // 8. Clear cart after successful order using CartService
-        cartService.clearCartForUser(request.getCustomerId());
+        cartService.clearCart(request.getCustomerId());
         log.info("Cart cleared for customer: {}", request.getCustomerId());
         
         // 9. Update promotion quantity

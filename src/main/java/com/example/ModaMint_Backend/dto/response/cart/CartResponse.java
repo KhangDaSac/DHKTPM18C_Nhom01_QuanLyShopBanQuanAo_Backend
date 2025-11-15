@@ -10,11 +10,8 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CartResponse {
-    Long id;
-    String sessionId;
-    List<CartItemDto> items;
-    Long subtotal;
-    Long shipping;
-    Long total;
-
+    Long cartId;
+    String customerId;
+    List<com.example.ModaMint_Backend.dto.response.cart.CartItemResponse> items;
+    BigDecimal totalPrice;
 }
