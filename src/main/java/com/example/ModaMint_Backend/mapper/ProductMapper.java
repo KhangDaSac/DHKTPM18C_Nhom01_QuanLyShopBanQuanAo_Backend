@@ -27,6 +27,8 @@ public interface ProductMapper {
     @Mapping(target = "reviews", ignore = true)
     Product toProduct(ProductRequest request);
 
+    @Mapping(target = "createAt", ignore = true)
+    @Mapping(target = "updateAt", ignore = true)
     @Mapping(source = "brand.name", target = "brandName")
     @Mapping(source = "category.name", target = "categoryName")
     @Mapping(source = "productVariants", target = "productVariants", qualifiedByName = "mapProductVariants")

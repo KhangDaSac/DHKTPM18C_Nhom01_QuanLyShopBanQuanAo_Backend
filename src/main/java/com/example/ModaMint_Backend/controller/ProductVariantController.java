@@ -105,6 +105,7 @@ public class ProductVariantController {
                 .message("Lấy tổng số lượng biến thể sản phẩm thành công")
                 .build();
     }
+
     @GetMapping("/colors")
     public ApiResponse<List<ProductVariantColorResponse>> getTopColors() {
         return ApiResponse.<List<ProductVariantColorResponse>>builder()

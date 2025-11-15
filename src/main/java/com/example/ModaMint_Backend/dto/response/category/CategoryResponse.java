@@ -14,4 +14,5 @@ public class CategoryResponse {
     Boolean isActive;
     Integer productCount; // Số lượng sản phẩm trong danh mục
     Long parentId;
+    String image;
 }

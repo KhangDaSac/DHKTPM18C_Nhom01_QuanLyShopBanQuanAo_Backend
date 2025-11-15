@@ -91,4 +91,11 @@ public class ReviewService {
                 .average()
                 .orElse(0.0);
     }
+
+    public List<ReviewResponse> getLatest10Reviews() {
+        List<Review> latestReviews = reviewRepository.findTop10ByOrderByCreateAtDesc();
+        return latestReviews.stream()
+                .map(reviewMapper::toReviewResponse)
+                .toList();
+    }
 }

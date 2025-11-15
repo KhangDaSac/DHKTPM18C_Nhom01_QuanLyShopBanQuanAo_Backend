@@ -5,6 +5,8 @@ import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.time.LocalDateTime;
+
 
 @Data
 @Builder
@@ -22,4 +24,7 @@ public class ProductResponse {
     List<String> images; // Danh sách URL ảnh
     List<ProductVariantResponse> productVariants; // Danh sách variants
     Integer quantity; // Tổng số lượng từ tất cả variants
+
+    LocalDateTime createAt;
+    LocalDateTime updateAt;
 }

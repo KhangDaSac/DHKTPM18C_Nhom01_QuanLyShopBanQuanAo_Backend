@@ -11,6 +11,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -123,5 +124,18 @@ public class CategoryService {
                 .stream()
                 .filter(Category::getIsActive)
                 .count();
+    }
+
+    //QuocHuy
+    public List<CategoryResponse> getTopActiveLeafCategoriesByProductCount() {
+
+        Pageable top8Pageable = PageRequest.of(0, 8);
+
+        Page<Category> categoryPage = categoryRepository.findTopLeafCategoriesByProductCount(top8Pageable);
+
+        return categoryPage.getContent()
+                .stream()
+                .map(categoryMapper::toCategoryResponse)
+                .toList();
     }
 }

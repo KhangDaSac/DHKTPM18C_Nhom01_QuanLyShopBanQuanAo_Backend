@@ -26,4 +26,7 @@ public class Category {
 
     @OneToMany(mappedBy = "category")
     Set<Product> products;
+
+    @Column(name = "image")
+    String image;
 }
