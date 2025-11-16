@@ -22,7 +22,6 @@ public interface UserMapper {
     User toUser(UserCreationRequest request);
 
     @Mapping(target = "roles", expression = "java(user.getRoles().stream().map(role -> role.getName().name()).collect(java.util.stream.Collectors.toSet()))")
-    @Mapping(target = "id", ignore = true)
     @Mapping(source = "image", target = "image")
     UserResponse toUserResponse(User user);
     void updateUser(UserUpdateRequest request, @MappingTarget User user);
