@@ -27,7 +27,6 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
            "WHERE p.id = :id")
     Optional<Product> findByIdWithImagesAndVariants(Long id);
 
-
     @Override
     @EntityGraph(attributePaths = {"productVariants", "brand", "category"})
     List<Product> findAll();
@@ -58,4 +57,3 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     Page<Long> findTopBrandIdsByProductCount(Pageable pageable);
     List<Product> findByActiveTrueAndBrandIdIn(List<Long> brandIds);
 }
-

@@ -34,7 +34,7 @@ public class Order {
     BigDecimal subTotal; // Tổng tiền hàng - khuyến mãi (Tổng tiền cuối cùng)
 
     @Column(name = "percentage_promotion_id")
-    Long percentagePromotionId; 
+    Long percentPromotionId;
 
     @Column(name = "amount_promotion_id")
     Long amountPromotionId; 
@@ -69,7 +69,7 @@ public class Order {
 
     @ManyToOne
     @JoinColumn(name = "percentage_promotion_id", insertable = false, updatable = false)
-    PercentagePromotion percentagePromotion;
+    PercentPromotion percentPromotion;
 
     @ManyToOne
     @JoinColumn(name = "amount_promotion_id", insertable = false, updatable = false)
