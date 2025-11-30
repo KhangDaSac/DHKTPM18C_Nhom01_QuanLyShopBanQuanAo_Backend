@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
-
     
     @Query("SELECT DISTINCT p FROM Product p " +
            "LEFT JOIN FETCH p.productVariants " +
