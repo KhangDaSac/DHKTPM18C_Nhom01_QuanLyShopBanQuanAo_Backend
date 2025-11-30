@@ -3,35 +3,52 @@ package com.example.ModaMint_Backend.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import java.math.BigDecimal;
+
+import java.io.Serializable;
 
 @Entity
 @Table(name = "order_item")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@ToString
+@EqualsAndHashCode
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@IdClass(OrderItem.OrderItemId.class)
 public class OrderItem {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
-
-    @Column(name = "order_id")
-    Long orderId;
-
-    @Column(name = "product_variant_id")
-    Long productVariantId; 
-
-    BigDecimal unitPrice; // Giá đơn vị của sản phẩm
-    Integer quantity; // Số lượng sản phẩm
-
+    @EqualsAndHashCode.Include
     @ManyToOne
-    @JoinColumn(name = "order_id", insertable = false, updatable = false)
+    @JoinColumn(name = "order_id")
     Order order;
 
+    @Id
+    @EqualsAndHashCode.Include
     @ManyToOne
-    @JoinColumn(name = "product_variant_id", insertable = false, updatable = false)
+    @JoinColumn(name = "product_variant_id")
     ProductVariant productVariant;
 
-    public BigDecimal getLineTotal() { // Tổng tiền của sản phẩm
-        return unitPrice.multiply(BigDecimal.valueOf(quantity));
+    @Column(name = "unit_price", nullable = false)
+    double unitPrice;
+
+    @Column(nullable = false)
+    long quantity;
+
+    public double getLineTotal() {
+        return unitPrice * quantity;
+    }
+
+    @Getter
+    @Setter
+    @EqualsAndHashCode
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    @FieldDefaults(level = AccessLevel.PRIVATE)
+    public static class OrderItemId implements Serializable {
+        Order order;
+        ProductVariant productVariant;
     }
 }

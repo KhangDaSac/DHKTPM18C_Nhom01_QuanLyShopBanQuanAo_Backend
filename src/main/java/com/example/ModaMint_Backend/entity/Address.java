@@ -1,33 +1,21 @@
 package com.example.ModaMint_Backend.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.util.Set;
-
-@Entity
-@Table(name = "addresses")
+@Embeddable
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Address {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
-
     String city;
-    String district;
     String ward;
+    @Column(name = "address_detail")
     String addressDetail;
-
-    @ManyToOne
-    @JoinColumn(name = "customer_id")
-    Customer customer;
-
-    @OneToMany(mappedBy = "shippingAddress")
-    Set<Order> orders;
 }

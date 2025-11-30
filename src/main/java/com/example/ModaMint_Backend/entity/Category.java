@@ -3,26 +3,36 @@ package com.example.ModaMint_Backend.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import java.util.Set;
+
+import java.util.List;
 
 @Entity
 @Table(name = "categories")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@ToString
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    @Column(name = "category_id")
+    long categoryId;
 
-    String name;
-    
-    @Column(name = "is_active")
-    Boolean isActive;
+    @Column(name = "category_name")
+    String categoryName;
 
-    // Chỉ lưu ID của danh mục cha
-    @Column(name = "parent_id")
-    Long parentId;
+    boolean active;
+
+    String image;
+
+    @ManyToOne
+    @JoinColumn(name = "parent_category_id")
+    Category parentCategory;
 
     @OneToMany(mappedBy = "category")
-    Set<Product> products;
+    @ToString.Exclude
+    List<Product> products;
 }

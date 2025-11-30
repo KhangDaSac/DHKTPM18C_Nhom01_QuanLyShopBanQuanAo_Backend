@@ -3,49 +3,49 @@ package com.example.ModaMint_Backend.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.annotations.CreationTimestamp;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.Set;
+
+import java.util.List;
 
 @Entity
 @Table(name = "product_variants")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@ToString
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductVariant {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    @Column(name = "product_variant_id")
+    long productVariantId;
 
-    @Column(name = "product_id")
-    Long productId;
+    @Column(name = "product_variant_name")
+    String productVariantName;
 
     String size;
+
     String color;
-    
-    String image;               // Hình ảnh của variant này
 
-    BigDecimal price;           // Giá của variant này
-    BigDecimal discount;       // Giảm giá của variant này
-    Integer quantity;          // Số lượng tồn kho
+    String image;
 
-    @Column(name = "additional_price")
-    BigDecimal additionalPrice;
+    double price;
 
-    @CreationTimestamp
-    @Column(name = "create_at")
-    LocalDateTime createAt;
+    /* Dạng phần trăm */
+    double discount;
+
+    @Column(name = "inventory_quantity")
+    long inventoryQuantity;
 
     @ManyToOne
-    @JoinColumn(name = "product_id", insertable = false, updatable = false)
+    @JoinColumn(name = "product_id")
     Product product;
 
-
-
-
-    @OneToMany(mappedBy = "productVariant")
-    Set<CartItem> cartItems;
-
-    @OneToMany(mappedBy = "productVariant")
-    Set<OrderItem> orderItems;
+    public double getSalePrice() {
+        if (discount > 0) {
+            return price - (price * discount / 100);
+        }
+        return price;
+    }
 }

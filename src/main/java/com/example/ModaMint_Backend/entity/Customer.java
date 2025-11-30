@@ -1,35 +1,54 @@
 package com.example.ModaMint_Backend.entity;
 
-import com.example.ModaMint_Backend.enums.Gender;
+
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import java.time.LocalDate;
-import java.util.Set;
+
+import java.util.List;
 
 @Entity
 @Table(name = "customers")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@ToString
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Customer {
     @Id
-    String customerId;
+    @Column(name = "customer_id")
+    long customerId;
 
     @OneToOne(cascade = CascadeType.ALL)
-    @MapsId
     @JoinColumn(name = "user_id")
     User user;
 
-    @OneToMany(mappedBy = "customer")
-    Set<Address> addresses;
+    @ElementCollection
+    @CollectionTable(
+            name = "customer_addresses",
+            joinColumns = @JoinColumn(name = "customer_id")
+    )
+    List<Address> addresses;
 
     @OneToOne(mappedBy = "customer")
     Cart cart;
 
     @OneToMany(mappedBy = "customer")
-    Set<Order> orders;
-
+    @ToString.Exclude
+    List<Order> orders;
 
     @OneToMany(mappedBy = "customer")
-    Set<Review> reviews;
+    @ToString.Exclude
+    List<Review> reviews;
+
+    @ManyToMany
+    @JoinTable(
+            name = "customer_favorite_products",
+            joinColumns = @JoinColumn(name = "customer_id"),
+            inverseJoinColumns = @JoinColumn(name = "product_id")
+    )
+    @ToString.Exclude
+    List<Product> favoriteProducts;
 }

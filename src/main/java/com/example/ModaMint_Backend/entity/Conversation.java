@@ -3,25 +3,31 @@ package com.example.ModaMint_Backend.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import java.util.Set;
+
+import java.util.List;
 
 @Entity
 @Table(name = "conversations")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@ToString
 @FieldDefaults(level = AccessLevel.PRIVATE)
-
 public class Conversation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    @Column(name = "conversation_id")
+    long conversationId;
 
-    @Column(name = "is_active")
-    Boolean isActive = true;
+    boolean active;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
     User user;
 
     @OneToMany(mappedBy = "conversation")
-    Set<Message> messages;
+    @ToString.Exclude
+    List<Message> messages;
 }

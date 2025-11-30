@@ -1,59 +1,48 @@
 package com.example.ModaMint_Backend.entity;
 
-import com.example.ModaMint_Backend.converter.StringSetConverter;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.Set;
+
+import java.util.List;
 
 @Entity
 @Table(name = "products")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@ToString
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    @Column(name = "product_id")
+    long productId;
 
-    String name;
-
-    @Column(name = "brand_id")
-    Long brandId;
-
-    @Column(name = "category_id")
-    Long categoryId;
+    @Column(name = "product_name")
+    String productName;
 
     String description;
 
-    @Convert(converter = StringSetConverter.class)
-    @Column(name = "images", columnDefinition = "TEXT")
-    Set<String> images;
+    String image;
 
-    Boolean active = true;
-
-    @CreationTimestamp
-    @Column(name = "create_at")
-    LocalDateTime createAt;
-
-    @UpdateTimestamp
-    @Column(name = "update_at")
-    LocalDateTime updateAt;
+    boolean active;
 
     @ManyToOne
-    @JoinColumn(name = "brand_id", insertable = false, updatable = false)
+    @JoinColumn(name = "brand_id")
     Brand brand;
 
     @ManyToOne
-    @JoinColumn(name = "category_id", insertable = false, updatable = false)
+    @JoinColumn(name = "category_id")
     Category category;
 
     @OneToMany(mappedBy = "product")
-    Set<ProductVariant> productVariants;
+    @ToString.Exclude
+    List<ProductVariant> productVariants;
 
     @OneToMany(mappedBy = "product")
-    Set<Review> reviews;
+    @ToString.Exclude
+    List<Review> reviews;
 }
