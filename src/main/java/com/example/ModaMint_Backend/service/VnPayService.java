@@ -7,8 +7,6 @@ import org.springframework.stereotype.Service;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -60,7 +58,7 @@ public class VnPayService {
         vnp_Params.put("vnp_ReturnUrl", vnp_ReturnUrl);
         vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
 
-        //Sử dụng timezone Việt Nam
+        // Sử dụng timezone Việt Nam
         TimeZone vietnamTimeZone = TimeZone.getTimeZone("Asia/Ho_Chi_Minh");
         Calendar cld = Calendar.getInstance(vietnamTimeZone);
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -137,9 +135,25 @@ public class VnPayService {
         queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
 
         String finalUrl = vnp_PayUrl + "?" + queryUrl;
-        System.out.println("🔗 Final VNPay URL: " + finalUrl);
+        System.out.println("Final VNPay URL: " + finalUrl);
 
         return finalUrl;
+    }
+
+    /**
+     * Tạo payment URL từ Order entity (dùng cho retry payment)
+     * Sử dụng orderId (không phải orderCode) để tránh lỗi parse khi extract
+     */
+    public String createPaymentUrlForOrder(HttpServletRequest req, com.example.ModaMint_Backend.entity.Order order) {
+        // Tạo orderInfo từ order ID (số) để consistent với createPaymentUrl
+        // Điều này đảm bảo extractOrderIdFromOrderInfo có thể parse thành Long
+        String orderInfo = "Thanh toan don hang " + order.getId();
+
+        // Lấy amount từ subTotal của order (số tiền cuối cùng khách hàng phải trả)
+        long amount = order.getSubTotal().longValue();
+
+        // Gọi lại method createPaymentUrl với thông tin từ order
+        return createPaymentUrl(req, amount, orderInfo);
     }
 
     // Helper method to safely get parameters
@@ -187,7 +201,8 @@ public class VnPayService {
             }
             final javax.crypto.Mac hmac512 = javax.crypto.Mac.getInstance("HmacSHA512");
             byte[] hmacKeyBytes = key.getBytes();
-            final javax.crypto.spec.SecretKeySpec secretKey = new javax.crypto.spec.SecretKeySpec(hmacKeyBytes, "HmacSHA512");
+            final javax.crypto.spec.SecretKeySpec secretKey = new javax.crypto.spec.SecretKeySpec(hmacKeyBytes,
+                    "HmacSHA512");
             hmac512.init(secretKey);
             byte[] dataBytes = data.getBytes(StandardCharsets.UTF_8);
             byte[] result = hmac512.doFinal(dataBytes);
@@ -214,7 +229,7 @@ public class VnPayService {
             String paramName = paramNames.nextElement();
             String paramValue = request.getParameter(paramName);
             fields.put(paramName, paramValue);
-            System.out.println("📋 " + paramName + " = " + paramValue);
+            System.out.println(paramName + " = " + paramValue);
         }
 
         String vnp_SecureHash = request.getParameter("vnp_SecureHash");
