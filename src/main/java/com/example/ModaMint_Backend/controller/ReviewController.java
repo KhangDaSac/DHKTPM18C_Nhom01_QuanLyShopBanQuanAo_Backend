@@ -123,4 +123,11 @@ public class ReviewController {
                 .message("Lấy 10 đánh giá mới nhất thành công")
                 .build();
     }
+    @GetMapping("/order-item/{orderItemId}")
+    public ApiResponse<List<ReviewResponse>> getReviewsByOrderItemId(@PathVariable Long orderItemId) {
+        return ApiResponse.<List<ReviewResponse>>builder()
+                .result(reviewService.getReviewsByOrderItemId(orderItemId))
+                .message("Lấy danh sách đánh giá theo Order Item thành công")
+                .build();
+    }
 }
