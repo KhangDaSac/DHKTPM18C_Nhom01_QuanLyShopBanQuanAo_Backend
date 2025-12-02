@@ -16,7 +16,6 @@ import java.util.Set;
 public class ProductResponse {
     Long id;
     String name;
-    BigDecimal price;
     Boolean active;
     String description;
     String brandName;
@@ -24,7 +23,6 @@ public class ProductResponse {
     List<String> images; // Danh sách URL ảnh
     List<ProductVariantResponse> productVariants; // Danh sách variants
     Integer quantity; // Tổng số lượng từ tất cả variants
-
     LocalDateTime createAt;
     LocalDateTime updateAt;
 }

@@ -1,5 +1,7 @@
 package com.example.ModaMint_Backend.controller;
 
+import com.example.ModaMint_Backend.dto.request.product.CreateProductWithVariantsRequest;
+import com.example.ModaMint_Backend.dto.request.product.UpdateProductWithVariantsRequest;
 import com.example.ModaMint_Backend.dto.request.product.ProductRequest;
 import com.example.ModaMint_Backend.dto.response.ApiResponse;
 import com.example.ModaMint_Backend.dto.response.product.ProductResponse;
@@ -85,16 +87,6 @@ public class ProductController {
         return ApiResponse.<ProductResponse>builder()
                 .result(productService.restoreProduct(id))
                 .message("Kích hoạt lại sản phẩm thành công")
-                .build();
-    }
-
-    @DeleteMapping("/{id}/permanent")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<String> permanentDeleteProduct(@PathVariable Long id) {
-        productService.permanentDeleteProduct(id);
-        return ApiResponse.<String>builder()
-                .result("Sản phẩm đã được xóa vĩnh viễn")
-                .message("Xóa vĩnh viễn sản phẩm thành công")
                 .build();
     }
 
@@ -211,6 +203,42 @@ public class ProductController {
         return ApiResponse.<List<ProductResponse>>builder()
                 .result(productService.getProductsFromTop5Brands())
                 .message("Lấy sản phẩm từ top 5 thương hiệu thành công")
+                .build();
+    }
+
+    /**
+     * API mới: Tạo Product + Variants cùng lúc trong 1 transaction
+     * POST /api/products/with-variants
+     * 
+     * @param request - CreateProductWithVariantsRequest
+     * @return ProductResponse với đầy đủ variants
+     */
+    @PostMapping("/with-variants")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<ProductResponse> createProductWithVariants(
+            @RequestBody @Valid CreateProductWithVariantsRequest request) {
+        return ApiResponse.<ProductResponse>builder()
+                .result(productService.createProductWithVariants(request))
+                .message("Tạo sản phẩm với biến thể thành công")
+                .build();
+    }
+
+    /**
+     * API mới: Cập nhật Product + Variants cùng lúc trong 1 transaction
+     * PUT /api/products/{id}/with-variants
+     * 
+     * @param id - Product ID
+     * @param request - UpdateProductWithVariantsRequest
+     * @return ProductResponse với đầy đủ variants
+     */
+    @PutMapping("/{id}/with-variants")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<ProductResponse> updateProductWithVariants(
+            @PathVariable Long id,
+            @RequestBody @Valid UpdateProductWithVariantsRequest request) {
+        return ApiResponse.<ProductResponse>builder()
+                .result(productService.updateProductWithVariants(id, request))
+                .message("Cập nhật sản phẩm với biến thể thành công")
                 .build();
     }
 }

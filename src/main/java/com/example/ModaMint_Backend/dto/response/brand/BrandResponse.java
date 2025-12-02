@@ -13,5 +13,6 @@ public class BrandResponse {
     String name;
     String description;
     String logoUrl;
+    Boolean isActive;
     Integer productCount; // Số lượng sản phẩm của thương hiệu
 }

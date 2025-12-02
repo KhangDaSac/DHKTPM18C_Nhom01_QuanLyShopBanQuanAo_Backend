@@ -10,6 +10,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,11 +26,19 @@ public class FavoriteService {
         .stream()
         .map(f -> {
             var p = productService.getProductById(f.getProductId());
+            // Lấy giá thấp nhất từ variants
+            BigDecimal minPrice = p.getProductVariants() != null && !p.getProductVariants().isEmpty()
+                ? p.getProductVariants().stream()
+                    .filter(v -> v.getPrice() != null)
+                    .map(v -> v.getPrice())
+                    .min(BigDecimal::compareTo)
+                    .orElse(BigDecimal.ZERO)
+                : BigDecimal.ZERO;
             return FavoriteDto.builder()
                 .id(f.getId())
                 .productId(f.getProductId())
                 .productName(p.getName())
-                .price(p.getPrice())
+                .price(minPrice)
                 .build();
         })
         .collect(Collectors.toList());
@@ -43,11 +52,19 @@ public class FavoriteService {
         Favorite saved = favoriteRepository.save(f);
 
     var p = productService.getProductById(saved.getProductId());
+    // Lấy giá thấp nhất từ variants
+    BigDecimal minPrice = p.getProductVariants() != null && !p.getProductVariants().isEmpty()
+        ? p.getProductVariants().stream()
+            .filter(v -> v.getPrice() != null)
+            .map(v -> v.getPrice())
+            .min(BigDecimal::compareTo)
+            .orElse(BigDecimal.ZERO)
+        : BigDecimal.ZERO;
     return FavoriteDto.builder()
         .id(saved.getId())
         .productId(saved.getProductId())
         .productName(p.getName())
-        .price(p.getPrice())
+        .price(minPrice)
         .build();
     }
 

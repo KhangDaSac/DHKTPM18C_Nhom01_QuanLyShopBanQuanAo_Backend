@@ -31,10 +31,6 @@ public class ProductRequest {
 
     Set<String> images;
 
-    @NotNull(message = "Giá sản phẩm là bắt buộc")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Giá phải lớn hơn 0")
-    BigDecimal price;
-
     @Builder.Default
     Boolean active = true;
 }

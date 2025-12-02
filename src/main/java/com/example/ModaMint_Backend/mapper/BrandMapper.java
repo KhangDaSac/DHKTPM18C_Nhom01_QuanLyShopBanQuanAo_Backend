@@ -13,6 +13,7 @@ public interface BrandMapper {
     @Mapping(target = "products", ignore = true)
     Brand toBrand(BrandRequest request);
 
+    @Mapping(source = "active", target = "isActive")
     @Mapping(target = "productCount", expression = "java(brand.getProducts() != null ? brand.getProducts().size() : 0)")
     BrandResponse toBrandResponse(Brand brand);
 

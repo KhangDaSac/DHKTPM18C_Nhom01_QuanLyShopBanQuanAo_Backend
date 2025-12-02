@@ -1,14 +1,18 @@
 package com.example.ModaMint_Backend.service;
 
+import com.example.ModaMint_Backend.dto.request.product.CreateProductWithVariantsRequest;
+import com.example.ModaMint_Backend.dto.request.product.UpdateProductWithVariantsRequest;
 import com.example.ModaMint_Backend.dto.request.product.ProductRequest;
 import com.example.ModaMint_Backend.dto.response.product.ProductResponse;
 import com.example.ModaMint_Backend.entity.Product;
+import com.example.ModaMint_Backend.entity.ProductVariant;
 import com.example.ModaMint_Backend.exception.AppException;
 import com.example.ModaMint_Backend.exception.ErrorCode;
 import com.example.ModaMint_Backend.mapper.ProductMapper;
 import com.example.ModaMint_Backend.repository.BrandRepository;
 import com.example.ModaMint_Backend.repository.CategoryRepository;
 import com.example.ModaMint_Backend.repository.ProductRepository;
+import com.example.ModaMint_Backend.repository.ProductVariantRepository;
 import com.example.ModaMint_Backend.specification.ProductSpecification;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -18,16 +22,19 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProductService {
     ProductRepository productRepository;
+    ProductVariantRepository productVariantRepository;
     BrandRepository brandRepository;
     CategoryRepository categoryRepository;
     ProductMapper productMapper;
@@ -101,16 +108,6 @@ public class ProductService {
         Product restoredProduct = productRepository.save(product);
         return productMapper.toProductResponse(restoredProduct);
     }
-
-
-    public void permanentDeleteProduct(Long id) {
-        if (!productRepository.existsById(id)) {
-            throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
-        }
-
-        productRepository.deleteById(id);
-    }
-
 
     public List<ProductResponse> getProductsByBrandId(Long brandId) {
         if (!brandRepository.existsById(brandId)) {
@@ -254,5 +251,106 @@ public class ProductService {
         return products.stream()
                 .map(productMapper::toProductResponse)
                 .toList();
+    }
+
+    /**
+     * Tạo Product + Variants trong 1 transaction duy nhất
+     * Đảm bảo atomicity và Product luôn có ít nhất 1 Variant
+     * 
+     * @param request - CreateProductWithVariantsRequest chứa product + variants
+     * @return ProductResponse đầy đủ bao gồm variants
+     */
+    @Transactional
+    public ProductResponse createProductWithVariants(CreateProductWithVariantsRequest request) {
+        // Validate brand
+        if (!brandRepository.existsById(request.getProduct().getBrandId())) {
+            throw new AppException(ErrorCode.BRAND_NOT_FOUND);
+        }
+
+        // Validate category
+        if (!categoryRepository.existsById(request.getProduct().getCategoryId())) {
+            throw new AppException(ErrorCode.CATEGORY_NOT_FOUND);
+        }
+
+        // Bước 1: Tạo và lưu Product
+        Product product = productMapper.toProduct(request.getProduct());
+        Product savedProduct = productRepository.save(product);
+
+        // Bước 2: Tạo danh sách ProductVariant từ request
+        List<ProductVariant> variants = request.getVariants().stream()
+                .map(variantRequest -> ProductVariant.builder()
+                        .productId(savedProduct.getId()) // Gán productId từ savedProduct
+                        .size(variantRequest.getSize())
+                        .color(variantRequest.getColor())
+                        .image(variantRequest.getImage())
+                        .price(variantRequest.getPrice())
+                        .discount(variantRequest.getDiscount())
+                        .quantity(variantRequest.getQuantity())
+                        .additionalPrice(variantRequest.getAdditionalPrice())
+                        .build())
+                .collect(Collectors.toList());
+
+        // Bước 3: Lưu tất cả variants
+        productVariantRepository.saveAll(variants);
+
+        // Bước 4: Load lại product với đầy đủ variants để trả về
+        Product productWithVariants = productRepository.findByIdWithImagesAndVariants(savedProduct.getId())
+                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+
+        return productMapper.toProductResponse(productWithVariants);
+    }
+
+    /**
+     * Cập nhật Product + Variants trong 1 transaction
+     * Xóa toàn bộ variants cũ và tạo mới theo request
+     * @param id ID của product cần update
+     * @param request Chứa thông tin Product và danh sách Variants mới
+     * @return ProductResponse đầy đủ bao gồm variants
+     */
+    @Transactional
+    public ProductResponse updateProductWithVariants(Long id, UpdateProductWithVariantsRequest request) {
+        // Validate product exists
+        Product existingProduct = productRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+
+        // Validate brand
+        if (!brandRepository.existsById(request.getProduct().getBrandId())) {
+            throw new AppException(ErrorCode.BRAND_NOT_FOUND);
+        }
+
+        // Validate category
+        if (!categoryRepository.existsById(request.getProduct().getCategoryId())) {
+            throw new AppException(ErrorCode.CATEGORY_NOT_FOUND);
+        }
+
+        // Bước 1: Cập nhật thông tin Product
+        productMapper.updateProduct(request.getProduct(), existingProduct);
+        Product updatedProduct = productRepository.save(existingProduct);
+
+        // Bước 2: Xóa tất cả variants cũ của product
+        productVariantRepository.deleteByProductId(id);
+
+        // Bước 3: Tạo danh sách ProductVariant mới từ request
+        List<ProductVariant> newVariants = request.getVariants().stream()
+                .map(variantRequest -> ProductVariant.builder()
+                        .productId(updatedProduct.getId())
+                        .size(variantRequest.getSize())
+                        .color(variantRequest.getColor())
+                        .image(variantRequest.getImage())
+                        .price(variantRequest.getPrice())
+                        .discount(variantRequest.getDiscount())
+                        .quantity(variantRequest.getQuantity())
+                        .additionalPrice(variantRequest.getAdditionalPrice())
+                        .build())
+                .collect(Collectors.toList());
+
+        // Bước 4: Lưu tất cả variants mới
+        productVariantRepository.saveAll(newVariants);
+
+        // Bước 5: Load lại product với đầy đủ variants để trả về
+        Product productWithVariants = productRepository.findByIdWithImagesAndVariants(updatedProduct.getId())
+                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+
+        return productMapper.toProductResponse(productWithVariants);
     }
 }

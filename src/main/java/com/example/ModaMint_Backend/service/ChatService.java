@@ -17,21 +17,16 @@ import com.example.ModaMint_Backend.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
-import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ChatService {
 
     ChatClient chatClient;
-    VectorStore vectorStore;
-    ProductVectorLoader productVectorLoader;
 
     MessageRepository messageRepository;
     ConversationRepository conversationRepository;
@@ -40,11 +35,8 @@ public class ChatService {
     MessageMapper messageMapper;
     ConversationMapper conversationMapper;
 
-
     public ChatService(
             ChatClient.Builder chatClientBuilder,
-            VectorStore vectorStore,
-            ProductVectorLoader productVectorLoader,
             MessageRepository messageRepository,
             ConversationRepository conversationRepository,
             UserRepository userRepository,
@@ -52,31 +44,25 @@ public class ChatService {
             ConversationMapper conversationMapper
     ) {
         this.chatClient = chatClientBuilder.build();
-        this.vectorStore = vectorStore;
-        this.productVectorLoader = productVectorLoader;
-        this.conversationMapper = conversationMapper;
         this.messageMapper = messageMapper;
+        this.conversationMapper = conversationMapper;
         this.messageRepository = messageRepository;
         this.conversationRepository = conversationRepository;
         this.userRepository = userRepository;
     }
 
     public MessageResponse chatWithAi(MessageRequest request) {
-        System.out.println("ChatService.chatWithAi called with request: " + request);
+
         Conversation conversation = conversationRepository.findById(request.getConversationId())
                 .orElseThrow(() -> new AppException(ErrorCode.CONVERSATION_NOT_FOUND));
-        productVectorLoader.loadProductsToVectorDB();
-
-        QuestionAnswerAdvisor qaAdvisor = new QuestionAnswerAdvisor(vectorStore);
 
         String content = chatClient.prompt()
                 .system("""
-                            Bạn là trợ lý AI bán hàng của cửa hàng thời trang ModaMint.
-                            Hãy trả lời thân thiện, chuyên nghiệp, và gợi ý thêm sản phẩm phù hợp.
-                            Nếu không chắc câu trả lời, hãy nói lịch sự rằng bạn sẽ tìm hiểu thêm.
+                        Bạn là trợ lý AI bán hàng của cửa hàng thời trang ModaMint.
+                        Hãy trả lời thân thiện, chuyên nghiệp, gợi ý thêm sản phẩm phù hợp.
+                        Nếu không chắc câu trả lời, hãy nói lịch sự rằng bạn sẽ tìm hiểu thêm.
                         """)
                 .user(request.getContent())
-                .advisors(qaAdvisor)
                 .call()
                 .content();
 
@@ -92,6 +78,7 @@ public class ChatService {
     }
 
     public MessageResponse chatWithShop(MessageRequest request) {
+
         Conversation conversation = conversationRepository.findById(request.getConversationId())
                 .orElseThrow(() -> new AppException(ErrorCode.CONVERSATION_NOT_FOUND));
 
@@ -107,8 +94,9 @@ public class ChatService {
     }
 
     public ConversationResponse getConversationById(String userId) {
+
         Conversation conversation = conversationRepository.findByUserId(userId)
-                .orElseGet(()-> {
+                .orElseGet(() -> {
                     User user = userRepository.findById(userId)
                             .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
                     Conversation newConversation = Conversation.builder()
@@ -121,6 +109,7 @@ public class ChatService {
     }
 
     public List<MessageResponse> getChatHistory(Long conversationId) {
+
         Conversation conversation = conversationRepository.findById(conversationId)
                 .orElseThrow(() -> new AppException(ErrorCode.CONVERSATION_NOT_FOUND));
 

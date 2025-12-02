@@ -32,7 +32,6 @@ public interface ProductMapper {
     @Mapping(source = "brand.name", target = "brandName")
     @Mapping(source = "category.name", target = "categoryName")
     @Mapping(source = "productVariants", target = "productVariants", qualifiedByName = "mapProductVariants")
-    @Mapping(target = "price", expression = "java(getMinPriceFromVariants(product))")
     @Mapping(target = "quantity", expression = "java(getTotalQuantityFromVariants(product))")
     @Mapping(source = "images", target = "images")
     ProductResponse toProductResponse(Product product);
@@ -94,6 +93,7 @@ public interface ProductMapper {
                         .discount(v.getDiscount())
                         .quantity(v.getQuantity())
                         .additionalPrice(v.getAdditionalPrice())
+                        .active(v.getActive() != null ? v.getActive() : true)
                         .build())
                 .collect(Collectors.toList());
     }
