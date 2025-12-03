@@ -52,9 +52,9 @@ spring:
             model: gemini-2.0-flash
         embedding:
           api-key: ${GEMINI_API_KEY}
-    vectorstore:
+    vector-store:
       chroma:
-        collection-name: products1
+        collection-name: products
         database-name: default_database
         tenant-name: default_tenant
 server:

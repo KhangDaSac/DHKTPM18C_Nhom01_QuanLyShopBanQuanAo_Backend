@@ -1,59 +1,29 @@
 package com.example.ModaMint_Backend.controller;
 
-import com.example.ModaMint_Backend.dto.request.chat.MessageRequest;
+import com.example.ModaMint_Backend.dto.request.chat.ChatAiRequest;
 import com.example.ModaMint_Backend.dto.response.ApiResponse;
-import com.example.ModaMint_Backend.dto.response.chat.ConversationResponse;
-import com.example.ModaMint_Backend.dto.response.chat.MessageResponse;
+import com.example.ModaMint_Backend.dto.response.chat.ChatAiResponse;
 import com.example.ModaMint_Backend.service.ChatService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/chat")
-@RequiredArgsConstructor
+@RequestMapping(("/chat"))
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@RequiredArgsConstructor
 public class ChatController {
-
     ChatService chatService;
 
-    @GetMapping("/conversation/{userId}")
-    public ApiResponse<ConversationResponse> getConversationByUserId(@PathVariable String userId) {
-        ConversationResponse conversation = chatService.getConversationById(userId);
-        return ApiResponse.<ConversationResponse>builder()
-                .result(conversation)
-                .message("Lấy cuộc trò chuyện thành công")
+    @PostMapping("/chat-ai")
+    public ApiResponse<ChatAiResponse> chatAi(@RequestBody ChatAiRequest request) {
+        return ApiResponse.<ChatAiResponse>builder()
+                .result(chatService.chatAi(request))
+                .message("Chat với bot thành công")
                 .build();
     }
-
-    @GetMapping("/history/{conversationId}")
-    public ApiResponse<List<MessageResponse>> getChatHistory(@PathVariable Long conversationId) {
-        List<MessageResponse> history = chatService.getChatHistory(conversationId);
-        return ApiResponse.<List<MessageResponse>>builder()
-                .result(history)
-                .message("Lấy lịch sử trò chuyện thành công")
-                .build();
-    }
-
-    @MessageMapping("/sendMessage/shop")
-    @SendTo("/topic/messages/shop")
-    public ApiResponse<MessageResponse> handleShopMessage(@RequestBody MessageRequest request) {
-        return ApiResponse.<MessageResponse>builder()
-                .result(chatService.chatWithShop(request))
-                .message("Thành công")
-                .build();
-    }
-
-    @PostMapping("/sendMessage/ai")
-    public ApiResponse<MessageResponse>  handleAiMessage(@RequestBody MessageRequest request) {
-        return ApiResponse.<MessageResponse>builder()
-                .result(chatService.chatWithAi(request))
-                .message("Thành công")
-                .build();
-    }
- }
+}
