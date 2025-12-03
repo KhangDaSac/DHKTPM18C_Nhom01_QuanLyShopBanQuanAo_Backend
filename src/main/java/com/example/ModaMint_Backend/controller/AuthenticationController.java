@@ -1,6 +1,7 @@
 package com.example.ModaMint_Backend.controller;
 
 import com.example.ModaMint_Backend.dto.request.auth.AuthenticationRequest;
+import com.example.ModaMint_Backend.dto.request.auth.GoogleAuthRequest;
 import com.example.ModaMint_Backend.dto.request.auth.IntrospectRequest;
 import com.example.ModaMint_Backend.dto.request.auth.LogoutRequest;
 
@@ -26,7 +27,6 @@ import java.text.ParseException;
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class AuthenticationController {
     AuthenticationService authenticationService;
-    private final RestClient.Builder builder;
 
     @PostMapping("/login")
     ApiResponse<AuthenticationResponse> authenticate(
@@ -38,8 +38,21 @@ public class AuthenticationController {
                 .result(result)
                 .build();
     }
+
+    @PostMapping("/google")
+    ApiResponse<AuthenticationResponse> authenticateWithGoogle(
+            @RequestBody GoogleAuthRequest request,
+            HttpServletResponse response) throws JOSEException {
+
+        AuthenticationResponse result = authenticationService.authenticateWithGoogle(request.getCode(), response);
+        return ApiResponse.<AuthenticationResponse>builder()
+                .result(result)
+                .build();
+    }
+
     @PostMapping("/introspect")
-    ApiResponse<IntrospectResponse> introspect(@RequestBody IntrospectRequest request) throws JOSEException, ParseException {
+    ApiResponse<IntrospectResponse> introspect(@RequestBody IntrospectRequest request)
+            throws JOSEException, ParseException {
         IntrospectResponse result = authenticationService.introspect(request);
         return ApiResponse.<IntrospectResponse>builder()
                 .result(result)
@@ -65,7 +78,8 @@ public class AuthenticationController {
     }
 
     @GetMapping("/me")
-    public ApiResponse<UserResponse> getCurrentUser(@RequestHeader("Authorization") String authHeader) throws ParseException, JOSEException {
+    public ApiResponse<UserResponse> getCurrentUser(@RequestHeader("Authorization") String authHeader)
+            throws ParseException, JOSEException {
         // Lấy access token từ Authorization header (Bearer token)
         String accessToken = authHeader.replace("Bearer ", "");
         UserResponse result = authenticationService.getCurrentUser(accessToken);
