@@ -22,7 +22,6 @@ public class CheckoutController {
     private final CheckoutService checkoutService;
 
     @GetMapping("/promotions")
-    @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
     public ApiResponse<List<PromotionSummary>> getAvailablePromotions(
             @RequestParam String customerId) {
         log.info("Getting available promotions for customer: {}", customerId);
@@ -36,9 +35,9 @@ public class CheckoutController {
 
 
     @PostMapping
-    @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
     public ApiResponse<CheckoutResponse> checkout(@Valid @RequestBody CheckoutRequest request) {
-        log.info("Processing checkout for customer: {}", request.getCustomerId());
+        log.info("Processing checkout for customer: {} (isGuest: {})", 
+                request.getCustomerId(), request.getIsGuest());
         
         CheckoutResponse response = checkoutService.checkout(request);
         

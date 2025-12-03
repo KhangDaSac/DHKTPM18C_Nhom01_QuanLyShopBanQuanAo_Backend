@@ -889,4 +889,3 @@ VALUES
     ),
     (5, 'Giảm 5%', 'PER5', 0, NOW(), DATE_ADD(NOW(), INTERVAL 60 DAY), 500, TRUE, NOW(), 0.05, 50000),
     (6, 'Giảm 15%', 'PER15', 300000, NOW(), DATE_ADD(NOW(), INTERVAL 45 DAY), 120, TRUE, NOW(), 0.15, 150000);
-    

@@ -50,9 +50,10 @@ public class SecurityConfig {
                         .requestMatchers("/carts/**").permitAll()  // Guest + authenticated users
 
                         // === CHECKOUT & ORDER ENDPOINTS ===
-                        // Checkout cần authentication (JWT) vì cần customerId
-                        .requestMatchers("/checkout/**").authenticated()  // Yêu cầu đăng nhập
-                        .requestMatchers(HttpMethod.POST, "/orders").permitAll()  // Guest checkout (nếu có)
+                        // Allow guest checkout - backend will handle authentication internally
+                        .requestMatchers("/checkout/**").permitAll()  // Guest + authenticated checkout
+                        .requestMatchers(HttpMethod.POST, "/orders").permitAll()  // Guest orders
+                        .requestMatchers(HttpMethod.POST, "/addresses").permitAll()  // Guest address creation
 
                         // === TẤT CẢ ENDPOINTS KHÁC CẦN AUTHENTICATION ===
                         .anyRequest().authenticated()

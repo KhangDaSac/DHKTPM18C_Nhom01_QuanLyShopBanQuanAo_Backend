@@ -25,6 +25,7 @@ public interface OrderMapper {
     Order toOrder(OrderRequest request);
 
     @Mapping(target = "promotionId", ignore = true)
+    @Mapping(target = "totalAmount", source = "subTotal") // Use subTotal as final price (after discount)
     OrderResponse toOrderResponse(Order order);
 
     @Mapping(target = "id", ignore = true)
