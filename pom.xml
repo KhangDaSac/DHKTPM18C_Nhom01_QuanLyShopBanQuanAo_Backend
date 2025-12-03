@@ -129,10 +129,12 @@
 			<groupId>org.springframework.ai</groupId>
 			<artifactId>spring-ai-starter-vector-store-chroma</artifactId>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.springframework.ai/spring-ai-model-chat-memory-repository-jdbc -->
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-websocket</artifactId>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-model-chat-memory-repository-jdbc</artifactId>
 		</dependency>
+
 	</dependencies>
 	<repositories>
 		<repository>

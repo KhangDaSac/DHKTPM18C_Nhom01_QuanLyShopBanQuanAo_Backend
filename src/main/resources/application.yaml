@@ -52,11 +52,17 @@ spring:
             model: gemini-2.0-flash
         embedding:
           api-key: ${GEMINI_API_KEY}
+    chat:
+      memory:
+        repository:
+          jdbc:
+            initialize-schema: always
     vector-store:
       chroma:
         collection-name: products
         database-name: default_database
         tenant-name: default_tenant
+
 server:
   port: 8080
   servlet:
