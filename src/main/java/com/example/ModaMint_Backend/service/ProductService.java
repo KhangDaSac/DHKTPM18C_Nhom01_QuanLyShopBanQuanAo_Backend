@@ -2,6 +2,7 @@ package com.example.ModaMint_Backend.service;
 
 import com.example.ModaMint_Backend.dto.request.product.ProductRequest;
 import com.example.ModaMint_Backend.dto.response.product.ProductResponse;
+import com.example.ModaMint_Backend.entity.Category;
 import com.example.ModaMint_Backend.entity.Product;
 import com.example.ModaMint_Backend.exception.AppException;
 import com.example.ModaMint_Backend.exception.ErrorCode;
@@ -20,8 +21,11 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -83,7 +87,6 @@ public class ProductService {
         return productMapper.toProductResponse(updatedProduct);
     }
 
-
     public void deleteProduct(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
@@ -102,7 +105,6 @@ public class ProductService {
         return productMapper.toProductResponse(restoredProduct);
     }
 
-
     public void permanentDeleteProduct(Long id) {
         if (!productRepository.existsById(id)) {
             throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
@@ -110,7 +112,6 @@ public class ProductService {
 
         productRepository.deleteById(id);
     }
-
 
     public List<ProductResponse> getProductsByBrandId(Long brandId) {
         if (!brandRepository.existsById(brandId)) {
@@ -120,19 +121,6 @@ public class ProductService {
         return productRepository.findAll()
                 .stream()
                 .filter(product -> product.getBrandId().equals(brandId))
-                .map(productMapper::toProductResponse)
-                .toList();
-    }
-
-
-    public List<ProductResponse> getProductsByCategoryId(Long categoryId) {
-        if (!categoryRepository.existsById(categoryId)) {
-            throw new AppException(ErrorCode.CATEGORY_NOT_FOUND);
-        }
-
-        return productRepository.findAll()
-                .stream()
-                .filter(product -> product.getCategoryId().equals(categoryId))
                 .map(productMapper::toProductResponse)
                 .toList();
     }
@@ -163,14 +151,61 @@ public class ProductService {
                 .map(productMapper::toProductResponse)
                 .toList();
     }
+
+    public List<ProductResponse> searchByGenderAndKeyword(String genderSlug, String keywordSlug) {
+        String genderKeyword = genderSlug.equalsIgnoreCase("nam") ? "nam" : "nữ";
+
+        String keyword;
+        switch (keywordSlug.toLowerCase()) {
+            case "ao":
+                keyword = "áo";
+                break;
+            case "quan":
+                keyword = "quần";
+                break;
+            case "vay":
+                keyword = "váy";
+                break;
+            case "giay":
+                keyword = "giày";
+                break;
+            case "phu-kien":
+                keyword = "phụ kiện";
+                break;
+            default:
+                keyword = keywordSlug.toLowerCase();
+        }
+
+        String finalKeyword = keyword.toLowerCase();
+        String finalGender = genderKeyword.toLowerCase();
+
+        return productRepository.findAll()
+                .stream()
+                .filter(Product::getActive)
+                .filter(p -> {
+                    String name = p.getName() != null ? p.getName().toLowerCase() : "";
+                    String categoryName = (p.getCategory() != null && p.getCategory().getName() != null)
+                            ? p.getCategory().getName().toLowerCase()
+                            : "";
+
+                    boolean matchKeyword = name.contains(finalKeyword) || categoryName.contains(finalKeyword);
+                    boolean matchGender = categoryName.contains(finalGender);
+
+                    return matchKeyword && matchGender;
+                })
+                .map(productMapper::toProductResponse)
+                .toList();
+    }
+
     /**
      * Filter products theo nhiều điều kiện
-     * @param brandId - ID của brand (nullable)
+     * 
+     * @param brandId    - ID của brand (nullable)
      * @param categoryId - ID của category (nullable)
-     * @param minPrice - Giá tối thiểu (nullable)
-     * @param maxPrice - Giá tối đa (nullable)
-     * @param colors - Danh sách màu sắc (nullable)
-     * @param sizes - Danh sách size (nullable)
+     * @param minPrice   - Giá tối thiểu (nullable)
+     * @param maxPrice   - Giá tối đa (nullable)
+     * @param colors     - Danh sách màu sắc (nullable)
+     * @param sizes      - Danh sách size (nullable)
      * @return List<ProductResponse>
      */
     public List<ProductResponse> filterProducts(
@@ -179,11 +214,9 @@ public class ProductService {
             BigDecimal minPrice,
             BigDecimal maxPrice,
             List<String> colors,
-            List<String> sizes
-    ) {
+            List<String> sizes) {
         Specification<Product> spec = ProductSpecification.filterProducts(
-                brandId, categoryId, minPrice, maxPrice, colors, sizes
-        );
+                brandId, categoryId, minPrice, maxPrice, colors, sizes);
 
         return productRepository.findAll(spec)
                 .stream()
@@ -215,7 +248,8 @@ public class ProductService {
 
     public List<ProductResponse> getTop10ProductsForFemaleCategory() {
         Pageable pageable = PageRequest.of(0, 10);
-        Page<Product> productPage = productRepository.findByCategoryNameContainingIgnoreCaseAndActiveTrue("nữ", pageable);
+        Page<Product> productPage = productRepository.findByCategoryNameContainingIgnoreCaseAndActiveTrue("nữ",
+                pageable);
 
         return productPage.getContent()
                 .stream()
@@ -225,13 +259,15 @@ public class ProductService {
 
     public List<ProductResponse> getTop10ProductsForMaleCategory() {
         Pageable pageable = PageRequest.of(0, 10);
-        Page<Product> productPage = productRepository.findByCategoryNameContainingIgnoreCaseAndActiveTrue("nam", pageable);
+        Page<Product> productPage = productRepository.findByCategoryNameContainingIgnoreCaseAndActiveTrue("nam",
+                pageable);
 
         return productPage.getContent()
                 .stream()
                 .map(productMapper::toProductResponse)
                 .toList();
     }
+
     public List<ProductResponse> getTop20RandomActiveProducts() {
         Pageable pageable = PageRequest.of(0, 20);
 
@@ -242,6 +278,7 @@ public class ProductService {
                 .map(productMapper::toProductResponse)
                 .toList();
     }
+
     public List<ProductResponse> getProductsFromTop5Brands() {
         Pageable top5Pageable = PageRequest.of(0, 5);
 
