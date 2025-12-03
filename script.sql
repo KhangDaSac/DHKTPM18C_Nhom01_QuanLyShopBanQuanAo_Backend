@@ -61,7 +61,7 @@ INSERT INTO brands (id, name, description, logo_url, active) VALUES
 -- 3. CATEGORIES (ví dụ tên thật ngoài đời)
 -- ==============================================
 
-DELETE FROM categories;
+
 INSERT INTO categories (id, name, is_active, parent_id) VALUES
                                                             (1, 'Đồ Nam', true, NULL),
                                                             (3, 'Quần Nam', true, 1),
@@ -92,7 +92,7 @@ INSERT INTO categories (id, name, is_active, parent_id) VALUES
 -- ==============================================
 -- 4. PRODUCTS (tên và giá thật ngoài đời)
 -- ==============================================
-DELETE FROM products;
+
 INSERT INTO products (id, name, brand_id, category_id, description, images, active, create_at, update_at) VALUES
                                                                                                               (1, 'Quần Jeans Nam Slimfit', 1, 11, 'Quần jeans slimfit Nam màu xanh, form Hàn Quốc', NULL, true, NOW(), NOW()),
                                                                                                               (2, 'Quần Jeans Nam Rách Gối', 2, 11, 'Quần jeans nam rách trẻ trung Hàn Quốc', NULL, true, NOW(), NOW()),

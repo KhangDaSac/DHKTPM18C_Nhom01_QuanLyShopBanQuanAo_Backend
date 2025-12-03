@@ -457,32 +457,36 @@ INSERT INTO product_variants (id, product_id, size, color, price, discount, quan
 -- 7. PRODUCT IMAGES (Sample images for first 10 products)
 -- ==============================================
 
-INSERT INTO product_image (id, product_id, variant_id, url) VALUES
--- Product 1 images
-(1, 1, 1, 'https://example.com/products/1/s-1.jpg'),
-(2, 1, 2, 'https://example.com/products/1/m-1.jpg'),
-(3, 1, 3, 'https://example.com/products/1/l-1.jpg'),
-(4, 1, 4, 'https://example.com/products/1/xl-1.jpg'),
--- Product 2 images
-(5, 2, 5, 'https://example.com/products/2/s-1.jpg'),
-(6, 2, 6, 'https://example.com/products/2/m-1.jpg'),
-(7, 2, 7, 'https://example.com/products/2/l-1.jpg'),
-(8, 2, 8, 'https://example.com/products/2/xl-1.jpg'),
--- Product 3 images
-(9, 3, 9, 'https://example.com/products/3/s-1.jpg'),
-(10, 3, 10, 'https://example.com/products/3/m-1.jpg'),
-(11, 3, 11, 'https://example.com/products/3/l-1.jpg'),
-(12, 3, 12, 'https://example.com/products/3/xl-1.jpg'),
--- Product 4 images
-(13, 4, 13, 'https://example.com/products/4/s-1.jpg'),
-(14, 4, 14, 'https://example.com/products/4/m-1.jpg'),
-(15, 4, 15, 'https://example.com/products/4/l-1.jpg'),
-(16, 4, 16, 'https://example.com/products/4/xl-1.jpg'),
--- Product 5 images
-(17, 5, 17, 'https://example.com/products/5/s-1.jpg'),
-(18, 5, 18, 'https://example.com/products/5/m-1.jpg'),
-(19, 5, 19, 'https://example.com/products/5/l-1.jpg'),
-(20, 5, 20, 'https://example.com/products/5/xl-1.jpg');
+INSERT INTO product_variants ( image) VALUES
+-- Product 1
+(1, 1, 1, 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f'),
+(2, 1, 2, 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f'),
+(3, 1, 3, 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f'),
+(4, 1, 4, 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f'),
+
+-- Product 2
+(5, 2, 5, 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b'),
+(6, 2, 6, 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b'),
+(7, 2, 7, 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b'),
+(8, 2, 8, 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b'),
+
+-- Product 3
+(9, 3, 9, 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab'),
+(10, 3, 10, 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab'),
+(11, 3, 11, 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab'),
+(12, 3, 12, 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab'),
+
+-- Product 4
+(13, 4, 13, 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246'),
+(14, 4, 14, 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246'),
+(15, 4, 15, 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246'),
+(16, 4, 16, 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246'),
+
+-- Product 5
+(17, 5, 17, 'https://images.unsplash.com/photo-1520974698107-34a36c1cb9b0'),
+(18, 5, 18, 'https://images.unsplash.com/photo-1520974698107-34a36c1cb9b0'),
+(19, 5, 19, 'https://images.unsplash.com/photo-1520974698107-34a36c1cb9b0'),
+(20, 5, 20, 'https://images.unsplash.com/photo-1520974698107-34a36c1cb9b0');
 
 -- ==============================================
 -- 8. ADDRESSES (Sample addresses for customers)
@@ -506,18 +510,18 @@ INSERT INTO product_image (id, product_id, variant_id, url) VALUES
 -- 11. PROMOTIONS (Sample promotions)
 -- ==============================================
 
-INSERT INTO promotions (id, code, value, min_order_value, start_at, end_at, quantity, is_active, create_at) VALUES
-(1, 'WELCOME10', '10', 500000, '2024-01-01 00:00:00', '2024-12-31 23:59:59', 1000, true, NOW()),
-(2, 'SUMMER20', '20', 1000000, '2024-06-01 00:00:00', '2024-08-31 23:59:59', 500, true, NOW()),
-(3, 'NEWYEAR50', '50000', 2000000, '2024-01-01 00:00:00', '2024-01-31 23:59:59', 200, true, NOW()),
-(4, 'BLACKFRIDAY30', '30', 1500000, '2024-11-24 00:00:00', '2024-11-30 23:59:59', 300, true, NOW()),
-(5, 'STUDENT15', '15', 300000, '2024-01-01 00:00:00', '2024-12-31 23:59:59', 2000, true, NOW());
+INSERT INTO amount_promotion (amount_promotion.promotion_id, code, discount, min_order_value, create_at, expiration, quantity, is_active) VALUES
+(1, 'WELCOME10', '10', 500000, '2024-01-01 00:00:00', '2024-12-31 23:59:59', 1000),
+(2, 'SUMMER20', '20', 1000000, '2024-06-01 00:00:00', '2024-08-31 23:59:59', 500),
+(3, 'NEWYEAR50', '50000', 2000000, '2024-01-01 00:00:00', '2024-01-31 23:59:59', 200),
+(4, 'BLACKFRIDAY30', '30', 1500000, '2024-11-24 00:00:00', '2024-11-30 23:59:59', 300),
+(5, 'STUDENT15', '15', 300000, '2024-01-01 00:00:00', '2024-12-31 23:59:59', 2000);
 
 -- ==============================================
 -- 12. TYPE PROMOTIONS (Promotion types)
 -- ==============================================
 
-INSERT INTO type_promotions (id, promotion_id, type) VALUES
+INSERT INTO percent_promotion (promotion_id, type) VALUES
 (1, 1, 'PERCENT'),    -- WELCOME10: 10% discount
 (2, 2, 'PERCENT'),    -- SUMMER20: 20% discount
 (3, 3, 'AMOUNT'),     -- NEWYEAR50: 50,000 VND discount
@@ -575,3 +579,7 @@ INSERT INTO type_promotions (id, promotion_id, type) VALUES
 -- ==============================================
 -- END OF SAMPLE DATA
 -- ==============================================
+UPDATE product_variants SET image = 'https://images.unsplash.com/photo-1520974698107-34a36c1cb9b0' WHERE id = 1;
+UPDATE product_variants SET image = 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246' WHERE id = 2;
+UPDATE product_variants SET image = 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab' WHERE id = 3;
+UPDATE product_variants SET image = 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f' WHERE id = 4;
