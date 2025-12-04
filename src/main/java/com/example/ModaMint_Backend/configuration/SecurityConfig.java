@@ -60,7 +60,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/orders").permitAll()  // Guest checkout (nếu có)
 
                         .requestMatchers(HttpMethod.POST, "/cart/**").hasRole("CUSTOMER") // bắt buộc CUSTOMER// Xem giỏ hàng
-
+                        .requestMatchers(HttpMethod.POST, "/orders/detail/**").hasAnyRole("CUSTOMER", "ADMIN") // bắt buộc CUSTOMER// Xem giỏ hàng
                         .requestMatchers(HttpMethod.GET, "/product-variants/colors").permitAll()  // Lấy màu
 
                         .requestMatchers(HttpMethod.GET, "/reviews/**").permitAll()
