@@ -11,6 +11,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import java.time.LocalDate;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "customers")
@@ -18,11 +19,15 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Customer {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     String customerId;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @MapsId
-    @JoinColumn(name = "user_id")
+    String phone;
+    String name;  // Guest customer name
+    String email; // Guest customer email
+    
+    @OneToOne(optional = true) // Make User optional for guest customers
+    @JoinColumn(name = "user_id", nullable = true)
     User user;
 
     @OneToMany(mappedBy = "customer")

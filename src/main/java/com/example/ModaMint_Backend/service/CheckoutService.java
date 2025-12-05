@@ -21,6 +21,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -38,6 +39,8 @@ public class    CheckoutService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final CartService cartService;
+    private final EmailService emailService;
+    private final UserRepository userRepository;
 
     /**
      * Lấy danh sách mã giảm giá khả dụng cho đơn hàng
@@ -45,25 +48,30 @@ public class    CheckoutService {
     public List<PromotionSummary> getAvailablePromotions(String customerId) {
         log.info("Getting available promotions for customer: {}", customerId);
         
-        // Lấy giỏ hàng và tính tổng tiền
-        Cart cart = cartRepository.findByCustomerId(customerId)
-                .orElseThrow(() -> new AppException(ErrorCode.CART_NOT_FOUND));
-        
-        BigDecimal cartTotal = calculateCartTotal(cart.getId());
+        BigDecimal cartTotal = BigDecimal.ZERO;
         LocalDateTime now = LocalDateTime.now();
+        
+        // For guest customers, return all active promotions
+        if (!"guest".equalsIgnoreCase(customerId)) {
+            // Lấy giỏ hàng và tính tổng tiền for registered customers
+            Cart cart = cartRepository.findByCustomerId(customerId).orElse(null);
+            if (cart != null) {
+                cartTotal = calculateCartTotal(cart.getId());
+            }
+        }
         
         List<PromotionSummary> promotions = new ArrayList<>();
 
         List<PercentPromotion> percentPromotions = percentPromotionRepository.findByIsActive(true);
         for (PercentPromotion promo : percentPromotions) {
-            if (isPromotionValid(promo, cartTotal, now)) {
+            if (isPromotionValidForGuest(promo, cartTotal, now, "guest".equalsIgnoreCase(customerId))) {
                 promotions.add(buildPercentPromotionSummary(promo));
             }
         }
 
         List<AmountPromotion> amountPromotions = amountPromotionRepository.findByIsActive(true);
         for (AmountPromotion promo : amountPromotions) {
-            if (isPromotionValid(promo, cartTotal, now)) {
+            if (isPromotionValidForGuest(promo, cartTotal, now, "guest".equalsIgnoreCase(customerId))) {
                 promotions.add(buildAmountPromotionSummary(promo));
             }
         }
@@ -71,39 +79,165 @@ public class    CheckoutService {
         log.info("Found {} available promotions", promotions.size());
         return promotions;
     }
+    
+    private boolean isPromotionValidForGuest(Promotion promo, BigDecimal cartTotal, LocalDateTime now, boolean isGuest) {
+        // Check if promotion is within valid date range
+        if (promo.getEffective() != null && now.isBefore(promo.getEffective())) {
+            return false;
+        }
+        if (promo.getExpiration() != null && now.isAfter(promo.getExpiration())) {
+            return false;
+        }
+        
+        // Check if quantity is available
+        if (promo.getQuantity() != null && promo.getQuantity() <= 0) {
+            return false;
+        }
+        
+        // For guests, skip minimum order value check (will be validated at checkout)
+        if (!isGuest && promo.getMinOrderValue() != null && cartTotal.compareTo(promo.getMinOrderValue()) < 0) {
+            return false;
+        }
+        
+        return true;
+    }
 
 
     @Transactional
     public CheckoutResponse checkout(CheckoutRequest request) {
-        log.info("Processing checkout for customer: {}", request.getCustomerId());
+        log.info("=== Starting checkout process ===");
+        log.info("Customer ID: {}, isGuest: {}", request.getCustomerId(), request.getIsGuest());
+        log.info("Payment method: {}", request.getPaymentMethod());
         
-        // 1. Validate customer
-        Customer customer = customerRepository.findById(request.getCustomerId())
-                .orElseThrow(() -> new AppException(ErrorCode.CUSTOMER_NOT_FOUND));
+        try {
+            Customer customer;
+            Cart cart = null;
+            List<CartItem> cartItems = new ArrayList<>();
+            Address address;
+            
+            // Handle guest vs registered customer
+            boolean isGuestCheckout = Boolean.TRUE.equals(request.getIsGuest());
+            log.info("Guest checkout: {}", isGuestCheckout);
         
-        // 2. Validate address
-        Address address = addressRepository.findById(request.getShippingAddressId())
-                .orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_FOUND));
-        
-        if (!address.getCustomer().getUser().getId().equals(request.getCustomerId())) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
+        if (isGuestCheckout) {
+            // For guest checkout, create and save customer record to database
+            log.info("=== Processing GUEST checkout ===");
+            log.info("Guest name: {}", request.getGuestName());
+            log.info("Guest email: {}", request.getGuestEmail());
+            log.info("Guest phone: {}", request.getPhone());
+            
+            // For guests, validate that cart items are provided in request
+            if (request.getGuestCartItems() == null || request.getGuestCartItems().isEmpty()) {
+                log.error("Guest cart items are null or empty");
+                throw new AppException(ErrorCode.CART_EMPTY);
+            }
+            log.info("Guest cart has {} items", request.getGuestCartItems().size());
+            
+            // Validate guest address info
+            if (request.getCity() == null || request.getDistrict() == null || 
+                request.getWard() == null || request.getAddressDetail() == null) {
+                log.error("Guest address info is incomplete: city={}, district={}, ward={}, detail={}", 
+                    request.getCity(), request.getDistrict(), request.getWard(), request.getAddressDetail());
+                throw new AppException(ErrorCode.INVALID_KEY);
+            }
+            log.info("Guest address: {}, {}, {}, {}", 
+                request.getCity(), request.getDistrict(), request.getWard(), request.getAddressDetail());
+            
+            // Check if customer with same phone, email AND name already exists
+            Optional<Customer> existingCustomer = customerRepository.findByPhoneAndEmailAndName(
+                request.getPhone(), 
+                request.getGuestEmail(), 
+                request.getGuestName()
+            );
+            
+            if (existingCustomer.isPresent()) {
+                // Reuse existing customer (all 3 fields match)
+                customer = existingCustomer.get();
+                log.info("Reusing existing customer with phone: {}, email: {}, name: {} - ID: {}", 
+                    request.getPhone(), request.getGuestEmail(), request.getGuestName(), customer.getCustomerId());
+            } else {
+                // Create new customer (at least one field is different)
+                log.info("Creating new guest customer - phone: {}, email: {}, name: {}", 
+                    request.getPhone(), request.getGuestEmail(), request.getGuestName());
+                
+                customer = Customer.builder()
+                        .phone(request.getPhone())
+                        .name(request.getGuestName())
+                        .email(request.getGuestEmail())
+                        .user(null) // No user for guest customers
+                        .build();
+                customer = customerRepository.save(customer);
+                log.info("Created new guest customer with ID: {}", customer.getCustomerId());
+            }
+            
+            // Create and save Address for guest
+            address = Address.builder()
+                    .customer(customer)
+                    .city(request.getCity())
+                    .district(request.getDistrict())
+                    .ward(request.getWard())
+                    .addressDetail(request.getAddressDetail())
+                    .build();
+            address = addressRepository.save(address);
+            log.info("Created guest address with ID: {}", address.getId());
+            
+            // Convert guest cart items to CartItem objects for processing
+            for (CheckoutRequest.GuestCartItem guestItem : request.getGuestCartItems()) {
+                CartItem cartItem = new CartItem();
+                cartItem.setVariantId(guestItem.getVariantId());
+                cartItem.setQuantity(guestItem.getQuantity());
+                cartItems.add(cartItem);
+            }
+        } else {
+            // 1. Validate registered customer
+            customer = customerRepository.findById(request.getCustomerId())
+                    .orElseThrow(() -> new AppException(ErrorCode.CUSTOMER_NOT_FOUND));
+            
+            // 2. Validate address
+            address = addressRepository.findById(request.getShippingAddressId())
+                    .orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_FOUND));
+            
+            // Check address ownership for registered users
+            if (!address.getCustomer().getUser().getId().equals(request.getCustomerId())) {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+            
+            // 3. Get cart items for registered customer
+            cart = cartRepository.findByCustomerId(request.getCustomerId())
+                    .orElseThrow(() -> new AppException(ErrorCode.CART_NOT_FOUND));
+            
+            cartItems = cartItemRepository.findByCartId(cart.getId());
+            
+            if (cartItems.isEmpty()) {
+                throw new AppException(ErrorCode.CART_EMPTY);
+            }
         }
         
-        // 3. Get cart items
-        Cart cart = cartRepository.findByCustomerId(request.getCustomerId())
-                .orElseThrow(() -> new AppException(ErrorCode.CART_NOT_FOUND));
-        
-        List<CartItem> cartItems = cartItemRepository.findByCartId(cart.getId());
-        
-        if (cartItems.isEmpty()) {
-            throw new AppException(ErrorCode.CART_EMPTY);
+        // 4. Update shippingAddressId with the created address for guest
+        Long finalShippingAddressId;
+        if (isGuestCheckout) {
+            finalShippingAddressId = address.getId();
+        } else {
+            finalShippingAddressId = request.getShippingAddressId();
         }
         
-        // 4. Calculate prices
-        BigDecimal subtotal = calculateCartTotal(cart.getId());
+        // 5. Calculate prices
+        BigDecimal subtotal;
+        if (isGuestCheckout) {
+            // For guests, calculate from provided cart items
+            subtotal = cartItems.stream()
+                    .map(item -> {
+                        ProductVariant variant = productVariantRepository.findById(item.getVariantId()).orElse(null);
+                        if (variant == null) return BigDecimal.ZERO;
+                        return variant.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
+                    })
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        } else {
+            subtotal = calculateCartTotal(cart.getId());
+        }
         BigDecimal shippingFee = BigDecimal.valueOf(30000); // Fixed shipping fee
         
-        // 5. Apply promotion
+        // 6. Apply promotion
         PromotionResult promotionResult = applyPromotion(
                 request.getPercentagePromotionCode(),
                 request.getAmountPromotionCode(),
@@ -113,21 +247,25 @@ public class    CheckoutService {
         BigDecimal discountAmount = promotionResult.getDiscountAmount();
         BigDecimal totalAmount = subtotal.add(shippingFee).subtract(discountAmount);
         
-        // 6. Create order
+        // 7. Create order
         String orderCode = generateOrderCode();
+        
+        // Use actual customer ID from database (important for guests)
+        String actualCustomerId = customer.getCustomerId();
         
         Order order = Order.builder()
                 .orderCode(orderCode)
-                .customerId(request.getCustomerId())
-                .totalAmount(subtotal.add(shippingFee)) // Tổng trước khi giảm
-                .subTotal(totalAmount) // Tổng sau khi giảm
+                .customerId(actualCustomerId)
+                .totalAmount(subtotal.add(shippingFee)) // Tổng TRƯỚC giảm (theo entity definition)
+                .subTotal(totalAmount) // Tổng SAU giảm = final price (theo entity definition)
                 .percentPromotionId(promotionResult.getPercentagePromotionId())
                 .amountPromotionId(promotionResult.getAmountPromotionId())
                 .promotionValue(discountAmount)
                 .orderStatus(OrderStatus.PENDING)
                 .paymentMethod(request.getPaymentMethod())
-                .shippingAddressId(request.getShippingAddressId())
-                .phone(request.getPhone() != null ? request.getPhone() : customer.getUser().getPhone())
+                .shippingAddressId(finalShippingAddressId) // Use the created address ID for guest
+                .phone(request.getPhone() != null ? request.getPhone() 
+                    : (customer.getUser() != null ? customer.getUser().getPhone() : customer.getPhone()))
                 .build();
         
         Order savedOrder = orderRepository.save(order);
@@ -168,9 +306,16 @@ public class    CheckoutService {
                     .build());
         }
         
-        // 8. Clear cart after successful order using CartService
-        cartService.clearCart(request.getCustomerId());
-        log.info("Cart cleared for customer: {}", request.getCustomerId());
+         // 8. Clear cart after successful order using CartService
+         cartService.clearCart(request.getCustomerId());
+         log.info("Cart cleared for customer: {}", request.getCustomerId());
+//        // 8. Clear cart after successful order (only for registered users)
+//        if (!isGuestCheckout) {
+//            cartService.clearCartForUser(request.getCustomerId());
+//
+//        } else {
+//
+//        }
         
         // 9. Update promotion quantity
         if (promotionResult.getPercentagePromotionId() != null) {
@@ -181,12 +326,16 @@ public class    CheckoutService {
         }
         
         // 10. Build response
-        return CheckoutResponse.builder()
+        CheckoutResponse response = CheckoutResponse.builder()
                 .orderId(savedOrder.getId())
                 .orderCode(orderCode)
 //                .customerId(customer.getUserId())
-                .customerName(customer.getUser().getFirstName() + " " + customer.getUser().getLastName())
-                .customerEmail(customer.getUser().getEmail())
+                .customerName(customer.getUser() != null 
+                    ? customer.getUser().getFirstName() + " " + customer.getUser().getLastName()
+                    : customer.getName())
+                .customerEmail(customer.getUser() != null 
+                    ? customer.getUser().getEmail() 
+                    : customer.getEmail())
                 .customerPhone(savedOrder.getPhone())
                 .shippingAddress(buildAddressResponse(address))
                 .orderItems(orderItemResponses)
@@ -199,6 +348,30 @@ public class    CheckoutService {
                 .orderStatus(OrderStatus.PENDING.toString())
                 .message("Đặt hàng thành công!")
                 .build();
+        
+        // 11. Send order confirmation email
+        try {
+            String recipientEmail = customer.getUser() != null 
+                ? customer.getUser().getEmail() 
+                : customer.getEmail();
+            emailService.sendOrderConfirmationEmail(response, recipientEmail);
+            log.info("Order confirmation email queued for: {}", recipientEmail);
+        } catch (Exception e) {
+            log.error("Failed to queue order confirmation email", e);
+            // Don't fail the order if email fails
+        }
+        
+        log.info("=== Checkout completed successfully ===");
+        log.info("Order ID: {}, Order Code: {}", response.getOrderId(), response.getOrderCode());
+        return response;
+        
+        } catch (Exception e) {
+            log.error("=== CHECKOUT FAILED ===");
+            log.error("Error type: {}", e.getClass().getName());
+            log.error("Error message: {}", e.getMessage());
+            log.error("Stack trace:", e);
+            throw e;
+        }
     }
 
     // ==================== HELPER METHODS ====================
