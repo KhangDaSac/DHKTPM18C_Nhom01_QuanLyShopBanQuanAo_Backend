@@ -77,11 +77,11 @@ INSERT INTO permissions (id, name, description) VALUES
 -- ==============================================
 
 INSERT INTO brands (id, name, description, image, active) VALUES
-                                                                 (1, 'Uniqlo', 'Japanese casual wear brand', 'https://example.com/logos/uniqlo.jpg', true),
-                                                                 (2, 'Zara', 'Spanish fast fashion brand', 'https://example.com/logos/zara.jpg', true),
-                                                                 (3, 'H&M', 'Swedish multinational clothing retailer', 'https://example.com/logos/hm.jpg', true),
-                                                                 (4, 'Nike', 'American multinational sportswear brand', 'https://example.com/logos/nike.jpg', true),
-                                                                 (5, 'Adidas', 'German multinational sportswear brand', 'https://example.com/logos/adidas.jpg', true),
+                                                                 (1, 'Uniqlo', 'Japanese casual wear brand', 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/UNIQLO_logo.svg/2058px-UNIQLO_logo.svg.png', true),
+                                                                 (2, 'Zara', 'Spanish fast fashion brand', 'https://logomakerr.ai/blog/wp-content/uploads/2022/08/2019-to-Present-Zara-logo-design.jpg', true),
+                                                                 (3, 'H&M', 'Swedish multinational clothing retailer', 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/H%26M-Logo.svg/1280px-H%26M-Logo.svg.png', true),
+                                                                 (4, 'Nike', 'American multinational sportswear brand', 'https://inkythuatso.com/uploads/images/2021/11/logo-nike-inkythuatso-2-01-04-15-42-44.jpg', true),
+                                                                 (5, 'Adidas', 'German multinational sportswear brand', 'https://www.citypng.com/public/uploads/preview/adidas-white-logo-hd-png-701751694777208ogwssxbgpj.png', true),
                                                                  (6, 'Gucci', 'Italian luxury fashion brand', 'https://example.com/logos/gucci.jpg', true),
                                                                  (7, 'Louis Vuitton', 'French luxury fashion brand', 'https://example.com/logos/lv.jpg', true),
                                                                  (8, 'Chanel', 'French luxury fashion brand', 'https://example.com/logos/chanel.jpg', true),
