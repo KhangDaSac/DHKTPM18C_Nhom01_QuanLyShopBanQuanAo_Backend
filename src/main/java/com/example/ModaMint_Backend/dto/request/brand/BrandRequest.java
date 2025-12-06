@@ -16,5 +16,8 @@ public class BrandRequest {
 
     String description;
 
-    String logoUrl;
+    /**
+     * URL ảnh của brand từ Cloudinary
+     */
+    String image;
 }

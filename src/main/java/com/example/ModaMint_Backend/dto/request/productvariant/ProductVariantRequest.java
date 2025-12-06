@@ -19,7 +19,10 @@ public class    ProductVariantRequest {
 
     String color;
     
-    String image;
+    /**
+     * URL ảnh của variant từ Cloudinary
+     */
+    String imageUrl;
 
     @NotNull(message = "Giá không được để trống")
     BigDecimal price;

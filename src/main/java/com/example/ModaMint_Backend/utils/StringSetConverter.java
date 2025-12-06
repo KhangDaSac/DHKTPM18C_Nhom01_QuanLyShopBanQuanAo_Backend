@@ -1,4 +1,4 @@
-package com.example.ModaMint_Backend.converter;
+package com.example.ModaMint_Backend.utils;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;

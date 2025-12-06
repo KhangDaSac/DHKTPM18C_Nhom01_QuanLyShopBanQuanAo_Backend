@@ -1,10 +1,6 @@
 package com.example.ModaMint_Backend.entity;
 
-import com.example.ModaMint_Backend.converter.StringSetConverter;
-import com.example.ModaMint_Backend.entity.Brand;
-import com.example.ModaMint_Backend.entity.Category;
-import com.example.ModaMint_Backend.entity.ProductVariant;
-import com.example.ModaMint_Backend.entity.Review;
+import com.example.ModaMint_Backend.utils.StringSetConverter;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;

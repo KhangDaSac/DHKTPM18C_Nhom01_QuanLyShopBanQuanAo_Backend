@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PromotionSummary {
     
-    Long id;
+    String id;
     
     String name;
     

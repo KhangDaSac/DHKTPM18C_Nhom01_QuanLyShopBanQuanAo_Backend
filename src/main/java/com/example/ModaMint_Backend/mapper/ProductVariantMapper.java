@@ -14,6 +14,7 @@ public interface ProductVariantMapper {
     @Mapping(target = "product", ignore = true)
     @Mapping(target = "cartItems", ignore = true)
     @Mapping(target = "orderItems", ignore = true)
+    @Mapping(target = "image", source = "imageUrl")
     ProductVariant toProductVariant(ProductVariantRequest request);
 
     ProductVariantResponse toProductVariantResponse(ProductVariant productVariant);
@@ -23,5 +24,6 @@ public interface ProductVariantMapper {
     @Mapping(target = "product", ignore = true)
     @Mapping(target = "cartItems", ignore = true)
     @Mapping(target = "orderItems", ignore = true)
+    @Mapping(target = "image", source = "imageUrl")
     void updateProductVariant(ProductVariantRequest request, @MappingTarget ProductVariant productVariant);
 }

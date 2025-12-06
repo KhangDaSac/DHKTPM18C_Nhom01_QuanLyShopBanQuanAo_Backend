@@ -21,7 +21,12 @@ public class CreateProductVariantRequest {
 
     String color;
     
-    String image;
+    /**
+     * URL ảnh của variant từ Cloudinary
+     * Frontend upload ảnh variant lên /api/images/upload,
+     * nhận về imageUrl và gửi trong request
+     */
+    String imageUrl;
 
     @NotNull(message = "Giá không được để trống")
     BigDecimal price;

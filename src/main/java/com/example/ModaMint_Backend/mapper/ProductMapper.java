@@ -25,7 +25,16 @@ public interface ProductMapper {
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "productVariants", ignore = true)
     @Mapping(target = "reviews", ignore = true)
+    @Mapping(target = "images", source = "imageUrls", qualifiedByName = "listToSet")
     Product toProduct(ProductRequest request);
+
+    @Named("listToSet")
+    default Set<String> listToSet(List<String> list) {
+        if (list == null || list.isEmpty()) {
+            return Set.of();
+        }
+        return Set.copyOf(list);
+    }
 
     @Mapping(target = "createAt", ignore = true)
     @Mapping(target = "updateAt", ignore = true)
@@ -71,8 +80,8 @@ public interface ProductMapper {
     @Mapping(target = "brand", ignore = true)
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "productVariants", ignore = true)
-    @Mapping(target = "images", ignore = true)
     @Mapping(target = "reviews", ignore = true)
+    @Mapping(target = "images", source = "imageUrls", qualifiedByName = "listToSet")
     void updateProduct(ProductRequest request, @MappingTarget Product product);
 
 

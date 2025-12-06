@@ -29,7 +29,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PromotionResponse {
-    Long id;
+    String id;
     String code;
     String value; // "10%" hoặc "100000"
     BigDecimal minOrderValue;

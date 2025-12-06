@@ -34,10 +34,10 @@ public class Order {
     BigDecimal subTotal; // Tổng tiền hàng - khuyến mãi (Tổng tiền cuối cùng)
 
     @Column(name = "percentage_promotion_id")
-    Long percentPromotionId;
+    String percentPromotionId;
 
     @Column(name = "amount_promotion_id")
-    Long amountPromotionId; 
+    String amountPromotionId; 
 
     @Column(name = "promotion_value") 
     BigDecimal promotionValue; // Phải lưu vì theo thời gian promotion có thể thay đổi

@@ -18,8 +18,9 @@ import java.time.LocalDateTime;
 public abstract class Promotion {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "promotion_id")
-    Long promotionId;
+    String promotionId;
 
     @Column(name = "name", nullable = false)
     String name;

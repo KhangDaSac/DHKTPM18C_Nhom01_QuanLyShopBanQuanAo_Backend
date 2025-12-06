@@ -2,6 +2,60 @@
 -- This file contains test data for development and testing purposes
 
 -- ==============================================
+-- TABLE SCHEMA DEFINITIONS (Optional - for fresh database setup)
+-- Note: These tables are normally created by Hibernate, but included here for reference
+-- ==============================================
+
+-- Promotion Tables (using VARCHAR for UUID support)
+CREATE TABLE IF NOT EXISTS percent_promotion (
+    promotion_id VARCHAR(255) NOT NULL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    code VARCHAR(255) UNIQUE NOT NULL,
+    min_order_value DECIMAL(19,2),
+    effective DATETIME,
+    expiration DATETIME,
+    quantity INT,
+    is_active BOOLEAN DEFAULT true,
+    percent DOUBLE NOT NULL,
+    max_discount DOUBLE NOT NULL,
+    create_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS amount_promotion (
+    promotion_id VARCHAR(255) NOT NULL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    code VARCHAR(255) UNIQUE NOT NULL,
+    min_order_value DECIMAL(19,2),
+    effective DATETIME,
+    expiration DATETIME,
+    quantity INT,
+    is_active BOOLEAN DEFAULT true,
+    discount DOUBLE NOT NULL,
+    create_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Brand Table
+CREATE TABLE IF NOT EXISTS brands (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description VARCHAR(1000),
+    image VARCHAR(500),
+    active BOOLEAN DEFAULT true
+);
+
+-- Category Table
+CREATE TABLE IF NOT EXISTS categories (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    is_active BOOLEAN DEFAULT true,
+    parent_id BIGINT,
+    image VARCHAR(500),
+    create_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (parent_id) REFERENCES categories(id)
+);
+
+-- ==============================================
 -- 1. PERMISSIONS
 -- ==============================================
 
@@ -22,7 +76,7 @@ INSERT INTO permissions (id, name, description) VALUES
 -- 2. BRANDS (15 brands)
 -- ==============================================
 
-INSERT INTO brands (id, name, description, logo_url, active) VALUES
+INSERT INTO brands (id, name, description, image, active) VALUES
                                                                  (1, 'Uniqlo', 'Japanese casual wear brand', 'https://example.com/logos/uniqlo.jpg', true),
                                                                  (2, 'Zara', 'Spanish fast fashion brand', 'https://example.com/logos/zara.jpg', true),
                                                                  (3, 'H&M', 'Swedish multinational clothing retailer', 'https://example.com/logos/hm.jpg', true),
@@ -1145,6 +1199,27 @@ UPDATE categories SET image_url = 'https://picsum.photos/seed/cat22/800/300' WHE
 UPDATE users
 SET image = CONCAT('https://i.pravatar.cc/300?img=', MOD(ABS(CRC32(id)), 70) + 1)
 WHERE (image IS NULL OR TRIM(image) = '');
+
+-- ==============================================
+-- SAMPLE PROMOTIONS (using UUID for promotion_id)
+-- ==============================================
+
+-- Percent Promotions
+INSERT INTO percent_promotion (promotion_id, name, code, min_order_value, effective, expiration, quantity, is_active, percent, max_discount) VALUES
+('550e8400-e29b-41d4-a716-446655440001', 'Flash Sale 50%', 'FLASH50', 0, '2025-01-01 00:00:00', '2025-01-31 23:59:59', 100, true, 50.0, 500000.0),
+('550e8400-e29b-41d4-a716-446655440002', 'Giảm 30% Hè', 'SUMMER30', 500000, '2025-06-01 00:00:00', '2025-08-31 23:59:59', 200, true, 30.0, 300000.0),
+('550e8400-e29b-41d4-a716-446655440003', 'Black Friday 70%', 'BF70', 1000000, '2025-11-25 00:00:00', '2025-11-30 23:59:59', 50, true, 70.0, 1000000.0),
+('550e8400-e29b-41d4-a716-446655440004', 'Giảm 20% Thành Viên', 'MEMBER20', 0, '2025-01-01 00:00:00', '2025-12-31 23:59:59', 500, true, 20.0, 200000.0),
+('550e8400-e29b-41d4-a716-446655440005', 'Sale Cuối Năm 40%', 'NEWYEAR40', 2000000, '2025-12-01 00:00:00', '2025-12-31 23:59:59', 150, true, 40.0, 400000.0);
+
+-- Amount Promotions
+INSERT INTO amount_promotion (promotion_id, name, code, min_order_value, effective, expiration, quantity, is_active, discount) VALUES
+('660e8400-e29b-41d4-a716-446655440001', 'Giảm 100K', 'GIAM100K', 500000, '2025-01-01 00:00:00', '2025-12-31 23:59:59', 300, true, 100000.0),
+('660e8400-e29b-41d4-a716-446655440002', 'Voucher 200K', 'VOUCHER200', 1000000, '2025-01-01 00:00:00', '2025-06-30 23:59:59', 100, true, 200000.0),
+('660e8400-e29b-41d4-a716-446655440003', 'Giảm 50K Sinh Nhật', 'BIRTHDAY50', 0, '2025-01-01 00:00:00', '2025-12-31 23:59:59', 1000, true, 50000.0),
+('660e8400-e29b-41d4-a716-446655440004', 'Mã 500K VIP', 'VIP500', 5000000, '2025-01-01 00:00:00', '2025-12-31 23:59:59', 20, true, 500000.0),
+('660e8400-e29b-41d4-a716-446655440005', 'Freeship 30K', 'FREESHIP30', 0, '2025-01-01 00:00:00', '2025-12-31 23:59:59', 500, true, 30000.0);
+
 
 
 

@@ -38,7 +38,7 @@ public class AmountPromotionController {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<AmountPromotionResponse> getAmountPromotionById(@PathVariable Long id) {
+    public ApiResponse<AmountPromotionResponse> getAmountPromotionById(@PathVariable String id) {
         return ApiResponse.<AmountPromotionResponse>builder()
                 .result(amountPromotionService.getAmountPromotionById(id))
                 .message("Lấy thông tin khuyến mãi số tiền thành công")
@@ -56,7 +56,7 @@ public class AmountPromotionController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<AmountPromotionResponse> updateAmountPromotion(
-            @PathVariable Long id,
+            @PathVariable String id,
             @RequestBody @Valid AmountPromotionRequest request) {
         return ApiResponse.<AmountPromotionResponse>builder()
                 .result(amountPromotionService.updateAmountPromotion(id, request))
@@ -66,7 +66,7 @@ public class AmountPromotionController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<String> deleteAmountPromotion(@PathVariable Long id) {
+    public ApiResponse<String> deleteAmountPromotion(@PathVariable String id) {
         amountPromotionService.deleteAmountPromotion(id);
         return ApiResponse.<String>builder()
                 .result("Khuyến mãi số tiền đã được xóa")
@@ -122,7 +122,7 @@ public class AmountPromotionController {
 
     @PostMapping("/{id}/increase-quantity")
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<String> increaseQuantity(@PathVariable Long id) {
+    public ApiResponse<String> increaseQuantity(@PathVariable String id) {
         amountPromotionService.increaseQuantity(id);
         return ApiResponse.<String>builder()
                 .result("Đã tăng số lượng mã khuyến mãi")

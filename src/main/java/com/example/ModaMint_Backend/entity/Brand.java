@@ -17,8 +17,12 @@ public class Brand {
 
     String name;
     String description;
-    @Column(name = "logo_url")
-    String logoUrl;
+    
+    /**
+     * URL ảnh của brand từ Cloudinary
+     */
+    @Column(name = "image")
+    String image;
 
     Boolean active = true;
 

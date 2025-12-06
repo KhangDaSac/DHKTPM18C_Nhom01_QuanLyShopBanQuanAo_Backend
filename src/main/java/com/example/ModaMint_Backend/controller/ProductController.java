@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +25,7 @@ import java.util.List;
 @RequestMapping("/products")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class ProductController {
     ProductService productService;
 
@@ -217,10 +219,26 @@ public class ProductController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<ProductResponse> createProductWithVariants(
             @RequestBody @Valid CreateProductWithVariantsRequest request) {
-        return ApiResponse.<ProductResponse>builder()
-                .result(productService.createProductWithVariants(request))
-                .message("Tạo sản phẩm với biến thể thành công")
-                .build();
+        
+        log.info("[CONTROLLER] Received request to create product with variants - Product: {}", 
+                request.getProduct().getName());
+        log.debug("[CONTROLLER] Request details - Brand ID: {}, Category ID: {}, Variants: {}",
+                request.getProduct().getBrandId(), 
+                request.getProduct().getCategoryId(),
+                request.getVariants().size());
+        
+        try {
+            ProductResponse response = productService.createProductWithVariants(request);
+            log.info("[CONTROLLER] Successfully created product with ID: {}", response.getId());
+            
+            return ApiResponse.<ProductResponse>builder()
+                    .result(response)
+                    .message("Tạo sản phẩm với biến thể thành công")
+                    .build();
+        } catch (Exception e) {
+            log.error("[CONTROLLER] Failed to create product with variants", e);
+            throw e;
+        }
     }
 
     /**

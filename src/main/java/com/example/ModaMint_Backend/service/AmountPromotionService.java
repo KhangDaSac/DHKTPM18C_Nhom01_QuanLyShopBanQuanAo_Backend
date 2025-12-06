@@ -40,7 +40,7 @@ public class AmountPromotionService {
     }
 
     // Read - Lấy khuyến mãi số tiền theo ID
-    public AmountPromotionResponse getAmountPromotionById(Long id) {
+    public AmountPromotionResponse getAmountPromotionById(String id) {
         AmountPromotion amountPromotion = amountPromotionRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PROMOTION_NOT_FOUND));
         return amountPromotionMapper.toAmountPromotionResponse(amountPromotion);
@@ -54,7 +54,7 @@ public class AmountPromotionService {
     }
 
     // Update - Cập nhật khuyến mãi số tiền
-    public AmountPromotionResponse updateAmountPromotion(Long id, AmountPromotionRequest request) {
+    public AmountPromotionResponse updateAmountPromotion(String id, AmountPromotionRequest request) {
         AmountPromotion amountPromotion = amountPromotionRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PROMOTION_NOT_FOUND));
 
@@ -70,7 +70,7 @@ public class AmountPromotionService {
     }
 
     // Delete - Xóa khuyến mãi số tiền
-    public void deleteAmountPromotion(Long id) {
+    public void deleteAmountPromotion(String id) {
         if (!amountPromotionRepository.existsById(id)) {
             throw new AppException(ErrorCode.PROMOTION_NOT_FOUND);
         }
@@ -181,7 +181,7 @@ public class AmountPromotionService {
     /**
      * Tăng số lượng mã khuyến mãi (dùng khi hoàn trả đơn hàng)
      */
-    public void increaseQuantity(Long promotionId) {
+    public void increaseQuantity(String promotionId) {
         AmountPromotion promotion = amountPromotionRepository.findById(promotionId)
                 .orElseThrow(() -> new AppException(ErrorCode.PROMOTION_NOT_FOUND));
         

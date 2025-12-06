@@ -8,7 +8,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
-import java.util.Set;
+import java.util.List;
 
 @Data
 @Builder
@@ -29,7 +29,12 @@ public class ProductRequest {
     @NotBlank(message = "Mô tả sản phẩm không được để trống")
     String description;
 
-    Set<String> images;
+    /**
+     * Danh sách URL ảnh từ Cloudinary
+     * Frontend upload ảnh lên /api/images/upload, nhận về imageUrl,
+     * sau đó gửi danh sách URL này trong request
+     */
+    List<String> imageUrls;
 
     @Builder.Default
     Boolean active = true;

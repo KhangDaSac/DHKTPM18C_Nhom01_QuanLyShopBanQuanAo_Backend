@@ -42,7 +42,7 @@ public class PercentPromotionService {
     }
 
 
-    public PercentPromotionResponse getPercentagePromotionById(Long id) {
+    public PercentPromotionResponse getPercentagePromotionById(String id) {
         PercentPromotion percentPromotion = percentPromotionRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PROMOTION_NOT_FOUND));
         return percentPromotionMapper.toPercentPromotionResponse(percentPromotion);
@@ -54,7 +54,7 @@ public class PercentPromotionService {
         return percentPromotionMapper.toPercentPromotionResponse(percentPromotion);
     }
 
-    public PercentPromotionResponse updatePercentagePromotion(Long id, PercentPromotionRequest request) {
+    public PercentPromotionResponse updatePercentagePromotion(String id, PercentPromotionRequest request) {
         PercentPromotion percentPromotion = percentPromotionRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PROMOTION_NOT_FOUND));
 
@@ -68,7 +68,7 @@ public class PercentPromotionService {
         return percentPromotionMapper.toPercentPromotionResponse(updatedPromotion);
     }
 
-    public void deletePercentagePromotion(Long id) {
+    public void deletePercentagePromotion(String id) {
         if (!percentPromotionRepository.existsById(id)) {
             throw new AppException(ErrorCode.PROMOTION_NOT_FOUND);
         }
@@ -164,7 +164,7 @@ public class PercentPromotionService {
     }
 
 
-    public void increaseQuantity(Long promotionId) {
+    public void increaseQuantity(String promotionId) {
         PercentPromotion promotion = percentPromotionRepository.findById(promotionId)
                 .orElseThrow(() -> new AppException(ErrorCode.PROMOTION_NOT_FOUND));
         

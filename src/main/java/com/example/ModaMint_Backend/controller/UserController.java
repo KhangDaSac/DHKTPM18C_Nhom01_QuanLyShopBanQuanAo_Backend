@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -41,19 +42,31 @@ public class UserController {
                 .build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/deactivate")
+    public ApiResponse<UserResponse> deactivateUser(@RequestParam("userId") String userId) {
+        UserResponse response = userService.deactivateUser(userId);
+        return ApiResponse.<UserResponse>builder()
+                .result(response)
+                .message("User has been deactivated")
+                .build();
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/activate")
+    public ApiResponse<UserResponse> activateUser(@RequestParam("userId") String userId) {
+        UserResponse response = userService.activateUser(userId);
+        return ApiResponse.<UserResponse>builder()
+                .result(response)
+                .message("User has been activated")
+                .build();
+    }
+
     @PutMapping("/{userId}")
     public ApiResponse<UserResponse> updateUser(@PathVariable("userId") String userId,
                                                @RequestBody @Valid UserUpdateRequest request) {
         return ApiResponse.<UserResponse>builder()
                 .result(userService.updateUser(userId, request))
-                .build();
-    }
-
-    @DeleteMapping("/{userId}")
-    public ApiResponse<String> deleteUser(@PathVariable("userId") String userId) {
-        userService.deleteUser(userId);
-        return ApiResponse.<String>builder()
-                .result("User has been deleted")
                 .build();
     }
 }

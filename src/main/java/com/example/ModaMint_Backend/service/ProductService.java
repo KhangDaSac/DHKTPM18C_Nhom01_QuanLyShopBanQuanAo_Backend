@@ -17,6 +17,7 @@ import com.example.ModaMint_Backend.specification.ProductSpecification;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +33,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class ProductService {
     ProductRepository productRepository;
     ProductVariantRepository productVariantRepository;
@@ -257,52 +259,101 @@ public class ProductService {
      * Tạo Product + Variants trong 1 transaction duy nhất
      * Đảm bảo atomicity và Product luôn có ít nhất 1 Variant
      * 
+     * Hỗ trợ upload ảnh từ Cloudinary:
+     * - Product.images: Set<String> từ imageUrls trong ProductRequest
+     * - ProductVariant.image: String từ imageUrl trong CreateProductVariantRequest
+     * 
      * @param request - CreateProductWithVariantsRequest chứa product + variants
      * @return ProductResponse đầy đủ bao gồm variants
      */
     @Transactional
     public ProductResponse createProductWithVariants(CreateProductWithVariantsRequest request) {
-        // Validate brand
-        if (!brandRepository.existsById(request.getProduct().getBrandId())) {
-            throw new AppException(ErrorCode.BRAND_NOT_FOUND);
+        log.info("[CREATE_PRODUCT_WITH_VARIANTS] Starting - Product name: {}, Variants count: {}", 
+                request.getProduct().getName(), request.getVariants().size());
+        
+        try {
+            // Validate brand
+            log.debug("[CREATE_PRODUCT_WITH_VARIANTS] Validating brand ID: {}", request.getProduct().getBrandId());
+            if (!brandRepository.existsById(request.getProduct().getBrandId())) {
+                log.error("[CREATE_PRODUCT_WITH_VARIANTS] Brand not found: {}", request.getProduct().getBrandId());
+                throw new AppException(ErrorCode.BRAND_NOT_FOUND);
+            }
+
+            // Validate category
+            log.debug("[CREATE_PRODUCT_WITH_VARIANTS] Validating category ID: {}", request.getProduct().getCategoryId());
+            if (!categoryRepository.existsById(request.getProduct().getCategoryId())) {
+                log.error("[CREATE_PRODUCT_WITH_VARIANTS] Category not found: {}", request.getProduct().getCategoryId());
+                throw new AppException(ErrorCode.CATEGORY_NOT_FOUND);
+            }
+
+            // Bước 1: Tạo và lưu Product
+            log.debug("[CREATE_PRODUCT_WITH_VARIANTS] Mapping ProductRequest to Product entity");
+            log.debug("[CREATE_PRODUCT_WITH_VARIANTS] Image URLs count: {}", 
+                    request.getProduct().getImageUrls() != null ? request.getProduct().getImageUrls().size() : 0);
+            
+            Product product = productMapper.toProduct(request.getProduct());
+            log.debug("[CREATE_PRODUCT_WITH_VARIANTS] Product entity created, saving to database");
+            
+            Product savedProduct = productRepository.save(product);
+            log.info("[CREATE_PRODUCT_WITH_VARIANTS] Product saved successfully with ID: {}", savedProduct.getId());
+
+            // Bước 2: Tạo danh sách ProductVariant từ request
+            log.debug("[CREATE_PRODUCT_WITH_VARIANTS] Creating {} variants", request.getVariants().size());
+            
+            List<ProductVariant> variants = request.getVariants().stream()
+                    .map(variantRequest -> {
+                        log.debug("[CREATE_PRODUCT_WITH_VARIANTS] Creating variant - Size: {}, Color: {}, Price: {}",
+                                variantRequest.getSize(), variantRequest.getColor(), variantRequest.getPrice());
+                        return ProductVariant.builder()
+                                .productId(savedProduct.getId())
+                                .size(variantRequest.getSize())
+                                .color(variantRequest.getColor())
+                                .image(variantRequest.getImageUrl())
+                                .price(variantRequest.getPrice())
+                                .discount(variantRequest.getDiscount())
+                                .quantity(variantRequest.getQuantity())
+                                .additionalPrice(variantRequest.getAdditionalPrice())
+                                .build();
+                    })
+                    .collect(Collectors.toList());
+
+            // Bước 3: Lưu tất cả variants
+            log.debug("[CREATE_PRODUCT_WITH_VARIANTS] Saving {} variants to database", variants.size());
+            List<ProductVariant> savedVariants = productVariantRepository.saveAll(variants);
+            log.info("[CREATE_PRODUCT_WITH_VARIANTS] Saved {} variants successfully", savedVariants.size());
+
+            // Bước 4: Load lại product với đầy đủ variants để trả về
+            log.debug("[CREATE_PRODUCT_WITH_VARIANTS] Reloading product with variants");
+            Product productWithVariants = productRepository.findByIdWithImagesAndVariants(savedProduct.getId())
+                    .orElseThrow(() -> {
+                        log.error("[CREATE_PRODUCT_WITH_VARIANTS] Failed to reload product with ID: {}", savedProduct.getId());
+                        return new AppException(ErrorCode.PRODUCT_NOT_FOUND);
+                    });
+
+            ProductResponse response = productMapper.toProductResponse(productWithVariants);
+            log.info("[CREATE_PRODUCT_WITH_VARIANTS] Successfully created product ID: {} with {} variants",
+                    savedProduct.getId(), savedVariants.size());
+            
+            return response;
+            
+        } catch (AppException e) {
+            log.error("[CREATE_PRODUCT_WITH_VARIANTS] AppException - Code: {}, Message: {}", 
+                    e.getErrorCode(), e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("[CREATE_PRODUCT_WITH_VARIANTS] Unexpected error occurred", e);
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
         }
-
-        // Validate category
-        if (!categoryRepository.existsById(request.getProduct().getCategoryId())) {
-            throw new AppException(ErrorCode.CATEGORY_NOT_FOUND);
-        }
-
-        // Bước 1: Tạo và lưu Product
-        Product product = productMapper.toProduct(request.getProduct());
-        Product savedProduct = productRepository.save(product);
-
-        // Bước 2: Tạo danh sách ProductVariant từ request
-        List<ProductVariant> variants = request.getVariants().stream()
-                .map(variantRequest -> ProductVariant.builder()
-                        .productId(savedProduct.getId()) // Gán productId từ savedProduct
-                        .size(variantRequest.getSize())
-                        .color(variantRequest.getColor())
-                        .image(variantRequest.getImage())
-                        .price(variantRequest.getPrice())
-                        .discount(variantRequest.getDiscount())
-                        .quantity(variantRequest.getQuantity())
-                        .additionalPrice(variantRequest.getAdditionalPrice())
-                        .build())
-                .collect(Collectors.toList());
-
-        // Bước 3: Lưu tất cả variants
-        productVariantRepository.saveAll(variants);
-
-        // Bước 4: Load lại product với đầy đủ variants để trả về
-        Product productWithVariants = productRepository.findByIdWithImagesAndVariants(savedProduct.getId())
-                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
-
-        return productMapper.toProductResponse(productWithVariants);
     }
 
     /**
      * Cập nhật Product + Variants trong 1 transaction
      * Xóa toàn bộ variants cũ và tạo mới theo request
+     * 
+     * Hỗ trợ upload ảnh từ Cloudinary:
+     * - Product.images: Set<String> từ imageUrls trong ProductRequest
+     * - ProductVariant.image: String từ imageUrl trong CreateProductVariantRequest
+     * 
      * @param id ID của product cần update
      * @param request Chứa thông tin Product và danh sách Variants mới
      * @return ProductResponse đầy đủ bao gồm variants
@@ -324,6 +375,7 @@ public class ProductService {
         }
 
         // Bước 1: Cập nhật thông tin Product
+        // ProductMapper sẽ tự động map imageUrls (List<String>) → images (Set<String>)
         productMapper.updateProduct(request.getProduct(), existingProduct);
         Product updatedProduct = productRepository.save(existingProduct);
 
@@ -331,12 +383,13 @@ public class ProductService {
         productVariantRepository.deleteByProductId(id);
 
         // Bước 3: Tạo danh sách ProductVariant mới từ request
+        // Map imageUrl từ request → image trong entity
         List<ProductVariant> newVariants = request.getVariants().stream()
                 .map(variantRequest -> ProductVariant.builder()
                         .productId(updatedProduct.getId())
                         .size(variantRequest.getSize())
                         .color(variantRequest.getColor())
-                        .image(variantRequest.getImage())
+                        .image(variantRequest.getImageUrl()) // Cloudinary URL
                         .price(variantRequest.getPrice())
                         .discount(variantRequest.getDiscount())
                         .quantity(variantRequest.getQuantity())
