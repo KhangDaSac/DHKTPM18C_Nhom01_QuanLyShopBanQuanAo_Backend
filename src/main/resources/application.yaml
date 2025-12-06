@@ -52,13 +52,17 @@ spring:
           max-wait: 5000ms
 
   ai:
-    openai:
-      api-key: ${GEMINI_API_KEY}
-      chat:
-        options:
-          model: gemini-2.0-flash
-        base-url: https://generativelanguage.googleapis.com
-        completions-path: /v1beta/openai/chat/completions
+    google:
+      genai:
+        api-key: ${GEMINI_API_KEY}
+        chat:
+          options:
+            model: gemini-2.0-flash
+        embedding:
+          api-key: ${GEMINI_API_KEY}
+          text:
+            options:
+              model: text-embedding-004
     vector-store:
       chroma:
         collection-name: products
@@ -82,3 +86,4 @@ vnpay:
   hashSecret: ${VNPAY_HASH_SECRET}
   url: ${VNPAY_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
   returnUrl: ${VNPAY_RETURN_URL:http://localhost:5173/payment/return}
+

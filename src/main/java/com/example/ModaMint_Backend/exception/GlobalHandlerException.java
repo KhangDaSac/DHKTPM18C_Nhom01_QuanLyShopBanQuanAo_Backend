@@ -16,7 +16,7 @@ public class GlobalHandlerException {
         // Log exception để debug
         System.err.println("RuntimeException caught: " + exception.getMessage());
         exception.printStackTrace();
-        
+
         ApiResponse apiResponse = ApiResponse.builder()
                 .code(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode())
                 .message(exception.getMessage() != null ? exception.getMessage() : ErrorCode.UNCATEGORIZED_EXCEPTION.getMessage())
