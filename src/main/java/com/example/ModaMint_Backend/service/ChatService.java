@@ -2,7 +2,6 @@ package com.example.ModaMint_Backend.service;
 
 import com.example.ModaMint_Backend.dto.request.chat.ChatAiRequest;
 import com.example.ModaMint_Backend.dto.response.chat.ChatAiResponse;
-import com.example.ModaMint_Backend.dto.response.chat.MessageChatAiResponse;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.springframework.ai.chat.client.ChatClient;
@@ -14,7 +13,6 @@ import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -86,7 +84,6 @@ public class ChatService {
                 6. Khi khách hàng muốn tư vần về một loại sản phẩm thì hãy liệt kê một vài sản phẩm phù hợp với yêu cầu của khách hàng càng nhiều thông tin về sản phẩm càng tốt.
                 7. Nếu biết tên khách hàng thì hãy gọi tên khách hàng trong câu trả lời để tạo sự thân mật.
                 """.formatted(productList);
-        System.out.println("hello" + productList);
 
         SystemMessage systemMessage = new SystemMessage(systemPrompt);
         UserMessage userMsg = new UserMessage(userMessage);
@@ -99,16 +96,17 @@ public class ChatService {
 
         return ChatAiResponse.builder()
                 .message(response)
+                .type("ASSISTANT")
                 .build();
     }
 
-    public List<MessageChatAiResponse> getFullHistory() {
+    public List<ChatAiResponse> getFullHistory() {
         String conversationId = SecurityContextHolder.getContext().getAuthentication().getName();
         return jdbcChatMemoryRepository.findByConversationId(conversationId)
                 .stream()
-                .map(m -> MessageChatAiResponse.builder()
+                .map(m -> ChatAiResponse.builder()
                         .type(m.getMessageType().toString())
-                        .content(m.getText())
+                        .message(m.getText())
                         .build()
                 )
                 .toList();

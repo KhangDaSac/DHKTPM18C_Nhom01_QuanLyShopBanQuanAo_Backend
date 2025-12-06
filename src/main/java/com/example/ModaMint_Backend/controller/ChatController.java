@@ -3,7 +3,6 @@ package com.example.ModaMint_Backend.controller;
 import com.example.ModaMint_Backend.dto.request.chat.ChatAiRequest;
 import com.example.ModaMint_Backend.dto.response.ApiResponse;
 import com.example.ModaMint_Backend.dto.response.chat.ChatAiResponse;
-import com.example.ModaMint_Backend.dto.response.chat.MessageChatAiResponse;
 import com.example.ModaMint_Backend.service.ChatService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -28,8 +27,8 @@ public class ChatController {
     }
 
     @GetMapping("/chat-ai/history")
-    public ApiResponse<List<MessageChatAiResponse>> getChatHistory() {
-        return ApiResponse.<List<MessageChatAiResponse>>builder()
+    public ApiResponse<List<ChatAiResponse>> getChatHistory() {
+        return ApiResponse.<List<ChatAiResponse>>builder()
                 .message("Lấy lịch sử chat thành công")
                 .result(chatService.getFullHistory())
                 .build();
