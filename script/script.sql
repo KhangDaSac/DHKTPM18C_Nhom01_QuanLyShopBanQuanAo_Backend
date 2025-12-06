@@ -388,7 +388,7 @@ INSERT INTO product_variants (id, product_id, size, color, image, price, discoun
 
 --
 -- VARIANTS (ảnh từng biến thể)
-UPDATE product_variants SET image = 'https://picsum.photos/seed/10001/600/600' WHERE id = 1;
+UPDATE product_variants SET image = 'https://vulcano.vn/media/catalog/product/cache/4867bdff41445f787f46fb72bd107e23/q/u/quan-jeans-nam-cao-cap-den-tron-3004b-base.jpg' WHERE id = 1;
 UPDATE product_variants SET image = 'https://picsum.photos/seed/10002/600/600' WHERE id = 2;
 UPDATE product_variants SET image = 'https://picsum.photos/seed/10003/600/600' WHERE id = 3;
 UPDATE product_variants SET image = 'https://picsum.photos/seed/10004/600/600' WHERE id = 4;
@@ -765,40 +765,47 @@ SELECT promotion_id, name, code, discount, is_active, effective, expiration FROM
 -- Image size: 800x1000px
 
 -- Áo Sơ Mi Trắng Nam
-UPDATE products SET images = 'https://picsum.photos/seed/1010/800/1000|https://picsum.photos/seed/1011/800/1000|https://picsum.photos/seed/1012/800/1000|https://picsum.photos/seed/1013/800/1000' WHERE id = 1;
+UPDATE products SET images = 'https://lados.vn/wp-content/uploads/2024/07/1-702A-LD4111-600x600.jpg|https://4menshop.com/cache/image/300x400/images/thumbs/2025/10/quan-jean-dieu-tui-sau-form-slimfit-qj117_small-19477.jpg|https://product.hstatic.net/1000096703/product/28_abd1ec085f23444388eb3a609e4644bb_master.jpg
+' WHERE id = 1;
 
 -- Áo Sơ Mi Xanh Nam
-UPDATE products SET images = 'https://picsum.photos/seed/1020/800/1000|https://picsum.photos/seed/1021/800/1000|https://picsum.photos/seed/1022/800/1000|https://picsum.photos/seed/1023/800/1000' WHERE id = 2;
+UPDATE products SET images = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRukuLjOAGLkYNB2Ao3HzoINNWEUT0elh5pAQ&s|https://thoitrangngaynay.com/upload/images/Quan-jean-nam-rach-goi-co-gian-ca-tinh-phong-cach-han-quoc%20(1)(1).jpg|https://product.hstatic.net/1000205116/product/z2413572794821_91fe5147a037fb5f19cccbce96279e32_f1c4850b0f494927acae25d0c6ca200d_1024x1024.jpg
+' WHERE id = 2;
 
 -- Áo Thun Basic Nam
-UPDATE products SET images = 'https://picsum.photos/seed/2030/800/1000|https://picsum.photos/seed/2031/800/1000|https://picsum.photos/seed/2032/800/1000|https://picsum.photos/seed/2033/800/1000' WHERE id = 3;
+UPDATE products SET images = 'https://product.hstatic.net/200000564155/product/mf6563_a339a6e1800a47fa956abce979c67f15_71022f63a7934e69bd1042d0b791056f.jpg|https://product.hstatic.net/200000564155/product/mf6277_39b02bc5374f49499e7fd9324be0445f_8e0e06daf4f04c08b6df7230c499b858.jpg|https://down-vn.img.susercontent.com/file/4f859bf07261b415aad209f721cda36e_tn.webp
+' WHERE id = 3;
 
 -- Áo Thun Polo Nam
-UPDATE products SET images = 'https://picsum.photos/seed/2040/800/1000|https://picsum.photos/seed/2041/800/1000|https://picsum.photos/seed/2042/800/1000|https://picsum.photos/seed/2043/800/1000' WHERE id = 4;
+UPDATE products SET images = 'https://product.hstatic.net/1000304105/product/quan-dai-nam-kaki-bnh1__3__c5a899f274a54f12a8b7c626bb0f9d5f_1e264c9550de43e587d84bcc904e143b.jpg|https://product.hstatic.net/1000304105/product/quan-dai-nam-bda1__6__95cdced7e2d24cd1b74e6e247a6fc3e2_53316bce0c554abb827a4fdf46761c82.jpg|https://lh5.googleusercontent.com/FFQLZntUSI1E6z29Ht5rXAmkkEDZ5WQ1QoEBrT4sM1IvE_yP_lLiz98f7o-qnJSMaxpUfIPr5IaQV16g5848m_1mCrvy4dSKtsQMHKZ76Ijp6Jc3TZje3edlGlNszlHzhkQnZyRvbDvq0Tm-pWnUpQ
+' WHERE id = 4;
 
 -- Áo Khoác Bomber Nam
-UPDATE products SET images = 'https://picsum.photos/seed/3050/800/1000|https://picsum.photos/seed/3051/800/1000|https://picsum.photos/seed/3052/800/1000|https://picsum.photos/seed/3053/800/1000' WHERE id = 5;
+UPDATE products SET images = 'https://media.routine.vn/1200x1500/prod/variant/19s25tss053-white-1-jpg-0y10.webp|https://media.routine.vn/1200x1500/prod/variant/10s25tss046-snow-white-1-jpg-r09m.webp|https://media.routine.vn/1200x1500/prod/media/10f24tss011-silver-cloud-ao-thun-nam-tay-ngan-1-jpg-6f26.webp
+' WHERE id = 5;
 
 -- Áo Khoác Hoodie Nam
-UPDATE products SET images = 'https://picsum.photos/seed/3060/800/1000|https://picsum.photos/seed/3061/800/1000|https://picsum.photos/seed/3062/800/1000|https://picsum.photos/seed/3063/800/1000' WHERE id = 6;
+UPDATE products SET images = 'https://down-vn.img.susercontent.com/file/sg-11134201-7ra1u-m4vmk9i3ichs9f_tn.webp
+' WHERE id = 6;
 
 -- Áo Vest Nam
-UPDATE products SET images = 'https://picsum.photos/seed/4070/800/1000|https://picsum.photos/seed/4071/800/1000|https://picsum.photos/seed/4072/800/1000|https://picsum.photos/seed/4073/800/1000' WHERE id = 7;
+UPDATE products SET images = 'https://product.hstatic.net/200000588671/product/ao-so-mi-nam-tay-dai-cong-so-bamboo-mau-trang-2_cea1ab4240d048cd9a379aacae3b541b.jpg
+' WHERE id = 7;
 
 -- Áo Vest Kẻ Sọc Nam
-UPDATE products SET images = 'https://picsum.photos/seed/4080/800/1000|https://picsum.photos/seed/4081/800/1000|https://picsum.photos/seed/4082/800/1000|https://picsum.photos/seed/4083/800/1000' WHERE id = 8;
+UPDATE products SET images = 'https://linhvnxk.com/wp-content/uploads/2018/11/so-mi-nam-dai-tay-xuat-khau-sctoch-soda-ke-soc-to-4.jpg' WHERE id = 8;
 
 -- Áo Sơ Mi Kẻ Sọc Nam
-UPDATE products SET images = 'https://picsum.photos/seed/1090/800/1000|https://picsum.photos/seed/1091/800/1000|https://picsum.photos/seed/1092/800/1000|https://picsum.photos/seed/1093/800/1000' WHERE id = 9;
+UPDATE products SET images = 'https://product.hstatic.net/1000369857/product/ao_thun_ppl32_0006_layer_11_2f9b935e3b904eb39ed6c08ca476cf6f_large.jpg' WHERE id = 9;
 
 -- Áo Thun Graphic Nam
-UPDATE products SET images = 'https://picsum.photos/seed/2100/800/1000|https://picsum.photos/seed/2101/800/1000|https://picsum.photos/seed/2102/800/1000|https://picsum.photos/seed/2103/800/1000' WHERE id = 10;
+UPDATE products SET images = 'https://buggy.yodycdn.com/images/product/1f86f634390067541a9959c3c74c7e97.webp?width=987&height=1316' WHERE id = 10;
 
 -- Áo Khoác Denim Nam
-UPDATE products SET images = 'https://picsum.photos/seed/3110/800/1000|https://picsum.photos/seed/3111/800/1000|https://picsum.photos/seed/3112/800/1000|https://picsum.photos/seed/3113/800/1000' WHERE id = 11;
+UPDATE products SET images = 'https://product.hstatic.net/1000209952/product/z4617663729772_d6f95769e39dc18960feedec31c67c95_acc5fe0932c4494bad93ea59e7b3541e_large.jpg' WHERE id = 11;
 
 -- Áo Khoác Blazer Nam
-UPDATE products SET images = 'https://picsum.photos/seed/3120/800/1000|https://picsum.photos/seed/3121/800/1000|https://picsum.photos/seed/3122/800/1000|https://picsum.photos/seed/3123/800/1000' WHERE id = 12;
+UPDATE products SET images = 'https://bizweb.dktcdn.net/100/287/440/products/ao-khoac-bomber-jaket-thun-xop-mau-den-chu-theu-phoi-da-khoa-keo-kim-loai-3.jpg?v=1737631242547' WHERE id = 12;
 
 -- Áo Sơ Mi Flannel Nam
 UPDATE products SET images = 'https://picsum.photos/seed/1130/800/1000|https://picsum.photos/seed/1131/800/1000|https://picsum.photos/seed/1132/800/1000|https://picsum.photos/seed/1133/800/1000' WHERE id = 13;
@@ -924,9 +931,9 @@ UPDATE products SET images = 'https://picsum.photos/seed/12500/800/1000|https://
 -- Generated automatically by fetch_product_images.py
 -- Image size: 600x600px
 
-UPDATE product_variants SET image = 'https://picsum.photos/seed/15102/600/600' WHERE id = 2;
-UPDATE product_variants SET image = 'https://picsum.photos/seed/15103/600/600' WHERE id = 3;
-UPDATE product_variants SET image = 'https://picsum.photos/seed/15104/600/600' WHERE id = 4;
+UPDATE product_variants SET image = 'https://pubcdn.ivymoda.com/files/news/2023/10/27/c284d544a99b014031efd25821f60441.jpg' WHERE id = 2;
+UPDATE product_variants SET image = 'https://4men.com.vn/thumbs/2023/06/quan-jean-trang-tron-qj025-34262-p.jpg' WHERE id = 3;
+UPDATE product_variants SET image = 'https://product.hstatic.net/1000210295/product/z6734345038648_017afebac757079bd2dd96cd3051b6c4_6c7d4db5e3324c87aadd4bc17905a901_master.jpg' WHERE id = 4;
 UPDATE product_variants SET image = 'https://picsum.photos/seed/15206/600/600' WHERE id = 6;
 UPDATE product_variants SET image = 'https://picsum.photos/seed/15207/600/600' WHERE id = 7;
 UPDATE product_variants SET image = 'https://picsum.photos/seed/15208/600/600' WHERE id = 8;
