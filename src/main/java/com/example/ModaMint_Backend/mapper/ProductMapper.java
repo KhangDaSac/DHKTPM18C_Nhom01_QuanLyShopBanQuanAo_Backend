@@ -25,14 +25,22 @@ public interface ProductMapper {
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "productVariants", ignore = true)
     @Mapping(target = "reviews", ignore = true)
+    @Mapping(target = "images", source = "imageUrls", qualifiedByName = "listToSet")
     Product toProduct(ProductRequest request);
+
+    @Named("listToSet")
+    default Set<String> listToSet(List<String> list) {
+        if (list == null || list.isEmpty()) {
+            return Set.of();
+        }
+        return Set.copyOf(list);
+    }
 
     @Mapping(target = "createAt", ignore = true)
     @Mapping(target = "updateAt", ignore = true)
     @Mapping(source = "brand.name", target = "brandName")
     @Mapping(source = "category.name", target = "categoryName")
     @Mapping(source = "productVariants", target = "productVariants", qualifiedByName = "mapProductVariants")
-    @Mapping(target = "price", expression = "java(getMinPriceFromVariants(product))")
     @Mapping(target = "quantity", expression = "java(getTotalQuantityFromVariants(product))")
     @Mapping(source = "images", target = "images")
     ProductResponse toProductResponse(Product product);
@@ -72,8 +80,8 @@ public interface ProductMapper {
     @Mapping(target = "brand", ignore = true)
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "productVariants", ignore = true)
-    @Mapping(target = "images", ignore = true)
     @Mapping(target = "reviews", ignore = true)
+    @Mapping(target = "images", source = "imageUrls", qualifiedByName = "listToSet")
     void updateProduct(ProductRequest request, @MappingTarget Product product);
 
 
@@ -94,6 +102,7 @@ public interface ProductMapper {
                         .discount(v.getDiscount())
                         .quantity(v.getQuantity())
                         .additionalPrice(v.getAdditionalPrice())
+                        .active(v.getActive() != null ? v.getActive() : true)
                         .build())
                 .collect(Collectors.toList());
     }

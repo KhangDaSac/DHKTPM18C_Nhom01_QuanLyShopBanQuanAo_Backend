@@ -2,6 +2,60 @@
 -- This file contains test data for development and testing purposes
 
 -- ==============================================
+-- TABLE SCHEMA DEFINITIONS (Optional - for fresh database setup)
+-- Note: These tables are normally created by Hibernate, but included here for reference
+-- ==============================================
+
+-- Promotion Tables (using VARCHAR for UUID support)
+CREATE TABLE IF NOT EXISTS percent_promotion (
+    promotion_id VARCHAR(255) NOT NULL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    code VARCHAR(255) UNIQUE NOT NULL,
+    min_order_value DECIMAL(19,2),
+    effective DATETIME,
+    expiration DATETIME,
+    quantity INT,
+    is_active BOOLEAN DEFAULT true,
+    percent DOUBLE NOT NULL,
+    max_discount DOUBLE NOT NULL,
+    create_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS amount_promotion (
+    promotion_id VARCHAR(255) NOT NULL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    code VARCHAR(255) UNIQUE NOT NULL,
+    min_order_value DECIMAL(19,2),
+    effective DATETIME,
+    expiration DATETIME,
+    quantity INT,
+    is_active BOOLEAN DEFAULT true,
+    discount DOUBLE NOT NULL,
+    create_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Brand Table
+CREATE TABLE IF NOT EXISTS brands (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description VARCHAR(1000),
+    image VARCHAR(500),
+    active BOOLEAN DEFAULT true
+);
+
+-- Category Table
+CREATE TABLE IF NOT EXISTS categories (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    is_active BOOLEAN DEFAULT true,
+    parent_id BIGINT,
+    image VARCHAR(500),
+    create_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (parent_id) REFERENCES categories(id)
+);
+
+-- ==============================================
 -- 1. PERMISSIONS
 -- ==============================================
 
@@ -22,7 +76,7 @@ INSERT INTO permissions (id, name, description) VALUES
 -- 2. BRANDS (15 brands)
 -- ==============================================
 
-INSERT INTO brands (id, name, description, logo_url, active) VALUES
+INSERT INTO brands (id, name, description, image, active) VALUES
                                                                  (1, 'Uniqlo', 'Japanese casual wear brand', 'https://example.com/logos/uniqlo.jpg', true),
                                                                  (2, 'Zara', 'Spanish fast fashion brand', 'https://example.com/logos/zara.jpg', true),
                                                                  (3, 'H&M', 'Swedish multinational clothing retailer', 'https://example.com/logos/hm.jpg', true),
@@ -361,7 +415,339 @@ UPDATE product_variants SET image = 'https://picsum.photos/seed/10020/600/600' W
 
 
 
--
+-- =====================================================
+-- TEST DATA FOR PROMOTIONS
+-- Tạo dữ liệu test cho khuyến mãi
+-- =====================================================
+
+-- Xóa dữ liệu cũ (nếu có)
+DELETE FROM percent_promotion;
+DELETE FROM amount_promotion;
+
+-- Reset AUTO_INCREMENT
+-- Note: TABLE_PER_CLASS kh�ng s? d?ng AUTO_INCREMENT
+-- Note: TABLE_PER_CLASS kh�ng s? d?ng AUTO_INCREMENT
+
+-- =====================================================
+-- PERCENTAGE PROMOTIONS (Khuyến mãi theo phần trăm)
+-- =====================================================
+
+INSERT INTO percent_promotion (promotion_id, name, code, percent, max_discount, min_order_value, effective, expiration, quantity, is_active, create_at) VALUES
+-- 1. Khuyến mãi chào mừng (Đang hoạt động)
+(1, 'Chào mừng thành viên mới', 'WELCOME10', 10.00, 100000.00, 0.00, '2025-01-01 00:00:00', '2025-12-31 23:59:59', 1000, TRUE, NOW()),
+
+-- 2. Khuyến mãi Tết (Đang hoạt động)
+(2, 'Khuyến mãi Tết Nguyên Đán', 'TET2025', 20.00, 200000.00, 500000.00, '2025-01-15 00:00:00', '2025-02-15 23:59:59', 500, TRUE, NOW()),
+
+-- 3. Khuyến mãi sinh nhật (Đang hoạt động)
+(3, 'Sale sinh nhật thương hiệu', 'BIRTHDAY15', 15.00, 150000.00, 300000.00, '2025-01-01 00:00:00', '2025-03-31 23:59:59', 300, TRUE, NOW()),
+
+-- 4. Flash sale cuối tuần (Đang hoạt động)
+(4, 'Flash Sale Thứ 7 Chủ Nhật', 'WEEKEND25', 25.00, 250000.00, 800000.00, '2025-10-25 00:00:00', '2025-11-30 23:59:59', 200, TRUE, NOW()),
+
+-- 5. Khuyến mãi Black Friday (Chưa bắt đầu)
+(5, 'Black Friday Sale', 'BLACKFRIDAY30', 30.00, 300000.00, 1000000.00, '2025-11-25 00:00:00', '2025-11-30 23:59:59', 100, TRUE, NOW()),
+
+-- 6. Giảm giá học sinh sinh viên (Đang hoạt động)
+(6, 'Ưu đãi học sinh sinh viên', 'STUDENT12', 12.00, 120000.00, 200000.00, '2025-09-01 00:00:00', '2025-12-31 23:59:59', 500, TRUE, NOW()),
+
+-- 7. Sale mùa hè (Đã hết hạn)
+(7, 'Khuyến mãi mùa hè', 'SUMMER20', 20.00, 200000.00, 400000.00, '2024-06-01 00:00:00', '2024-08-31 23:59:59', 300, FALSE, '2024-06-01 00:00:00'),
+
+-- 8. VIP member discount (Đang hoạt động)
+(8, 'Ưu đãi thành viên VIP', 'VIP18', 18.00, 180000.00, 1500000.00, '2025-01-01 00:00:00', '2025-12-31 23:59:59', 50, TRUE, NOW()),
+
+-- 9. Khuyến mãi giữa năm (Đã hết hạn)
+(9, 'Sale giữa năm', 'MIDYEAR15', 15.00, 150000.00, 350000.00, '2024-06-01 00:00:00', '2024-07-31 23:59:59', 250, FALSE, '2024-06-01 00:00:00'),
+
+-- 10. Khuyến mãi đầu mùa (Đang hoạt động)
+(10, 'Đón đầu mùa thời trang mới', 'NEWSEASON22', 22.00, 220000.00, 600000.00, '2025-10-01 00:00:00', '2025-11-30 23:59:59', 400, TRUE, NOW());
+
+-- =====================================================
+-- AMOUNT PROMOTIONS (Khuyến mãi giá cố định)
+-- =====================================================
+
+INSERT INTO amount_promotion (promotion_id, name, code, discount, min_order_value, effective, expiration, quantity, is_active, create_at) VALUES
+-- 1. Giảm giá cho đơn hàng đầu tiên
+(11, 'Giảm giá đơn hàng đầu tiên', 'FIRST50K', 50000.00, 200000.00, '2025-01-01 00:00:00', '2025-12-31 23:59:59', 1000, TRUE, NOW()),
+
+-- 2. Voucher Tết
+(12, 'Voucher Tết may mắn', 'LUCKYTET100K', 100000.00, 500000.00, '2025-01-15 00:00:00', '2025-02-15 23:59:59', 500, TRUE, NOW()),
+
+-- 3. Giảm giá sinh nhật
+(13, 'Mừng sinh nhật khách hàng', 'BDAY80K', 80000.00, 400000.00, '2025-01-01 00:00:00', '2025-03-31 23:59:59', 300, TRUE, NOW()),
+
+-- 4. Flash sale giờ vàng
+(14, 'Flash Sale Giờ Vàng', 'GOLDHOUR150K', 150000.00, 1000000.00, '2025-10-25 00:00:00', '2025-11-30 23:59:59', 100, TRUE, NOW()),
+
+-- 5. Siêu sale cuối năm (Chưa bắt đầu)
+(15, 'Siêu Sale Cuối Năm', 'YEAREND200K', 200000.00, 1500000.00, '2025-12-15 00:00:00', '2025-12-31 23:59:59', 200, TRUE, NOW()),
+
+-- 6. Ưu đãi thành viên mới
+(16, 'Chào mừng thành viên mới', 'NEWMEM30K', 30000.00, 150000.00, '2025-09-01 00:00:00', '2025-12-31 23:59:59', 800, TRUE, NOW()),
+
+-- 7. Giảm giá mùa đông (Đã hết hạn)
+(17, 'Ấm áp mùa đông', 'WINTER70K', 70000.00, 350000.00, '2024-11-01 00:00:00', '2024-12-31 23:59:59', 400, FALSE, '2024-11-01 00:00:00'),
+
+-- 8. Mega sale
+(18, 'Mega Sale Đặc Biệt', 'MEGA250K', 250000.00, 2000000.00, '2025-01-01 00:00:00', '2025-12-31 23:59:59', 50, TRUE, NOW()),
+
+-- 9. Sale hè (Đã hết hạn)
+(19, 'Hè sôi động', 'SUMMER60K', 60000.00, 300000.00, '2024-06-01 00:00:00', '2024-08-31 23:59:59', 350, FALSE, '2024-06-01 00:00:00'),
+
+-- 10. Ưu đãi mua sắm trực tuyến
+(20, 'Mua Online Giảm Ngay', 'ONLINE120K', 120000.00, 700000.00, '2025-10-01 00:00:00', '2025-11-30 23:59:59', 600, TRUE, NOW());
+
+-- =====================================================
+-- VERIFY DATA
+-- =====================================================
+
+-- Kiểm tra dữ liệu đã insert
+SELECT COUNT(*) as 'Tổng Percentage Promotions' FROM percent_promotion;
+SELECT COUNT(*) as 'Tổng Amount Promotions' FROM amount_promotion;
+
+-- Xem chi tiết
+SELECT promotion_id, name, code, percent, max_discount, is_active, effective, expiration FROM percent_promotion ORDER BY promotion_id;
+SELECT promotion_id, name, code, discount, is_active, effective, expiration FROM amount_promotion ORDER BY promotion_id;
+
+-- =====================================================
+-- NOTES
+-- =====================================================
+-- Tổng cộng: 10 khuyến mãi phần trăm + 10 khuyến mãi giá cố định = 20 khuyến mãi
+--
+-- Phân loại trạng thái:
+-- - Đang hoạt động: 7 percentage + 7 amount = 14 khuyến mãi
+-- - Đã hết hạn: 2 percentage + 2 amount = 4 khuyến mãi
+-- - Chưa bắt đầu: 1 percentage + 1 amount = 2 khuyến mãi
+--
+-- Giá trị đa dạng:
+-- - Percentage: 10% - 30%
+-- - Amount: 30,000đ - 250,000đ
+-- - Min order: 0đ - 2,000,000đ
+-- =====================================================
+
+-- =====================================================
+-- TEST DATA FOR PROMOTIONS
+-- Tạo dữ liệu test cho khuyến mãi
+-- =====================================================
+
+-- Xóa dữ liệu cũ (nếu có)
+DELETE FROM percent_promotion;
+DELETE FROM amount_promotion;
+
+-- Reset AUTO_INCREMENT
+-- Note: TABLE_PER_CLASS kh�ng s? d?ng AUTO_INCREMENT
+-- Note: TABLE_PER_CLASS kh�ng s? d?ng AUTO_INCREMENT
+
+-- =====================================================
+-- PERCENTAGE PROMOTIONS (Khuyến mãi theo phần trăm)
+-- =====================================================
+
+INSERT INTO percent_promotion (promotion_id, name, code, percent, max_discount, min_order_value, effective, expiration, quantity, is_active, create_at) VALUES
+-- 1. Khuyến mãi chào mừng (Đang hoạt động)
+(1, 'Chào mừng thành viên mới', 'WELCOME10', 10.00, 100000.00, 0.00, '2025-01-01 00:00:00', '2025-12-31 23:59:59', 1000, TRUE, NOW()),
+
+-- 2. Khuyến mãi Tết (Đang hoạt động)
+(2, 'Khuyến mãi Tết Nguyên Đán', 'TET2025', 20.00, 200000.00, 500000.00, '2025-01-15 00:00:00', '2025-02-15 23:59:59', 500, TRUE, NOW()),
+
+-- 3. Khuyến mãi sinh nhật (Đang hoạt động)
+(3, 'Sale sinh nhật thương hiệu', 'BIRTHDAY15', 15.00, 150000.00, 300000.00, '2025-01-01 00:00:00', '2025-03-31 23:59:59', 300, TRUE, NOW()),
+
+-- 4. Flash sale cuối tuần (Đang hoạt động)
+(4, 'Flash Sale Thứ 7 Chủ Nhật', 'WEEKEND25', 25.00, 250000.00, 800000.00, '2025-10-25 00:00:00', '2025-11-30 23:59:59', 200, TRUE, NOW()),
+
+-- 5. Khuyến mãi Black Friday (Chưa bắt đầu)
+(5, 'Black Friday Sale', 'BLACKFRIDAY30', 30.00, 300000.00, 1000000.00, '2025-11-25 00:00:00', '2025-11-30 23:59:59', 100, TRUE, NOW()),
+
+-- 6. Giảm giá học sinh sinh viên (Đang hoạt động)
+(6, 'Ưu đãi học sinh sinh viên', 'STUDENT12', 12.00, 120000.00, 200000.00, '2025-09-01 00:00:00', '2025-12-31 23:59:59', 500, TRUE, NOW()),
+
+-- 7. Sale mùa hè (Đã hết hạn)
+(7, 'Khuyến mãi mùa hè', 'SUMMER20', 20.00, 200000.00, 400000.00, '2024-06-01 00:00:00', '2024-08-31 23:59:59', 300, FALSE, '2024-06-01 00:00:00'),
+
+-- 8. VIP member discount (Đang hoạt động)
+(8, 'Ưu đãi thành viên VIP', 'VIP18', 18.00, 180000.00, 1500000.00, '2025-01-01 00:00:00', '2025-12-31 23:59:59', 50, TRUE, NOW()),
+
+-- 9. Khuyến mãi giữa năm (Đã hết hạn)
+(9, 'Sale giữa năm', 'MIDYEAR15', 15.00, 150000.00, 350000.00, '2024-06-01 00:00:00', '2024-07-31 23:59:59', 250, FALSE, '2024-06-01 00:00:00'),
+
+-- 10. Khuyến mãi đầu mùa (Đang hoạt động)
+(10, 'Đón đầu mùa thời trang mới', 'NEWSEASON22', 22.00, 220000.00, 600000.00, '2025-10-01 00:00:00', '2025-11-30 23:59:59', 400, TRUE, NOW());
+
+-- =====================================================
+-- AMOUNT PROMOTIONS (Khuyến mãi giá cố định)
+-- =====================================================
+
+INSERT INTO amount_promotion (promotion_id, name, code, discount, min_order_value, effective, expiration, quantity, is_active, create_at) VALUES
+-- 1. Giảm giá cho đơn hàng đầu tiên
+(11, 'Giảm giá đơn hàng đầu tiên', 'FIRST50K', 50000.00, 200000.00, '2025-01-01 00:00:00', '2025-12-31 23:59:59', 1000, TRUE, NOW()),
+
+-- 2. Voucher Tết
+(12, 'Voucher Tết may mắn', 'LUCKYTET100K', 100000.00, 500000.00, '2025-01-15 00:00:00', '2025-02-15 23:59:59', 500, TRUE, NOW()),
+
+-- 3. Giảm giá sinh nhật
+(13, 'Mừng sinh nhật khách hàng', 'BDAY80K', 80000.00, 400000.00, '2025-01-01 00:00:00', '2025-03-31 23:59:59', 300, TRUE, NOW()),
+
+-- 4. Flash sale giờ vàng
+(14, 'Flash Sale Giờ Vàng', 'GOLDHOUR150K', 150000.00, 1000000.00, '2025-10-25 00:00:00', '2025-11-30 23:59:59', 100, TRUE, NOW()),
+
+-- 5. Siêu sale cuối năm (Chưa bắt đầu)
+(15, 'Siêu Sale Cuối Năm', 'YEAREND200K', 200000.00, 1500000.00, '2025-12-15 00:00:00', '2025-12-31 23:59:59', 200, TRUE, NOW()),
+
+-- 6. Ưu đãi thành viên mới
+(16, 'Chào mừng thành viên mới', 'NEWMEM30K', 30000.00, 150000.00, '2025-09-01 00:00:00', '2025-12-31 23:59:59', 800, TRUE, NOW()),
+
+-- 7. Giảm giá mùa đông (Đã hết hạn)
+(17, 'Ấm áp mùa đông', 'WINTER70K', 70000.00, 350000.00, '2024-11-01 00:00:00', '2024-12-31 23:59:59', 400, FALSE, '2024-11-01 00:00:00'),
+
+-- 8. Mega sale
+(18, 'Mega Sale Đặc Biệt', 'MEGA250K', 250000.00, 2000000.00, '2025-01-01 00:00:00', '2025-12-31 23:59:59', 50, TRUE, NOW()),
+
+-- 9. Sale hè (Đã hết hạn)
+(19, 'Hè sôi động', 'SUMMER60K', 60000.00, 300000.00, '2024-06-01 00:00:00', '2024-08-31 23:59:59', 350, FALSE, '2024-06-01 00:00:00'),
+
+-- 10. Ưu đãi mua sắm trực tuyến
+(20, 'Mua Online Giảm Ngay', 'ONLINE120K', 120000.00, 700000.00, '2025-10-01 00:00:00', '2025-11-30 23:59:59', 600, TRUE, NOW());
+
+-- =====================================================
+-- VERIFY DATA
+-- =====================================================
+
+-- Kiểm tra dữ liệu đã insert
+SELECT COUNT(*) as 'Tổng Percentage Promotions' FROM percent_promotion;
+SELECT COUNT(*) as 'Tổng Amount Promotions' FROM amount_promotion;
+
+-- Xem chi tiết
+SELECT promotion_id, name, code, percent, max_discount, is_active, effective, expiration FROM percent_promotion ORDER BY promotion_id;
+SELECT promotion_id, name, code, discount, is_active, effective, expiration FROM amount_promotion ORDER BY promotion_id;
+
+-- =====================================================
+-- NOTES
+-- =====================================================
+-- Tổng cộng: 10 khuyến mãi phần trăm + 10 khuyến mãi giá cố định = 20 khuyến mãi
+--
+-- Phân loại trạng thái:
+-- - Đang hoạt động: 7 percentage + 7 amount = 14 khuyến mãi
+-- - Đã hết hạn: 2 percentage + 2 amount = 4 khuyến mãi
+-- - Chưa bắt đầu: 1 percentage + 1 amount = 2 khuyến mãi
+--
+-- Giá trị đa dạng:
+-- - Percentage: 10% - 30%
+-- - Amount: 30,000đ - 250,000đ
+-- - Min order: 0đ - 2,000,000đ
+-- =====================================================
+
+-- =====================================================
+-- TEST DATA FOR PROMOTIONS
+-- Tạo dữ liệu test cho khuyến mãi
+-- =====================================================
+
+-- Xóa dữ liệu cũ (nếu có)
+DELETE FROM percent_promotion;
+DELETE FROM amount_promotion;
+
+-- Reset AUTO_INCREMENT
+-- Note: TABLE_PER_CLASS kh�ng s? d?ng AUTO_INCREMENT
+-- Note: TABLE_PER_CLASS kh�ng s? d?ng AUTO_INCREMENT
+
+-- =====================================================
+-- PERCENTAGE PROMOTIONS (Khuyến mãi theo phần trăm)
+-- =====================================================
+
+INSERT INTO percent_promotion (promotion_id, name, code, percent, max_discount, min_order_value, effective, expiration, quantity, is_active, create_at) VALUES
+-- 1. Khuyến mãi chào mừng (Đang hoạt động)
+(1, 'Chào mừng thành viên mới', 'WELCOME10', 10.00, 100000.00, 0.00, '2025-01-01 00:00:00', '2025-12-31 23:59:59', 1000, TRUE, NOW()),
+
+-- 2. Khuyến mãi Tết (Đang hoạt động)
+(2, 'Khuyến mãi Tết Nguyên Đán', 'TET2025', 20.00, 200000.00, 500000.00, '2025-01-15 00:00:00', '2025-02-15 23:59:59', 500, TRUE, NOW()),
+
+-- 3. Khuyến mãi sinh nhật (Đang hoạt động)
+(3, 'Sale sinh nhật thương hiệu', 'BIRTHDAY15', 15.00, 150000.00, 300000.00, '2025-01-01 00:00:00', '2025-03-31 23:59:59', 300, TRUE, NOW()),
+
+-- 4. Flash sale cuối tuần (Đang hoạt động)
+(4, 'Flash Sale Thứ 7 Chủ Nhật', 'WEEKEND25', 25.00, 250000.00, 800000.00, '2025-10-25 00:00:00', '2025-11-30 23:59:59', 200, TRUE, NOW()),
+
+-- 5. Khuyến mãi Black Friday (Chưa bắt đầu)
+(5, 'Black Friday Sale', 'BLACKFRIDAY30', 30.00, 300000.00, 1000000.00, '2025-11-25 00:00:00', '2025-11-30 23:59:59', 100, TRUE, NOW()),
+
+-- 6. Giảm giá học sinh sinh viên (Đang hoạt động)
+(6, 'Ưu đãi học sinh sinh viên', 'STUDENT12', 12.00, 120000.00, 200000.00, '2025-09-01 00:00:00', '2025-12-31 23:59:59', 500, TRUE, NOW()),
+
+-- 7. Sale mùa hè (Đã hết hạn)
+(7, 'Khuyến mãi mùa hè', 'SUMMER20', 20.00, 200000.00, 400000.00, '2024-06-01 00:00:00', '2024-08-31 23:59:59', 300, FALSE, '2024-06-01 00:00:00'),
+
+-- 8. VIP member discount (Đang hoạt động)
+(8, 'Ưu đãi thành viên VIP', 'VIP18', 18.00, 180000.00, 1500000.00, '2025-01-01 00:00:00', '2025-12-31 23:59:59', 50, TRUE, NOW()),
+
+-- 9. Khuyến mãi giữa năm (Đã hết hạn)
+(9, 'Sale giữa năm', 'MIDYEAR15', 15.00, 150000.00, 350000.00, '2024-06-01 00:00:00', '2024-07-31 23:59:59', 250, FALSE, '2024-06-01 00:00:00'),
+
+-- 10. Khuyến mãi đầu mùa (Đang hoạt động)
+(10, 'Đón đầu mùa thời trang mới', 'NEWSEASON22', 22.00, 220000.00, 600000.00, '2025-10-01 00:00:00', '2025-11-30 23:59:59', 400, TRUE, NOW());
+
+-- =====================================================
+-- AMOUNT PROMOTIONS (Khuyến mãi giá cố định)
+-- =====================================================
+
+INSERT INTO amount_promotion (promotion_id, name, code, discount, min_order_value, effective, expiration, quantity, is_active, create_at) VALUES
+-- 1. Giảm giá cho đơn hàng đầu tiên
+(11, 'Giảm giá đơn hàng đầu tiên', 'FIRST50K', 50000.00, 200000.00, '2025-01-01 00:00:00', '2025-12-31 23:59:59', 1000, TRUE, NOW()),
+
+-- 2. Voucher Tết
+(12, 'Voucher Tết may mắn', 'LUCKYTET100K', 100000.00, 500000.00, '2025-01-15 00:00:00', '2025-02-15 23:59:59', 500, TRUE, NOW()),
+
+-- 3. Giảm giá sinh nhật
+(13, 'Mừng sinh nhật khách hàng', 'BDAY80K', 80000.00, 400000.00, '2025-01-01 00:00:00', '2025-03-31 23:59:59', 300, TRUE, NOW()),
+
+-- 4. Flash sale giờ vàng
+(14, 'Flash Sale Giờ Vàng', 'GOLDHOUR150K', 150000.00, 1000000.00, '2025-10-25 00:00:00', '2025-11-30 23:59:59', 100, TRUE, NOW()),
+
+-- 5. Siêu sale cuối năm (Chưa bắt đầu)
+(15, 'Siêu Sale Cuối Năm', 'YEAREND200K', 200000.00, 1500000.00, '2025-12-15 00:00:00', '2025-12-31 23:59:59', 200, TRUE, NOW()),
+
+-- 6. Ưu đãi thành viên mới
+(16, 'Chào mừng thành viên mới', 'NEWMEM30K', 30000.00, 150000.00, '2025-09-01 00:00:00', '2025-12-31 23:59:59', 800, TRUE, NOW()),
+
+-- 7. Giảm giá mùa đông (Đã hết hạn)
+(17, 'Ấm áp mùa đông', 'WINTER70K', 70000.00, 350000.00, '2024-11-01 00:00:00', '2024-12-31 23:59:59', 400, FALSE, '2024-11-01 00:00:00'),
+
+-- 8. Mega sale
+(18, 'Mega Sale Đặc Biệt', 'MEGA250K', 250000.00, 2000000.00, '2025-01-01 00:00:00', '2025-12-31 23:59:59', 50, TRUE, NOW()),
+
+-- 9. Sale hè (Đã hết hạn)
+(19, 'Hè sôi động', 'SUMMER60K', 60000.00, 300000.00, '2024-06-01 00:00:00', '2024-08-31 23:59:59', 350, FALSE, '2024-06-01 00:00:00'),
+
+-- 10. Ưu đãi mua sắm trực tuyến
+(20, 'Mua Online Giảm Ngay', 'ONLINE120K', 120000.00, 700000.00, '2025-10-01 00:00:00', '2025-11-30 23:59:59', 600, TRUE, NOW());
+
+-- =====================================================
+-- VERIFY DATA
+-- =====================================================
+
+-- Kiểm tra dữ liệu đã insert
+SELECT COUNT(*) as 'Tổng Percentage Promotions' FROM percent_promotion;
+SELECT COUNT(*) as 'Tổng Amount Promotions' FROM amount_promotion;
+
+-- Xem chi tiết
+SELECT promotion_id, name, code, percent, max_discount, is_active, effective, expiration FROM percent_promotion ORDER BY promotion_id;
+SELECT promotion_id, name, code, discount, is_active, effective, expiration FROM amount_promotion ORDER BY promotion_id;
+
+-- =====================================================
+-- NOTES
+-- =====================================================
+-- Tổng cộng: 10 khuyến mãi phần trăm + 10 khuyến mãi giá cố định = 20 khuyến mãi
+--
+-- Phân loại trạng thái:
+-- - Đang hoạt động: 7 percentage + 7 amount = 14 khuyến mãi
+-- - Đã hết hạn: 2 percentage + 2 amount = 4 khuyến mãi
+-- - Chưa bắt đầu: 1 percentage + 1 amount = 2 khuyến mãi
+--
+-- Giá trị đa dạng:
+-- - Percentage: 10% - 30%
+-- - Amount: 30,000đ - 250,000đ
+-- - Min order: 0đ - 2,000,000đ
+-- =====================================================
+
 -- ==============================================
 -- Update ALL images: products, variants, categories, users
 -- Environment: MySQL (uses CRC32, IF NOT EXISTS, etc.)
@@ -814,78 +1200,30 @@ UPDATE users
 SET image = CONCAT('https://i.pravatar.cc/300?img=', MOD(ABS(CRC32(id)), 70) + 1)
 WHERE (image IS NULL OR TRIM(image) = '');
 
+-- ==============================================
+-- SAMPLE PROMOTIONS (using UUID for promotion_id)
+-- ==============================================
+
+-- Percent Promotions
+INSERT INTO percent_promotion (promotion_id, name, code, min_order_value, effective, expiration, quantity, is_active, percent, max_discount) VALUES
+('550e8400-e29b-41d4-a716-446655440001', 'Flash Sale 50%', 'FLASH50', 0, '2025-01-01 00:00:00', '2025-01-31 23:59:59', 100, true, 50.0, 500000.0),
+('550e8400-e29b-41d4-a716-446655440002', 'Giảm 30% Hè', 'SUMMER30', 500000, '2025-06-01 00:00:00', '2025-08-31 23:59:59', 200, true, 30.0, 300000.0),
+('550e8400-e29b-41d4-a716-446655440003', 'Black Friday 70%', 'BF70', 1000000, '2025-11-25 00:00:00', '2025-11-30 23:59:59', 50, true, 70.0, 1000000.0),
+('550e8400-e29b-41d4-a716-446655440004', 'Giảm 20% Thành Viên', 'MEMBER20', 0, '2025-01-01 00:00:00', '2025-12-31 23:59:59', 500, true, 20.0, 200000.0),
+('550e8400-e29b-41d4-a716-446655440005', 'Sale Cuối Năm 40%', 'NEWYEAR40', 2000000, '2025-12-01 00:00:00', '2025-12-31 23:59:59', 150, true, 40.0, 400000.0);
+
+-- Amount Promotions
+INSERT INTO amount_promotion (promotion_id, name, code, min_order_value, effective, expiration, quantity, is_active, discount) VALUES
+('660e8400-e29b-41d4-a716-446655440001', 'Giảm 100K', 'GIAM100K', 500000, '2025-01-01 00:00:00', '2025-12-31 23:59:59', 300, true, 100000.0),
+('660e8400-e29b-41d4-a716-446655440002', 'Voucher 200K', 'VOUCHER200', 1000000, '2025-01-01 00:00:00', '2025-06-30 23:59:59', 100, true, 200000.0),
+('660e8400-e29b-41d4-a716-446655440003', 'Giảm 50K Sinh Nhật', 'BIRTHDAY50', 0, '2025-01-01 00:00:00', '2025-12-31 23:59:59', 1000, true, 50000.0),
+('660e8400-e29b-41d4-a716-446655440004', 'Mã 500K VIP', 'VIP500', 5000000, '2025-01-01 00:00:00', '2025-12-31 23:59:59', 20, true, 500000.0),
+('660e8400-e29b-41d4-a716-446655440005', 'Freeship 30K', 'FREESHIP30', 0, '2025-01-01 00:00:00', '2025-12-31 23:59:59', 500, true, 30000.0);
 
 
 
 
 
--- ===================================================
--- KIỂM TRA DỮ LIỆU VỪA INSERT
--- ===================================================
-
--- Xem tất cả khuyến mãi
-SELECT
-    p.id,
-    p.code,
-    p.value,
-    tp.type,
-    p.min_order_value,
-    p.start_at,
-    p.end_at,
-    p.quantity,
-    p.is_active,
-    p.create_at
-FROM promotions p
-         LEFT JOIN type_promotions tp ON p.id = tp.promotion_id
-ORDER BY p.id DESC;
-
--- Xem khuyến mãi đang active
-SELECT
-    p.id,
-    p.code,
-    CONCAT(p.value, ' ', IF(tp.type = 'PERCENT', '%', 'VNĐ')) as discount,
-    p.min_order_value,
-    p.quantity as remaining
-FROM promotions p
-         LEFT JOIN type_promotions tp ON p.id = tp.promotion_id
-WHERE p.is_active = TRUE
-  AND NOW() BETWEEN p.start_at AND p.end_at
-ORDER BY p.code;
 
 
-INSERT INTO amount_promotion
-(promotion_id, name, code, min_order_value, effective, expiration, quantity, is_active, create_at, discount)
-VALUES
-    (
-        1,
-        'Giảm 50k đơn từ 300k',
-        'AMT50K',
-        300000,
-        '2025-02-01 00:00:00',
-        '2025-02-28 23:59:59',
-        100,
-        TRUE,
-        NOW(),
-        50000
-    ),
-    (3, 'Giảm 20k', 'AMT20', 100000, NOW(), DATE_ADD(NOW(), INTERVAL 30 DAY), 200, TRUE, NOW(), 20000),
-    (4, 'Giảm 100k', 'AMT100', 500000, NOW(), DATE_ADD(NOW(), INTERVAL 20 DAY), 80, TRUE, NOW(), 100000);
 
-INSERT INTO percent_promotion
-(promotion_id, name, code, min_order_value, effective, expiration, quantity, is_active, create_at, percent, max_discount)
-VALUES
-    (
-        2,
-        'Giảm 10% tối đa 100k',
-        'PER10',
-        200000,
-        '2025-02-01 00:00:00',
-        '2025-03-01 23:59:59',
-        150,
-        TRUE,
-        NOW(),
-        0.10,
-        100000
-    ),
-    (5, 'Giảm 5%', 'PER5', 0, NOW(), DATE_ADD(NOW(), INTERVAL 60 DAY), 500, TRUE, NOW(), 0.05, 50000),
-    (6, 'Giảm 15%', 'PER15', 300000, NOW(), DATE_ADD(NOW(), INTERVAL 45 DAY), 120, TRUE, NOW(), 0.15, 150000);

@@ -1,5 +1,7 @@
 package com.example.ModaMint_Backend.controller;
 
+import com.example.ModaMint_Backend.dto.request.product.CreateProductWithVariantsRequest;
+import com.example.ModaMint_Backend.dto.request.product.UpdateProductWithVariantsRequest;
 import com.example.ModaMint_Backend.dto.request.product.ProductRequest;
 import com.example.ModaMint_Backend.dto.response.ApiResponse;
 import com.example.ModaMint_Backend.dto.response.product.ProductResponse;
@@ -8,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +25,7 @@ import java.util.List;
 @RequestMapping("/products")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class ProductController {
     ProductService productService;
 
@@ -95,16 +99,6 @@ public class ProductController {
         return ApiResponse.<ProductResponse>builder()
                 .result(productService.restoreProduct(id))
                 .message("Kích hoạt lại sản phẩm thành công")
-                .build();
-    }
-
-    @DeleteMapping("/{id}/permanent")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<String> permanentDeleteProduct(@PathVariable Long id) {
-        productService.permanentDeleteProduct(id);
-        return ApiResponse.<String>builder()
-                .result("Sản phẩm đã được xóa vĩnh viễn")
-                .message("Xóa vĩnh viễn sản phẩm thành công")
                 .build();
     }
 
@@ -219,6 +213,58 @@ public class ProductController {
         return ApiResponse.<List<ProductResponse>>builder()
                 .result(productService.getProductsFromTop5Brands())
                 .message("Lấy sản phẩm từ top 5 thương hiệu thành công")
+                .build();
+    }
+
+    /**
+     * API mới: Tạo Product + Variants cùng lúc trong 1 transaction
+     * POST /api/products/with-variants
+     * 
+     * @param request - CreateProductWithVariantsRequest
+     * @return ProductResponse với đầy đủ variants
+     */
+    @PostMapping("/with-variants")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<ProductResponse> createProductWithVariants(
+            @RequestBody @Valid CreateProductWithVariantsRequest request) {
+        
+        log.info("[CONTROLLER] Received request to create product with variants - Product: {}", 
+                request.getProduct().getName());
+        log.debug("[CONTROLLER] Request details - Brand ID: {}, Category ID: {}, Variants: {}",
+                request.getProduct().getBrandId(), 
+                request.getProduct().getCategoryId(),
+                request.getVariants().size());
+        
+        try {
+            ProductResponse response = productService.createProductWithVariants(request);
+            log.info("[CONTROLLER] Successfully created product with ID: {}", response.getId());
+            
+            return ApiResponse.<ProductResponse>builder()
+                    .result(response)
+                    .message("Tạo sản phẩm với biến thể thành công")
+                    .build();
+        } catch (Exception e) {
+            log.error("[CONTROLLER] Failed to create product with variants", e);
+            throw e;
+        }
+    }
+
+    /**
+     * API mới: Cập nhật Product + Variants cùng lúc trong 1 transaction
+     * PUT /api/products/{id}/with-variants
+     * 
+     * @param id - Product ID
+     * @param request - UpdateProductWithVariantsRequest
+     * @return ProductResponse với đầy đủ variants
+     */
+    @PutMapping("/{id}/with-variants")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<ProductResponse> updateProductWithVariants(
+            @PathVariable Long id,
+            @RequestBody @Valid UpdateProductWithVariantsRequest request) {
+        return ApiResponse.<ProductResponse>builder()
+                .result(productService.updateProductWithVariants(id, request))
+                .message("Cập nhật sản phẩm với biến thể thành công")
                 .build();
     }
 }

@@ -21,7 +21,7 @@ public class OrderResponse {
     String customerId;
     BigDecimal totalAmount;
     BigDecimal subTotal;
-    Long promotionId;
+    String promotionId;
     BigDecimal promotionValue;
     OrderStatus orderStatus;
     PaymentMethod paymentMethod;

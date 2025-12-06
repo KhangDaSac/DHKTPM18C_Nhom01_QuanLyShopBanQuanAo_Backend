@@ -26,7 +26,7 @@ public class OrderRequest {
 
     BigDecimal subTotal;
 
-    Long promotionId;
+    String promotionId;
 
     BigDecimal promotionValue;
 

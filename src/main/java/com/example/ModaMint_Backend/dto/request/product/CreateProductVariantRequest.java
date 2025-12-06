@@ -1,4 +1,4 @@
-package com.example.ModaMint_Backend.dto.request.productvariant;
+package com.example.ModaMint_Backend.dto.request.product;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -6,21 +6,25 @@ import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 
+/**
+ * DTO để tạo ProductVariant không cần productId
+ * Dùng khi tạo Product + Variants cùng lúc
+ */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class    ProductVariantRequest {
-    @NotNull(message = "Mã sản phẩm không được để trống")
-    Long productId;
-
+public class CreateProductVariantRequest {
+    
     String size;
 
     String color;
     
     /**
      * URL ảnh của variant từ Cloudinary
+     * Frontend upload ảnh variant lên /api/images/upload,
+     * nhận về imageUrl và gửi trong request
      */
     String imageUrl;
 
@@ -33,6 +37,4 @@ public class    ProductVariantRequest {
     Integer quantity;
 
     BigDecimal additionalPrice;
-
-    Boolean active;
 }

@@ -435,7 +435,7 @@ public class    CheckoutService {
         return result;
     }
 
-    private void decreasePromotionQuantity(Long promotionId, boolean isPercentage) {
+    private void decreasePromotionQuantity(String promotionId, boolean isPercentage) {
         if (isPercentage) {
             PercentPromotion promo = percentPromotionRepository.findById(promotionId).orElse(null);
             if (promo != null && promo.getQuantity() != null && promo.getQuantity() > 0) {
@@ -536,8 +536,8 @@ public class    CheckoutService {
     // Inner class for promotion result
     @Data
     private static class PromotionResult {
-        private Long percentagePromotionId;
-        private Long amountPromotionId;
+        private String percentagePromotionId;
+        private String amountPromotionId;
         private BigDecimal discountAmount;
         private PromotionSummary promotionSummary;
     }

@@ -93,8 +93,18 @@ public class ProductVariantController {
     public ApiResponse<String> deleteProductVariant(@PathVariable Long id) {
         productVariantService.deleteProductVariant(id);
         return ApiResponse.<String>builder()
-                .result("Biến thể sản phẩm đã được xóa")
-                .message("Xóa biến thể sản phẩm thành công")
+                .result("Biến thể sản phẩm đã được vô hiệu hóa")
+                .message("Vô hiệu hóa biến thể sản phẩm thành công")
+                .build();
+    }
+
+    @PutMapping("/{id}/restore")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<String> restoreProductVariant(@PathVariable Long id) {
+        productVariantService.restoreProductVariant(id);
+        return ApiResponse.<String>builder()
+                .result("Biến thể sản phẩm đã được khôi phục")
+                .message("Khôi phục biến thể sản phẩm thành công")
                 .build();
     }
 

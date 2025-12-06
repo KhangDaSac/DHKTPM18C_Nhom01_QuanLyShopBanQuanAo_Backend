@@ -35,6 +35,10 @@ public class ProductVariant {
     @Column(name = "additional_price")
     BigDecimal additionalPrice;
 
+    @Builder.Default
+    @Column(name = "active", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    Boolean active = true;
+
     @CreationTimestamp
     @Column(name = "create_at")
     LocalDateTime createAt;
@@ -42,8 +46,6 @@ public class ProductVariant {
     @ManyToOne
     @JoinColumn(name = "product_id", insertable = false, updatable = false)
     Product product;
-
-
 
 
     @OneToMany(mappedBy = "productVariant")

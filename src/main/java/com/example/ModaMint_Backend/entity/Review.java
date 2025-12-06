@@ -1,9 +1,6 @@
 package com.example.ModaMint_Backend.entity;
 
-import com.example.ModaMint_Backend.entity.Customer;
-import com.example.ModaMint_Backend.entity.OrderItem;
-import com.example.ModaMint_Backend.entity.Product;
-import com.example.ModaMint_Backend.converter.StringSetConverter;
+import com.example.ModaMint_Backend.utils.StringSetConverter;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;

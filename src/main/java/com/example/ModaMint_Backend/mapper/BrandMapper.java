@@ -11,6 +11,7 @@ import org.mapstruct.MappingTarget;
 public interface BrandMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "products", ignore = true)
+    @Mapping(target = "active", constant = "true")
     Brand toBrand(BrandRequest request);
 
     @Mapping(target = "productCount", expression = "java(brand.getProducts() != null ? brand.getProducts().size() : 0)")
@@ -18,5 +19,6 @@ public interface BrandMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "products", ignore = true)
+    @Mapping(target = "active", ignore = true)
     void updateBrand(BrandRequest request, @MappingTarget Brand brand);
 }

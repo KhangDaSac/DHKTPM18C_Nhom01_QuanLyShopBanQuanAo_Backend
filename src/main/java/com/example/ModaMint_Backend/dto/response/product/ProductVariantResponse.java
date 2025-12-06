@@ -19,4 +19,5 @@ public class ProductVariantResponse {
     BigDecimal discount;
     Integer quantity;
     BigDecimal additionalPrice;
+    Boolean active;
 }

@@ -120,4 +120,26 @@ public class UserService {
         }
         userRepository.deleteById(userId);
     }
+
+    // Vô hiệu hóa user (soft delete)
+    public UserResponse deactivateUser(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        
+        // @Data annotation tạo setActive() method
+        user.setActive(false);
+        User savedUser = userRepository.save(user);
+        return userMapper.toUserResponse(savedUser);
+    }
+
+    // Kích hoạt lại user
+    public UserResponse activateUser(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        
+        // @Data annotation tạo setActive() method
+        user.setActive(true);
+        User savedUser = userRepository.save(user);
+        return userMapper.toUserResponse(savedUser);
+    }
 }

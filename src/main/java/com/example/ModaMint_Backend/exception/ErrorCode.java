@@ -35,7 +35,13 @@ public enum ErrorCode {
     PROMOTION_INVALID(2018, "Promotion is not valid for this order", HttpStatus.BAD_REQUEST),
     INVALID_INPUT(3000, "Invalid input", HttpStatus.BAD_REQUEST),
     CONVERSATION_NOT_FOUND(4001, "Conversation not found", HttpStatus.NOT_FOUND),
-    MESSAGE_NOT_FOUND(4002, "Message not found", HttpStatus.NOT_FOUND)
+    MESSAGE_NOT_FOUND(4002, "Message not found", HttpStatus.NOT_FOUND),
+    
+    // Image upload errors
+    FILE_EMPTY(5001, "File is empty", HttpStatus.BAD_REQUEST),
+    INVALID_FILE_TYPE(5002, "Invalid file type. Only image files are allowed", HttpStatus.BAD_REQUEST),
+    FILE_TOO_LARGE(5003, "File size exceeds maximum limit (10MB)", HttpStatus.BAD_REQUEST),
+    IMAGE_UPLOAD_FAILED(5004, "Failed to upload image to Cloudinary", HttpStatus.INTERNAL_SERVER_ERROR)
     ;
 
 
