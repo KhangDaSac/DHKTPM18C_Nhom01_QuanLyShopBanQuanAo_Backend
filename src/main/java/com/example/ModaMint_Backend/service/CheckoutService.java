@@ -7,6 +7,7 @@ import com.example.ModaMint_Backend.dto.response.customer.AddressResponse;
 import com.example.ModaMint_Backend.dto.response.promotion.PromotionSummary;
 import com.example.ModaMint_Backend.entity.*;
 import com.example.ModaMint_Backend.enums.OrderStatus;
+import com.example.ModaMint_Backend.enums.PaymentMethod;
 import com.example.ModaMint_Backend.exception.AppException;
 import com.example.ModaMint_Backend.exception.ErrorCode;
 import com.example.ModaMint_Backend.repository.*;
@@ -257,6 +258,11 @@ public class    CheckoutService {
         // Use actual customer ID from database (important for guests)
         String actualCustomerId = customer.getCustomerId();
         
+        // COD: PREPARING ngay, VNPay: PENDING chờ thanh toán
+        OrderStatus initialStatus = (request.getPaymentMethod() == PaymentMethod.CASH_ON_DELIVERY) 
+                ? OrderStatus.PREPARING 
+                : OrderStatus.PENDING;
+        
         Order order = Order.builder()
                 .orderCode(orderCode)
                 .customerId(actualCustomerId)
@@ -265,7 +271,7 @@ public class    CheckoutService {
                 .percentPromotionId(promotionResult.getPercentagePromotionId())
                 .amountPromotionId(promotionResult.getAmountPromotionId())
                 .promotionValue(discountAmount)
-                .orderStatus(OrderStatus.PENDING)
+                .orderStatus(initialStatus)
                 .paymentMethod(request.getPaymentMethod())
                 .shippingAddressId(finalShippingAddressId) // Use the created address ID for guest
                 .phone(request.getPhone() != null ? request.getPhone() 
@@ -348,20 +354,25 @@ public class    CheckoutService {
                 .discountAmount(discountAmount)
                 .totalAmount(totalAmount)
                 .paymentMethod(request.getPaymentMethod().toString())
-                .orderStatus(OrderStatus.PENDING.toString())
+                .orderStatus(initialStatus.toString())
                 .message("Đặt hàng thành công!")
                 .build();
         
-        // 11. Send order confirmation email
-        try {
-            String recipientEmail = customer.getUser() != null 
-                ? customer.getUser().getEmail() 
-                : customer.getEmail();
-            emailService.sendOrderConfirmationEmail(response, recipientEmail);
-            log.info("Order confirmation email queued for: {}", recipientEmail);
-        } catch (Exception e) {
-            log.error("Failed to queue order confirmation email", e);
-            // Don't fail the order if email fails
+        // 11. Send order confirmation email - CHỈ GỬI CHO COD
+        // VNPay sẽ gửi email sau khi thanh toán thành công trong PaymentController
+        if (request.getPaymentMethod() == PaymentMethod.CASH_ON_DELIVERY) {
+            try {
+                String recipientEmail = customer.getUser() != null 
+                    ? customer.getUser().getEmail() 
+                    : customer.getEmail();
+                emailService.sendOrderConfirmationEmail(response, recipientEmail);
+                log.info("Order confirmation email queued for COD: {}", recipientEmail);
+            } catch (Exception e) {
+                log.error("Failed to queue order confirmation email", e);
+                // Don't fail the order if email fails
+            }
+        } else {
+            log.info("Skipping email for VNPay - will send after payment confirmation");
         }
         
         log.info("=== Checkout completed successfully ===");

@@ -10,6 +10,7 @@ import com.example.ModaMint_Backend.exception.ErrorCode;
 import com.example.ModaMint_Backend.repository.OrderRepository;
 import com.example.ModaMint_Backend.service.VnPayService;
 import com.example.ModaMint_Backend.service.OrderService;
+import com.example.ModaMint_Backend.service.CartService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class PaymentController {
     private final VnPayService vnPayService;
     private final OrderService orderService;
     private final OrderRepository orderRepository;
+    private final CartService cartService;
 
     // Xử lý tạo URL thanh toán
     @PostMapping("/create-payment")
@@ -92,15 +94,58 @@ public class PaymentController {
     // Xử lý kết quả trả về từ VNPAY
     @GetMapping("/vnpay-return")
     public void handleVnpayReturn(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        System.out.println("\n\n========================================");
+        System.out.println("VNPAY CALLBACK RECEIVED");
+        System.out.println("========================================");
+        
         int status = vnPayService.orderReturn(request);
         String orderInfo = request.getParameter("vnp_OrderInfo");
         String orderId = extractOrderIdFromOrderInfo(orderInfo);
+        
+        System.out.println("Payment Status: " + (status == 1 ? "SUCCESS" : "FAILED"));
+        System.out.println("Order ID: " + orderId);
 
         if (status == 1) {
-            orderService.updateOrderStatus(Long.valueOf(orderId), OrderStatus.PREPARING);
-            response.sendRedirect("http://localhost:5173/order-success/" + orderId);
+            try {
+                System.out.println("\n>>> STEP 1: Updating order status to PREPARING...");
+                orderService.updateOrderStatus(Long.valueOf(orderId), OrderStatus.PREPARING);
+                System.out.println(">>> Order status updated successfully");
+                
+                System.out.println("\n>>> STEP 2: Clearing cart for customer...");
+                // Lấy thông tin order để lấy customerId
+                Order order = orderRepository.findById(Long.valueOf(orderId))
+                        .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+                String customerId = order.getCustomerId();
+                
+                // Xóa giỏ hàng của khách hàng (cho cả registered user, guest tự xóa ở frontend)
+                if (customerId != null && !customerId.startsWith("GUEST_")) {
+                    try {
+                        cartService.clearCart(customerId);
+                        System.out.println(">>> Cart cleared for customer: " + customerId);
+                    } catch (Exception cartException) {
+                        // Cart có thể đã được xóa rồi trong checkout process - không cần throw error
+                        System.out.println(">>> Cart already cleared or not found for customer: " + customerId);
+                    }
+                } else {
+                    System.out.println(">>> Guest customer - cart will be cleared on frontend");
+                }
+                
+                System.out.println("\n>>> STEP 3: Sending confirmation email...");
+                orderService.sendOrderConfirmationEmailById(Long.valueOf(orderId));
+                System.out.println(">>> Email sending process completed");
+                
+                System.out.println("\n>>> STEP 4: Redirecting to success page...");
+                response.sendRedirect("http://localhost:5173/order-success/" + orderId);
+                System.out.println("========================================\n\n");
+            } catch (Exception e) {
+                System.err.println("!!! ERROR in VNPay success handling: " + e.getMessage());
+                e.printStackTrace();
+                response.sendRedirect("http://localhost:5173/order-failed/" + orderId);
+            }
         } else {
-            orderService.updateOrderStatus(Long.valueOf(orderId), OrderStatus.CANCELLED);
+            System.out.println("\n>>> Payment failed - Order remains PENDING");
+            System.out.println(">>> Customer can retry payment within 15 minutes");
+            System.out.println("========================================\n\n");
             response.sendRedirect("http://localhost:5173/order-failed/" + orderId);
         }
     }
