@@ -160,7 +160,11 @@ public class    CheckoutService {
                 log.info("Creating new guest customer - phone: {}, email: {}, name: {}", 
                     request.getPhone(), request.getGuestEmail(), request.getGuestName());
                 
+                // Generate a unique ID for guest customer
+                String guestCustomerId = UUID.randomUUID().toString();
+                
                 customer = Customer.builder()
+                        .customerId(guestCustomerId)
                         .phone(request.getPhone())
                         .name(request.getGuestName())
                         .email(request.getGuestEmail())
@@ -306,14 +310,13 @@ public class    CheckoutService {
                     .build());
         }
         
-         // 8. Clear cart after successful order using CartService
-         cartService.clearCart(request.getCustomerId());
-         log.info("Cart cleared for customer: {}", request.getCustomerId());
-//        // 8. Clear cart after successful order (only for registered users)
-//        if (!isGuestCheckout) {
-//            cartService.clearCartForUser(request.getCustomerId());
-//
-//        } else {
+        // 8. Clear cart after successful order (only for registered users)
+        if (!isGuestCheckout) {
+            cartService.clearCart(request.getCustomerId());
+            log.info("Cart cleared for customer: {}", request.getCustomerId());
+        } else {
+            log.info("Skipping cart clear for guest checkout (cart is in localStorage on frontend)");
+        }
 //
 //        }
         
