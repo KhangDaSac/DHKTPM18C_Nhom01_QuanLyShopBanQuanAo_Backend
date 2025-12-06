@@ -3,14 +3,14 @@ package com.example.ModaMint_Backend.controller;
 import com.example.ModaMint_Backend.dto.request.chat.ChatAiRequest;
 import com.example.ModaMint_Backend.dto.response.ApiResponse;
 import com.example.ModaMint_Backend.dto.response.chat.ChatAiResponse;
+import com.example.ModaMint_Backend.dto.response.chat.MessageChatAiResponse;
 import com.example.ModaMint_Backend.service.ChatService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping(("/chat"))
@@ -24,6 +24,14 @@ public class ChatController {
         return ApiResponse.<ChatAiResponse>builder()
                 .result(chatService.chatAi(request))
                 .message("Chat với bot thành công")
+                .build();
+    }
+
+    @GetMapping("/chat-ai/history")
+    public ApiResponse<List<MessageChatAiResponse>> getChatHistory() {
+        return ApiResponse.<List<MessageChatAiResponse>>builder()
+                .message("Lấy lịch sử chat thành công")
+                .result(chatService.getFullHistory())
                 .build();
     }
 }
