@@ -24,12 +24,12 @@ import java.util.List;
 public class ChatService {
 
     ChatClient chatClient;
-    VectorStore vectorStore; // Thêm cái này để dùng sản phẩm
+    VectorStore vectorStore;
 
     public ChatService(ChatClient.Builder builder,
                        JdbcChatMemoryRepository jdbcChatMemoryRepository,
-                       VectorStore vectorStore) { // Thêm vectorStore vào constructor
-
+                       VectorStore vectorStore)
+    {
         ChatMemory chatMemory = MessageWindowChatMemory.builder()
                 .chatMemoryRepository(jdbcChatMemoryRepository)
                 .maxMessages(100)
@@ -112,5 +112,4 @@ public class ChatService {
                 .message(response)
                 .build();
     }
-
 }
