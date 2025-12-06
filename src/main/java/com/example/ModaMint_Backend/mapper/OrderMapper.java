@@ -2,7 +2,9 @@ package com.example.ModaMint_Backend.mapper;
 
 import com.example.ModaMint_Backend.dto.request.order.OrderRequest;
 import com.example.ModaMint_Backend.dto.response.order.OrderResponse;
+import com.example.ModaMint_Backend.dto.response.orderitem.OrderItemResponse;
 import com.example.ModaMint_Backend.entity.Order;
+import com.example.ModaMint_Backend.entity.OrderItem;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -25,6 +27,8 @@ public interface OrderMapper {
     Order toOrder(OrderRequest request);
 
     @Mapping(target = "promotionId", ignore = true)
+    @Mapping(target = "orderItems", source = "orderItems")
+    @Mapping(target = "totalAmount", source = "subTotal") // Use subTotal as final price (after discount)
     OrderResponse toOrderResponse(Order order);
 
     @Mapping(target = "id", ignore = true)
@@ -41,4 +45,14 @@ public interface OrderMapper {
     @Mapping(target = "shipments", ignore = true)
     @Mapping(target = "payment", ignore = true)
     void updateOrder(OrderRequest request, @MappingTarget Order order);
+
+
+    // Mới: Mapping cho OrderItem
+    @Mapping(target = "lineTotal", expression = "java(orderItem.getLineTotal())")
+    @Mapping(target = "productVariantName", source = "productVariant.product.name") // Giả sử ProductVariant có liên kết Product
+    @Mapping(target = "size", source = "productVariant.size")
+    @Mapping(target = "color", source = "productVariant.color")
+    @Mapping(target = "productVariantImage", source = "productVariant.image")
+    @Mapping(target = "productId", source = "productVariant.productId")
+    OrderItemResponse toOrderItemResponse(OrderItem orderItem);
 }

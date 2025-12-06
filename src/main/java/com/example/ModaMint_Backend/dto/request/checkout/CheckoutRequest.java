@@ -16,8 +16,7 @@ public class CheckoutRequest {
     @NotBlank(message = "Customer ID is required")
     String customerId;
     
-    @NotNull(message = "Shipping address ID is required")
-    Long shippingAddressId;
+    Long shippingAddressId; // Can be null for guest checkout with new address
     
     String percentagePromotionCode; // Mã giảm giá theo phần trăm (optional)
     
@@ -29,4 +28,29 @@ public class CheckoutRequest {
     String phone; // Số điện thoại nhận hàng
     
     String note; // Ghi chú đơn hàng
+    
+    // Guest checkout fields
+    Boolean isGuest; // true if guest checkout
+    
+    String guestName; // Name for guest customers
+    
+    String guestEmail; // Email for guest customers
+    
+    java.util.List<GuestCartItem> guestCartItems; // Cart items for guest checkout
+    
+    // Guest address fields (used when shippingAddressId is null)
+    String city;
+    String district;
+    String ward;
+    String addressDetail;
+    
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class GuestCartItem {
+        Long variantId;
+        Integer quantity;
+        Long unitPrice;
+    }
 }

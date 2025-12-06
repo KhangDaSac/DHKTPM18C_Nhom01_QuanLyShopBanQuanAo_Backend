@@ -53,6 +53,16 @@ public class ProductController {
                 .build();
     }
 
+    @GetMapping("/search-by-gender-and-keyword")
+    public ApiResponse<List<ProductResponse>> searchByGenderAndKeyword(
+            @RequestParam String gender,
+            @RequestParam String keyword) {
+        return ApiResponse.<List<ProductResponse>>builder()
+                .result(productService.searchByGenderAndKeyword(gender, keyword))
+                .message("Lọc sản phẩm theo giới và từ khóa thành công")
+                .build();
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<ProductResponse> createProduct(@RequestBody @Valid ProductRequest request) {
@@ -119,14 +129,6 @@ public class ProductController {
                 .build();
     }
 
-    @GetMapping("/category/{categoryId}")
-    public ApiResponse<List<ProductResponse>> getProductsByCategoryId(@PathVariable Long categoryId) {
-        return ApiResponse.<List<ProductResponse>>builder()
-                .result(productService.getProductsByCategoryId(categoryId))
-                .message("Lấy sản phẩm theo danh mục thành công")
-                .build();
-    }
-
     @GetMapping("/active")
     public ApiResponse<List<ProductResponse>> getActiveProducts() {
         return ApiResponse.<List<ProductResponse>>builder()
@@ -150,6 +152,7 @@ public class ProductController {
                 .message("Lấy số lượng sản phẩm đang hoạt động thành công")
                 .build();
     }
+
     @GetMapping("/filter")
     public ApiResponse<List<ProductResponse>> filterProducts(
             @RequestParam(required = false) Long brandId,
@@ -157,10 +160,10 @@ public class ProductController {
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) List<String> colors,
-            @RequestParam(required = false) List<String> sizes
-    ) {
+            @RequestParam(required = false) List<String> sizes) {
         return ApiResponse.<List<ProductResponse>>builder()
-                .result(productService.filterProducts(brandId, categoryId, minPrice, maxPrice, colors, sizes))
+                .result(productService.filterProducts(brandId, categoryId, minPrice, maxPrice, colors,
+                        sizes))
                 .message("Lọc sản phẩm thành công")
                 .build();
     }
@@ -172,6 +175,7 @@ public class ProductController {
                 .message("Lấy 10 sản phẩm bán chạy nhất thành công")
                 .build();
     }
+
     @GetMapping("/worst-selling")
     public ApiResponse<List<ProductResponse>> getWorstSellingProducts() {
         return ApiResponse.<List<ProductResponse>>builder()
@@ -179,6 +183,7 @@ public class ProductController {
                 .message("Lấy 10 sản phẩm bán ít nhất thành công")
                 .build();
     }
+
     @GetMapping("/category/female")
     public ApiResponse<List<ProductResponse>> getTop10FemaleCategoryProducts() {
         return ApiResponse.<List<ProductResponse>>builder()
@@ -186,6 +191,7 @@ public class ProductController {
                 .message("Lấy 10 sản phẩm thuộc danh mục 'nữ' thành công")
                 .build();
     }
+
     @GetMapping("/category/male")
     public ApiResponse<List<ProductResponse>> getTop10MaleCategoryProducts() {
         return ApiResponse.<List<ProductResponse>>builder()
@@ -193,6 +199,7 @@ public class ProductController {
                 .message("Lấy 10 sản phẩm thuộc danh mục 'nam' thành công")
                 .build();
     }
+
     @GetMapping("/random")
     public ApiResponse<List<ProductResponse>> getRandomProducts() {
         return ApiResponse.<List<ProductResponse>>builder()
@@ -200,6 +207,7 @@ public class ProductController {
                 .message("Lấy 20 sản phẩm ngẫu nhiên thành công")
                 .build();
     }
+
     @GetMapping("/top-brands")
     public ApiResponse<List<ProductResponse>> getProductsFromTop5Brands() {
         return ApiResponse.<List<ProductResponse>>builder()

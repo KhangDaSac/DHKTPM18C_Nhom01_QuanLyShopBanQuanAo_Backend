@@ -149,8 +149,8 @@ public class    ApplicationInitConfig {
 
                     User savedUser = userRepository.save(customer);
                     
-                    // Tạo customer record bằng native SQL để tránh detached entity issue
-                    jdbcTemplate.update("INSERT INTO customers (user_id) VALUES (?)", savedUser.getId());
+                    // Tạo customer record bằng native SQL với UUID
+                    jdbcTemplate.update("INSERT INTO customers (customer_id, user_id) VALUES (UUID(), ?)", savedUser.getId());
                     
                     log.info("Customer user created: {}", username);
                 } else {

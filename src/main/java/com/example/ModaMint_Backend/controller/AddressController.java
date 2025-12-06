@@ -26,9 +26,9 @@ public class AddressController {
     /**
      * Tạo địa chỉ mới
      * POST /api/v1/addresses
+     * NOTE: Public endpoint to support guest checkout
      */
     @PostMapping
-    @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
     public ApiResponse<AddressResponse> createAddress(@Valid @RequestBody CreateAddressRequest request) {
         log.info("Creating address for customer: {}", request.getCustomerId());
         
