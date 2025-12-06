@@ -9,11 +9,13 @@ import com.example.ModaMint_Backend.dto.response.auth.RefreshResponse;
 import com.example.ModaMint_Backend.dto.response.user.UserResponse;
 import com.example.ModaMint_Backend.entity.User;
 import com.example.ModaMint_Backend.entity.Role;
+import com.example.ModaMint_Backend.entity.Customer;
 import com.example.ModaMint_Backend.enums.RoleName;
 import com.example.ModaMint_Backend.exception.AppException;
 import com.example.ModaMint_Backend.exception.ErrorCode;
 import com.example.ModaMint_Backend.repository.UserRepository;
 import com.example.ModaMint_Backend.repository.RoleRepository;
+import com.example.ModaMint_Backend.repository.CustomerRepository;
 import com.example.ModaMint_Backend.mapper.UserMapper;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
@@ -54,6 +56,7 @@ import java.util.UUID;
 public class AuthenticationService {
     UserRepository userRepository;
     RoleRepository roleRepository;
+    CustomerRepository customerRepository;
     @NonFinal
     @Value("${jwt.signer-key}")
     protected String SIGNER_KEY;
@@ -145,11 +148,31 @@ public class AuthenticationService {
                         .build();
 
                 user = userRepository.save(user);
+
+                // Tạo Customer record cho user mới (chỉ khi chưa có)
+                if (!customerRepository.existsByUserId(user.getId())) {
+                    Customer customer = Customer.builder()
+                            .user(user)
+                            .build();
+                    customerRepository.save(customer);
+                    log.info("Created Customer record for new Google OAuth user: {}", user.getUsername());
+                } else {
+                    log.info("Customer record already exists for Google OAuth user: {}", user.getUsername());
+                }
             } else {
                 // Cập nhật image nếu user tồn tại
                 if (googlePicture != null && !googlePicture.isEmpty()) {
                     user.setImage(googlePicture);
                     userRepository.save(user);
+                }
+
+                // Đảm bảo Customer record tồn tại cho user đã có
+                if (!customerRepository.existsByUserId(user.getId())) {
+                    Customer customer = Customer.builder()
+                            .user(user)
+                            .build();
+                    customerRepository.save(customer);
+                    log.info("Created missing Customer record for existing Google OAuth user: {}", user.getUsername());
                 }
             }
 
@@ -178,7 +201,7 @@ public class AuthenticationService {
     }
 
     public AuthenticationResponse authenticate(AuthenticationRequest request,
-                                               HttpServletResponse response) throws JOSEException {
+            HttpServletResponse response) throws JOSEException {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
