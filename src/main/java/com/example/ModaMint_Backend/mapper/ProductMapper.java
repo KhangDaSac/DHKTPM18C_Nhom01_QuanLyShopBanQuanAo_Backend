@@ -36,8 +36,8 @@ public interface ProductMapper {
         return Set.copyOf(list);
     }
 
-    @Mapping(target = "createAt", ignore = true)
-    @Mapping(target = "updateAt", ignore = true)
+    @Mapping(source = "createAt", target = "createAt")
+    @Mapping(source = "updateAt", target = "updateAt")
     @Mapping(source = "brand.name", target = "brandName")
     @Mapping(source = "category.name", target = "categoryName")
     @Mapping(source = "productVariants", target = "productVariants", qualifiedByName = "mapProductVariants")
