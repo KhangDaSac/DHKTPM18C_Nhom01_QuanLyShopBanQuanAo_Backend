@@ -24,36 +24,34 @@ public class ProductVectorLoader {
     VectorStore vectorStore;
     ProductVariantRepository productVariantRepository;
 
-    public void loadProductsToVectorDB() {
-        if (vectorStore.similaritySearch("product").isEmpty()) {
-            List<Product> products = productRepository.findAll();
-            List<Document> documents = products.stream()
-                    .map(p -> {
-                        List<ProductVariant> productVariants = productVariantRepository.findByProductId(p.getId());
-                        String variantsText = productVariants.stream()
-                                .map(v -> "Màu: %s, Size: %s, Giá: %.0f₫, discount: %s"
-                                        .formatted(v.getColor(), v.getSize(), v.getPrice(), v.getDiscount()))
-                                .reduce((a, b) -> a + "; " + b)
-                                .orElse("Không có biến thể");
+    public List<Document> loadProductsToVectorDB() {
+        List<Product> products = productRepository.findAll();
+        List<Document> documents = products.stream()
+                .map(p -> {
+                    List<ProductVariant> productVariants = productVariantRepository.findByProductId(p.getId());
+                    String variantsText = productVariants.stream()
+                            .map(v -> "Màu: %s, Size: %s, Giá: %.0f₫, discount: %s"
+                                    .formatted(v.getColor(), v.getSize(), v.getPrice(), v.getDiscount()))
+                            .reduce((a, b) -> a + "; " + b)
+                            .orElse("Không có biến thể");
 
-                        return new Document("""
+                    return new Document("""
                             Tên sản phẩm: %s
                             Mô tả: %s
                             Thương hiệu: %s
                             Các biến thể: %s
                             """.formatted(
-                                p.getName(),
-                                p.getDescription(),
-                                p.getBrand().getName(),
-                                variantsText
-                        ));
-                    })
-                    .toList();
+                            p.getName(),
+                            p.getDescription(),
+                            p.getBrand().getName(),
+                            variantsText
+                    ));
+                })
+                .toList();
 
-            vectorStore.add(documents);
-            System.out.println("Loaded " + documents.size() + " products into VectorDB.");
-        } else {
-            System.out.println("VectorDB already initialized, skipping reload.");
-        }
+        vectorStore.add(documents);
+
+        System.out.println("Loaded " + documents.size() + " products into VectorDB.");
+        return documents;
     }
 }

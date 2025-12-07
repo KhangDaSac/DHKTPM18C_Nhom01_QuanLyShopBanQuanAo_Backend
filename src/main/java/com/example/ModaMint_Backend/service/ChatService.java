@@ -52,15 +52,10 @@ public class ChatService {
         String conversationId = SecurityContextHolder.getContext().getAuthentication().getName();
         String userMessage = request.getMessage();
 
-        productVectorLoader.loadProductsToVectorDB();
-        List<Document> similarProducts = vectorStore.similaritySearch(userMessage);
-
-        if (similarProducts.isEmpty()) {
-            similarProducts = vectorStore.similaritySearch("thời trang áo quần váy giày phụ kiện");
-        }
+        List<Document> similarProducts = productVectorLoader.loadProductsToVectorDB();
 
         String productList = similarProducts.stream()
-                .limit(5)
+                .limit(50)
                 .map(Document::getText)
                 .collect(Collectors.joining("\n"));
 
@@ -83,6 +78,10 @@ public class ChatService {
                 5. Khi khách hàng muốn thông tin chi tiết về một sản phẩm cụ thẻ nào đó thì trả lời về sản phẩm phải cho biết đầy đủ thông tin về sản phẩm đó như các biến thể, thương hiệu, các loại size, màu sắc,.... và bắt buộc phải có giá của từng biến thể của sản phẩm
                 6. Khi khách hàng muốn tư vần về một loại sản phẩm thì hãy liệt kê một vài sản phẩm phù hợp với yêu cầu của khách hàng càng nhiều thông tin về sản phẩm càng tốt.
                 7. Nếu biết tên khách hàng thì hãy gọi tên khách hàng trong câu trả lời để tạo sự thân mật.
+                8. Tìm kiểm sản phẩm có những cụm từ tương tự nhau như "áo, "quần", "váy", "nam", "nữ",... thì vẫn gợi ý sản phẩm bình thường.
+                9. Trả lời được những sản phẩm bán chạy nhất trong shop.
+                10. Trả lời được tổng số sản phẩm hiện có trong shop.
+                
                 """.formatted(productList);
 
         SystemMessage systemMessage = new SystemMessage(systemPrompt);
