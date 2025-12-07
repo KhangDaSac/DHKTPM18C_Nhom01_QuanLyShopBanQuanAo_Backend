@@ -82,6 +82,22 @@ public class PercentPromotionController {
                 .build();
     }
 
+    @GetMapping("/not-started")
+    public ApiResponse<List<PercentPromotionResponse>> getNotStartedPercentagePromotions() {
+        return ApiResponse.<List<PercentPromotionResponse>>builder()
+                .result(percentPromotionService.getNotStartedPercentagePromotions())
+                .message("Lấy danh sách khuyến mãi phần trăm chưa bắt đầu thành công")
+                .build();
+    }
+
+    @GetMapping("/expired")
+    public ApiResponse<List<PercentPromotionResponse>> getExpiredPercentagePromotions() {
+        return ApiResponse.<List<PercentPromotionResponse>>builder()
+                .result(percentPromotionService.getExpiredPercentagePromotions())
+                .message("Lấy danh sách khuyến mãi phần trăm đã hết hạn thành công")
+                .build();
+    }
+
     @GetMapping("/count")
     public ApiResponse<Long> getTotalPercentagePromotionCount() {
         return ApiResponse.<Long>builder()

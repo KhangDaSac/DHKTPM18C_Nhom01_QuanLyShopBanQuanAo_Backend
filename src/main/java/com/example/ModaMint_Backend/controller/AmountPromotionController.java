@@ -82,6 +82,22 @@ public class AmountPromotionController {
                 .build();
     }
 
+    @GetMapping("/not-started")
+    public ApiResponse<List<AmountPromotionResponse>> getNotStartedAmountPromotions() {
+        return ApiResponse.<List<AmountPromotionResponse>>builder()
+                .result(amountPromotionService.getNotStartedAmountPromotions())
+                .message("Lấy danh sách khuyến mãi số tiền chưa bắt đầu thành công")
+                .build();
+    }
+
+    @GetMapping("/expired")
+    public ApiResponse<List<AmountPromotionResponse>> getExpiredAmountPromotions() {
+        return ApiResponse.<List<AmountPromotionResponse>>builder()
+                .result(amountPromotionService.getExpiredAmountPromotions())
+                .message("Lấy danh sách khuyến mãi số tiền đã hết hạn thành công")
+                .build();
+    }
+
     @GetMapping("/count")
     public ApiResponse<Long> getTotalAmountPromotionCount() {
         return ApiResponse.<Long>builder()

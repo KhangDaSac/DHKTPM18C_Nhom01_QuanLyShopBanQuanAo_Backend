@@ -69,6 +69,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/chat").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // CORS
                         
+                        // === DASHBOARD CHART ENDPOINTS (ADMIN ONLY) ===
+                        .requestMatchers("/api/charts/**").hasRole("ADMIN")  // All chart endpoints require ADMIN role
+                        
                         // === USER MANAGEMENT (ADMIN ONLY) ===
                         .requestMatchers(HttpMethod.POST, "/users/deactivate").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/users/activate").hasRole("ADMIN")

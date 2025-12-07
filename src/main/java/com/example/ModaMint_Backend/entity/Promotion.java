@@ -46,6 +46,4 @@ public abstract class Promotion {
     @CreationTimestamp
     @Column(name = "create_at", updatable = false)
     LocalDateTime createAt;
-
-
 }

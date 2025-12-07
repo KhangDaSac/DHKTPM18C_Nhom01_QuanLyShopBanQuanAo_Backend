@@ -19,7 +19,6 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Customer {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     String customerId;
 
     String phone;

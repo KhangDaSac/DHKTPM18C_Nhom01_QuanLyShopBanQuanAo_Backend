@@ -10,6 +10,7 @@ import com.example.ModaMint_Backend.exception.ErrorCode;
 import com.example.ModaMint_Backend.repository.OrderRepository;
 import com.example.ModaMint_Backend.service.VnPayService;
 import com.example.ModaMint_Backend.service.OrderService;
+import com.example.ModaMint_Backend.service.CartService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class PaymentController {
     private final VnPayService vnPayService;
     private final OrderService orderService;
     private final OrderRepository orderRepository;
+    private final CartService cartService;
 
     // Xử lý tạo URL thanh toán
     @PostMapping("/create-payment")
@@ -89,35 +91,50 @@ public class PaymentController {
                         .build());
     }
 
-    // Xử lý kết quả trả về từ VNPAY
+
     @GetMapping("/vnpay-return")
     public void handleVnpayReturn(HttpServletRequest request, HttpServletResponse response) throws IOException {
+
         int status = vnPayService.orderReturn(request);
         String orderInfo = request.getParameter("vnp_OrderInfo");
         String orderId = extractOrderIdFromOrderInfo(orderInfo);
 
+
         if (status == 1) {
-            orderService.updateOrderStatus(Long.valueOf(orderId), OrderStatus.PREPARING);
-            response.sendRedirect("http://localhost:5173/order-success/" + orderId);
+            try {
+                orderService.updateOrderStatus(Long.valueOf(orderId), OrderStatus.PREPARING);
+                Order order = orderRepository.findById(Long.valueOf(orderId))
+                        .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+                String customerId = order.getCustomerId();
+                
+                if (customerId != null && !customerId.startsWith("GUEST_")) {
+                    try {
+                        cartService.clearCart(customerId);
+                    } catch (Exception cartException) {
+
+                    }
+                } else {
+
+                }
+                orderService.sendOrderConfirmationEmailById(Long.valueOf(orderId));
+                response.sendRedirect("http://localhost:5173/order-success/" + orderId);
+            } catch (Exception e) {
+                e.printStackTrace();
+                response.sendRedirect("http://localhost:5173/order-failed/" + orderId);
+            }
         } else {
-            orderService.updateOrderStatus(Long.valueOf(orderId), OrderStatus.CANCELLED);
             response.sendRedirect("http://localhost:5173/order-failed/" + orderId);
         }
     }
 
-    // Hàm extract orderId từ orderInfo
-    // Format: "Thanh toan don hang <orderId>"
-    // Ví dụ: "Thanh toan don hang 1" hoặc "Thanh toan don hang 123"
     private String extractOrderIdFromOrderInfo(String orderInfo) {
         if (orderInfo == null || orderInfo.isEmpty()) {
             throw new AppException(ErrorCode.ORDER_NOT_FOUND);
         }
 
-        // Split bằng space và lấy phần cuối cùng (là orderId)
         String[] parts = orderInfo.split(" ");
         String orderId = parts[parts.length - 1];
 
-        // Kiểm tra orderId có phải là số hợp lệ không
         try {
             Long.parseLong(orderId);
             return orderId;
