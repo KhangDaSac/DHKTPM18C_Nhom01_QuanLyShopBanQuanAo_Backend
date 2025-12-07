@@ -8,6 +8,7 @@ import org.springframework.data.jpa.domain.Specification;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class ProductSpecification {
 
@@ -23,7 +24,7 @@ public class ProductSpecification {
      */
     public static Specification<Product> filterProducts(
             Long brandId,
-            Long categoryId,
+            Set<Long> categoryId,
             BigDecimal minPrice,
             BigDecimal maxPrice,
             List<String> colors,
