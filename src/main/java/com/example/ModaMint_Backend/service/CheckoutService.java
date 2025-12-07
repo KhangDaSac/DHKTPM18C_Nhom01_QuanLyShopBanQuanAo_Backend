@@ -7,6 +7,7 @@ import com.example.ModaMint_Backend.dto.response.customer.AddressResponse;
 import com.example.ModaMint_Backend.dto.response.promotion.PromotionSummary;
 import com.example.ModaMint_Backend.entity.*;
 import com.example.ModaMint_Backend.enums.OrderStatus;
+import com.example.ModaMint_Backend.enums.PaymentMethod;
 import com.example.ModaMint_Backend.exception.AppException;
 import com.example.ModaMint_Backend.exception.ErrorCode;
 import com.example.ModaMint_Backend.repository.*;
@@ -160,7 +161,11 @@ public class    CheckoutService {
                 log.info("Creating new guest customer - phone: {}, email: {}, name: {}", 
                     request.getPhone(), request.getGuestEmail(), request.getGuestName());
                 
+                // Generate a unique ID for guest customer
+                String guestCustomerId = UUID.randomUUID().toString();
+                
                 customer = Customer.builder()
+                        .customerId(guestCustomerId)
                         .phone(request.getPhone())
                         .name(request.getGuestName())
                         .email(request.getGuestEmail())
@@ -253,6 +258,9 @@ public class    CheckoutService {
         // Use actual customer ID from database (important for guests)
         String actualCustomerId = customer.getCustomerId();
         
+        // Tất cả đơn hàng đều bắt đầu với trạng thái PENDING
+        OrderStatus initialStatus = OrderStatus.PENDING;
+        
         Order order = Order.builder()
                 .orderCode(orderCode)
                 .customerId(actualCustomerId)
@@ -261,7 +269,7 @@ public class    CheckoutService {
                 .percentPromotionId(promotionResult.getPercentagePromotionId())
                 .amountPromotionId(promotionResult.getAmountPromotionId())
                 .promotionValue(discountAmount)
-                .orderStatus(OrderStatus.PENDING)
+                .orderStatus(initialStatus)
                 .paymentMethod(request.getPaymentMethod())
                 .shippingAddressId(finalShippingAddressId) // Use the created address ID for guest
                 .phone(request.getPhone() != null ? request.getPhone() 
@@ -306,14 +314,13 @@ public class    CheckoutService {
                     .build());
         }
         
-         // 8. Clear cart after successful order using CartService
-         cartService.clearCart(request.getCustomerId());
-         log.info("Cart cleared for customer: {}", request.getCustomerId());
-//        // 8. Clear cart after successful order (only for registered users)
-//        if (!isGuestCheckout) {
-//            cartService.clearCartForUser(request.getCustomerId());
-//
-//        } else {
+        // 8. Clear cart after successful order (only for registered users)
+        if (!isGuestCheckout) {
+            cartService.clearCart(request.getCustomerId());
+            log.info("Cart cleared for customer: {}", request.getCustomerId());
+        } else {
+            log.info("Skipping cart clear for guest checkout (cart is in localStorage on frontend)");
+        }
 //
 //        }
         
@@ -345,20 +352,25 @@ public class    CheckoutService {
                 .discountAmount(discountAmount)
                 .totalAmount(totalAmount)
                 .paymentMethod(request.getPaymentMethod().toString())
-                .orderStatus(OrderStatus.PENDING.toString())
+                .orderStatus(initialStatus.toString())
                 .message("Đặt hàng thành công!")
                 .build();
         
-        // 11. Send order confirmation email
-        try {
-            String recipientEmail = customer.getUser() != null 
-                ? customer.getUser().getEmail() 
-                : customer.getEmail();
-            emailService.sendOrderConfirmationEmail(response, recipientEmail);
-            log.info("Order confirmation email queued for: {}", recipientEmail);
-        } catch (Exception e) {
-            log.error("Failed to queue order confirmation email", e);
-            // Don't fail the order if email fails
+        // 11. Send order confirmation email - CHỈ GỬI CHO COD
+        // VNPay sẽ gửi email sau khi thanh toán thành công trong PaymentController
+        if (request.getPaymentMethod() == PaymentMethod.CASH_ON_DELIVERY) {
+            try {
+                String recipientEmail = customer.getUser() != null 
+                    ? customer.getUser().getEmail() 
+                    : customer.getEmail();
+                emailService.sendOrderConfirmationEmail(response, recipientEmail);
+                log.info("Order confirmation email queued for COD: {}", recipientEmail);
+            } catch (Exception e) {
+                log.error("Failed to queue order confirmation email", e);
+                // Don't fail the order if email fails
+            }
+        } else {
+            log.info("Skipping email for VNPay - will send after payment confirmation");
         }
         
         log.info("=== Checkout completed successfully ===");

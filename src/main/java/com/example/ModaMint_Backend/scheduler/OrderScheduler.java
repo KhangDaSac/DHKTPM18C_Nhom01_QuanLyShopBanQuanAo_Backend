@@ -24,8 +24,9 @@ public class OrderScheduler {
 
     /**
      * Chạy mỗi 5 phút để kiểm tra và hủy các đơn PENDING quá hạn
+     * DISABLED: Không tự động hủy đơn hàng theo yêu cầu mới
      */
-    @Scheduled(cron = "0 */5 * * * *")
+    // @Scheduled(cron = "0 */5 * * * *")
     public void cancelExpiredPendingOrders() {
         log.info("Bat dau kiem tra don hang PENDING qua han...");
 

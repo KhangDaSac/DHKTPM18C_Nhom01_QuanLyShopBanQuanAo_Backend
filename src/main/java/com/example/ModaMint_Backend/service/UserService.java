@@ -79,9 +79,14 @@ public class UserService {
                 .anyMatch(role -> role.getName() == RoleName.CUSTOMER);
         
         if (hasCustomerRole) {
-        Customer customer = Customer.builder()
-            .user(savedUser)
-            .build();
+            Customer customer = Customer.builder()
+                    .customerId(savedUser.getId())
+                    .user(savedUser)
+                    .email(savedUser.getEmail())
+                    .name((savedUser.getFirstName() != null ? savedUser.getFirstName() : "") + " " + 
+                          (savedUser.getLastName() != null ? savedUser.getLastName() : "").trim())
+                    .phone(savedUser.getPhone())
+                    .build();
             customerRepository.save(customer);
         }
         

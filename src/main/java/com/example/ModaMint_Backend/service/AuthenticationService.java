@@ -8,11 +8,13 @@ import com.example.ModaMint_Backend.dto.response.auth.IntrospectResponse;
 import com.example.ModaMint_Backend.dto.response.auth.RefreshResponse;
 import com.example.ModaMint_Backend.dto.response.user.UserResponse;
 import com.example.ModaMint_Backend.entity.User;
+import com.example.ModaMint_Backend.entity.Customer;
 import com.example.ModaMint_Backend.entity.Role;
 import com.example.ModaMint_Backend.enums.RoleName;
 import com.example.ModaMint_Backend.exception.AppException;
 import com.example.ModaMint_Backend.exception.ErrorCode;
 import com.example.ModaMint_Backend.repository.UserRepository;
+import com.example.ModaMint_Backend.repository.CustomerRepository;
 import com.example.ModaMint_Backend.repository.RoleRepository;
 import com.example.ModaMint_Backend.mapper.UserMapper;
 import com.nimbusds.jose.*;
@@ -53,6 +55,7 @@ import java.util.UUID;
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class AuthenticationService {
     UserRepository userRepository;
+    CustomerRepository customerRepository;
     RoleRepository roleRepository;
     @NonFinal
     @Value("${jwt.signer-key}")
@@ -145,11 +148,43 @@ public class AuthenticationService {
                         .build();
 
                 user = userRepository.save(user);
+                
+                // Tự động tạo Customer record cho user mới từ Google OAuth
+                log.info("Creating Customer record for new Google OAuth user: {}", user.getId());
+                try {
+                    Customer customer = Customer.builder()
+                            .customerId(user.getId())
+                            .user(user)
+                            .email(googleEmail)
+                            .name(googleName)
+                            .build();
+                    customerRepository.save(customer);
+                    log.info("Customer record created successfully for userId: {}", user.getId());
+                } catch (Exception e) {
+                    log.warn("Customer record already exists for userId: {} - {}", user.getId(), e.getMessage());
+                }
             } else {
                 // Cập nhật image nếu user tồn tại
                 if (googlePicture != null && !googlePicture.isEmpty()) {
                     user.setImage(googlePicture);
                     userRepository.save(user);
+                }
+                
+                // Đảm bảo Customer record tồn tại cho user hiện có
+                if (!customerRepository.existsByCustomerId(user.getId())) {
+                    log.info("Creating missing Customer record for existing user: {}", user.getId());
+                    try {
+                        Customer customer = Customer.builder()
+                                .customerId(user.getId())
+                                .user(user)
+                                .email(googleEmail)
+                                .name(googleName)
+                                .build();
+                        customerRepository.save(customer);
+                        log.info("Customer record created successfully for existing userId: {}", user.getId());
+                    } catch (Exception e) {
+                        log.warn("Customer record already exists for userId: {} - {}", user.getId(), e.getMessage());
+                    }
                 }
             }
 
@@ -186,6 +221,26 @@ public class AuthenticationService {
 
         if (!authenticated) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        // Đảm bảo Customer record tồn tại cho user đăng nhập thông thường
+        if (!customerRepository.existsByCustomerId(user.getId())) {
+            log.info("Creating missing Customer record for user during login: {}", user.getId());
+            try {
+                Customer customer = Customer.builder()
+                        .customerId(user.getId())
+                        .user(user)
+                        .email(user.getEmail())
+                        .name((user.getFirstName() != null ? user.getFirstName() : "") + " " + 
+                              (user.getLastName() != null ? user.getLastName() : "").trim())
+                        .phone(user.getPhone())
+                        .build();
+                customerRepository.save(customer);
+                log.info("Customer record created successfully for userId: {}", user.getId());
+            } catch (Exception e) {
+                // Customer đã tồn tại (race condition) - bỏ qua lỗi
+                log.warn("Customer record already exists for userId: {} - {}", user.getId(), e.getMessage());
+            }
         }
 
         // Tạo token
