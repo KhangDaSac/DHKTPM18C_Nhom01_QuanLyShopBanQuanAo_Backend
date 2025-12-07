@@ -258,10 +258,8 @@ public class    CheckoutService {
         // Use actual customer ID from database (important for guests)
         String actualCustomerId = customer.getCustomerId();
         
-        // COD: PREPARING ngay, VNPay: PENDING chờ thanh toán
-        OrderStatus initialStatus = (request.getPaymentMethod() == PaymentMethod.CASH_ON_DELIVERY) 
-                ? OrderStatus.PREPARING 
-                : OrderStatus.PENDING;
+        // Tất cả đơn hàng đều bắt đầu với trạng thái PENDING
+        OrderStatus initialStatus = OrderStatus.PENDING;
         
         Order order = Order.builder()
                 .orderCode(orderCode)

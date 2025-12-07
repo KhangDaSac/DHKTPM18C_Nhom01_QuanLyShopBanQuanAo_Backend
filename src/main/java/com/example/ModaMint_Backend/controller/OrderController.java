@@ -125,4 +125,22 @@ public class OrderController {
                 .message("Lấy thông tin đơn hàng và chi tiết thành công") 
                 .build();
     }
+
+    /**
+     * Hủy đơn hàng - Chỉ cho phép khách hàng hủy đơn ở trạng thái PENDING
+     * @param id Order ID
+     * @param customerId Customer ID (từ request param)
+     * @param cancelReason Lý do hủy đơn hàng (từ request param)
+     */
+    @PutMapping("/{id}/cancel")
+    public ApiResponse<String> cancelOrder(
+            @PathVariable Long id,
+            @RequestParam String customerId,
+            @RequestParam String cancelReason) {
+        orderService.cancelOrder(id, customerId, cancelReason);
+        return ApiResponse.<String>builder()
+                .result("Đơn hàng đã được hủy")
+                .message("Hủy đơn hàng thành công")
+                .build();
+    }
 }

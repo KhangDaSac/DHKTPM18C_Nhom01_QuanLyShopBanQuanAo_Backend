@@ -6,11 +6,13 @@ import com.example.ModaMint_Backend.dto.response.checkout.CheckoutResponse;
 import com.example.ModaMint_Backend.dto.response.customer.AddressResponse;
 import com.example.ModaMint_Backend.dto.response.order.OrderResponse;
 import com.example.ModaMint_Backend.entity.Order;
+import com.example.ModaMint_Backend.entity.OrderStatusHistory;
 import com.example.ModaMint_Backend.enums.OrderStatus;
 import com.example.ModaMint_Backend.exception.AppException;
 import com.example.ModaMint_Backend.exception.ErrorCode;
 import com.example.ModaMint_Backend.mapper.OrderMapper;
 import com.example.ModaMint_Backend.repository.OrderRepository;
+import com.example.ModaMint_Backend.repository.OrderStatusHistoryRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -28,6 +30,7 @@ import java.util.List;
 @Slf4j
 public class OrderService {
     OrderRepository orderRepository;
+    OrderStatusHistoryRepository orderStatusHistoryRepository;
     OrderMapper orderMapper;
     EmailService emailService;
 
@@ -91,6 +94,37 @@ public class OrderService {
                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
         order.setOrderStatus(status);
         orderRepository.save(order);
+    }
+
+    public void cancelOrder(Long id, String customerId, String cancelReason) {
+        log.info("Attempting to cancel order {} by customer {} with reason: {}", id, customerId, cancelReason);
+        
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+
+        if (!order.getCustomerId().equals(customerId)) {
+            log.error("Customer {} attempted to cancel order {} that belongs to {}", 
+                customerId, id, order.getCustomerId());
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        if (order.getOrderStatus() != OrderStatus.PENDING) {
+            log.error("Cannot cancel order {} with status {}", id, order.getOrderStatus());
+            throw new AppException(ErrorCode.CANNOT_CANCEL_ORDER);
+        }
+
+        order.setOrderStatus(OrderStatus.CANCELLED);
+        orderRepository.save(order);
+        
+        // Lưu lịch sử hủy đơn với lý do
+        OrderStatusHistory history = OrderStatusHistory.builder()
+                .order(order)
+                .orderStatus(OrderStatus.CANCELLED)
+                .message(cancelReason)
+                .build();
+        orderStatusHistoryRepository.save(history);
+        
+        log.info("Order {} cancelled successfully by customer {}", id, customerId);
     }
 
     public long getTotalOrderCount() {
