@@ -90,4 +90,10 @@ public class OrderService {
     public long getTotalOrderCount() {
         return orderRepository.count();
     }
+
+    public OrderResponse getOrderDetailById(Long id) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+        return orderMapper.toOrderResponse(order);
+    }
 }

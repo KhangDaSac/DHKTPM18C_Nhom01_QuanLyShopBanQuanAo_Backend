@@ -98,4 +98,11 @@ public class ReviewService {
                 .map(reviewMapper::toReviewResponse)
                 .toList();
     }
+
+    public List<ReviewResponse> getReviewsByOrderItemId(Long orderItemId) {
+        return reviewRepository.findByOrderItemId(orderItemId)
+                .stream()
+                .map(reviewMapper::toReviewResponse)
+                .toList();
+    }
 }

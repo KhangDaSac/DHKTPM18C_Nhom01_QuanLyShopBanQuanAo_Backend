@@ -8,9 +8,12 @@ import com.example.ModaMint_Backend.dto.response.auth.IntrospectResponse;
 import com.example.ModaMint_Backend.dto.response.auth.RefreshResponse;
 import com.example.ModaMint_Backend.dto.response.user.UserResponse;
 import com.example.ModaMint_Backend.entity.User;
+import com.example.ModaMint_Backend.entity.Role;
+import com.example.ModaMint_Backend.enums.RoleName;
 import com.example.ModaMint_Backend.exception.AppException;
 import com.example.ModaMint_Backend.exception.ErrorCode;
 import com.example.ModaMint_Backend.repository.UserRepository;
+import com.example.ModaMint_Backend.repository.RoleRepository;
 import com.example.ModaMint_Backend.mapper.UserMapper;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
@@ -28,6 +31,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.client.RestClient;
+import org.springframework.http.MediaType;
+import org.springframework.http.HttpHeaders;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.text.ParseException;
 import java.time.Duration;
@@ -35,6 +43,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Optional;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.UUID;
 
@@ -44,12 +53,129 @@ import java.util.UUID;
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class AuthenticationService {
     UserRepository userRepository;
+    RoleRepository roleRepository;
     @NonFinal
     @Value("${jwt.signer-key}")
     protected String SIGNER_KEY;
     PasswordEncoder passwordEncoder;
     RedisTokenService redisTokenService;
     UserMapper userMapper;
+    RestClient.Builder restClientBuilder;
+
+    @NonFinal
+    @Value("${spring.security.oauth2.client.registration.google.client-id}")
+    protected String GOOGLE_CLIENT_ID;
+
+    @NonFinal
+    @Value("${spring.security.oauth2.client.registration.google.client-secret}")
+    protected String GOOGLE_CLIENT_SECRET;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    public AuthenticationResponse authenticateWithGoogle(String code, HttpServletResponse response)
+            throws JOSEException {
+        try {
+            String tokenUrl = "https://oauth2.googleapis.com/token";
+            String redirectUri = "http://localhost:5173/auth/google";
+            RestClient restClient = restClientBuilder.build();
+
+            String tokenResponse = restClient.post()
+                    .uri(tokenUrl)
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .body("code=" + code +
+                            "&client_id=" + GOOGLE_CLIENT_ID +
+                            "&client_secret=" + GOOGLE_CLIENT_SECRET +
+                            "&redirect_uri=" + redirectUri +
+                            "&grant_type=authorization_code")
+                    .retrieve()
+                    .body(String.class);
+
+            JsonNode tokenJson = objectMapper.readTree(tokenResponse);
+
+            if (tokenJson.has("error")) {
+                String error = tokenJson.get("error").asText();
+                String errorDescription = tokenJson.has("error_description")
+                        ? tokenJson.get("error_description").asText()
+                        : "No description";
+                throw new AppException(ErrorCode.UNAUTHENTICATED);
+            }
+
+            String googleAccessToken = tokenJson.get("access_token").asText();
+            String userInfoUrl = "https://www.googleapis.com/oauth2/v2/userinfo";
+            String userInfoResponse = restClient.get()
+                    .uri(userInfoUrl)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + googleAccessToken)
+                    .retrieve()
+                    .body(String.class);
+
+            JsonNode userInfoJson = objectMapper.readTree(userInfoResponse);
+            String googleEmail = userInfoJson.get("email").asText();
+            String googleName = userInfoJson.has("name") ? userInfoJson.get("name").asText() : "";
+            String googlePicture = userInfoJson.has("picture") ? userInfoJson.get("picture").asText() : "";
+
+            User user = userRepository.findByEmail(googleEmail)
+                    .orElse(null);
+
+            if (user == null) {
+                // Tạo user mới nếu chưa tồn tại
+                String[] nameParts = googleName.split(" ", 2);
+                String firstName = nameParts.length > 0 ? nameParts[0] : "";
+                String lastName = nameParts.length > 1 ? nameParts[1] : "";
+                String username = googleEmail.split("@")[0];
+
+                int counter = 1;
+                String originalUsername = username;
+                while (userRepository.findByUsername(username).isPresent()) {
+                    username = originalUsername + counter;
+                    counter++;
+                }
+
+                Role customerRole = roleRepository.findByName(RoleName.CUSTOMER)
+                        .orElseThrow(() -> new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION));
+
+                user = User.builder()
+                        .username(username)
+                        .email(googleEmail)
+                        .firstName(firstName)
+                        .lastName(lastName)
+                        .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                        .image(googlePicture)
+                        .roles(Set.of(customerRole))
+                        .active(true)
+                        .build();
+
+                user = userRepository.save(user);
+            } else {
+                // Cập nhật image nếu user tồn tại
+                if (googlePicture != null && !googlePicture.isEmpty()) {
+                    user.setImage(googlePicture);
+                    userRepository.save(user);
+                }
+            }
+
+            // Tạo JWT token cho user
+            String accessToken = generateToken(user, 1, ChronoUnit.HOURS, "access");
+            String refreshToken = generateToken(user, 7, ChronoUnit.DAYS, "refresh");
+
+            // Set refreshToken vào HttpOnly cookie
+            Cookie cookie = new Cookie("refreshToken", refreshToken);
+            cookie.setHttpOnly(true);
+            cookie.setSecure(true);
+            cookie.setPath("/refresh");
+            cookie.setMaxAge(7 * 24 * 60 * 60);
+            response.addCookie(cookie);
+
+            return AuthenticationResponse.builder()
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .expiresIn(3600)
+                    .tokenType("Bearer")
+                    .build();
+
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+    }
 
     public AuthenticationResponse authenticate(AuthenticationRequest request,
                                                HttpServletResponse response) throws JOSEException {
@@ -63,8 +189,8 @@ public class AuthenticationService {
         }
 
         // Tạo token
-        String accessToken = generateToken(user,1, ChronoUnit.HOURS, "access");
-        String refreshToken = generateToken(user,7, ChronoUnit.DAYS, "refresh");
+        String accessToken = generateToken(user, 1, ChronoUnit.HOURS, "access");
+        String refreshToken = generateToken(user, 7, ChronoUnit.DAYS, "refresh");
 
         // Set refreshToken vào HttpOnly cookie
         Cookie cookie = new Cookie("refreshToken", refreshToken);
@@ -109,7 +235,6 @@ public class AuthenticationService {
                 .build();
     }
 
-
     public RefreshResponse refresh(String refreshToken) throws JOSEException, ParseException {
         SignedJWT signedJWT = verify(refreshToken);
 
@@ -118,11 +243,12 @@ public class AuthenticationService {
         // Try to find user by ID first
         Optional<User> userOptional = userRepository.findById(userId);
         User user;
-        
+
         if (userOptional.isPresent()) {
             user = userOptional.get();
         } else {
-            // Fallback: try to get username from claim for backward compatibility with old tokens
+            // Fallback: try to get username from claim for backward compatibility with old
+            // tokens
             String username = signedJWT.getJWTClaimsSet().getStringClaim("username");
             if (username != null) {
                 user = userRepository.findByUsername(username)
@@ -143,10 +269,9 @@ public class AuthenticationService {
                 .build();
     }
 
-
     public void logout(LogoutRequest request, HttpServletResponse response) {
         try {
-            if(request.getAccessToken() != null) {
+            if (request.getAccessToken() != null) {
                 SignedJWT accessJWT = verify(request.getAccessToken());
                 // Kiểm tra token type
                 String type = accessJWT.getJWTClaimsSet().getStringClaim("type");
@@ -156,7 +281,7 @@ public class AuthenticationService {
                 // Chỉ blacklist nếu token còn hạn
                 Date expireAt = accessJWT.getJWTClaimsSet().getExpirationTime();
                 long ttlMillis = expireAt.getTime() - System.currentTimeMillis();
-                
+
                 if (ttlMillis > 0) {
                     String tokenId = accessJWT.getJWTClaimsSet().getJWTID();
                     redisTokenService.blacklistToken(tokenId, Duration.ofMillis(ttlMillis));
@@ -166,7 +291,7 @@ public class AuthenticationService {
                 }
             }
 
-            if(request.getRefreshToken() != null) {
+            if (request.getRefreshToken() != null) {
                 SignedJWT refreshJWT = verify(request.getRefreshToken());
                 // Kiểm tra token type
                 String type = refreshJWT.getJWTClaimsSet().getStringClaim("type");
@@ -176,7 +301,7 @@ public class AuthenticationService {
                 // Chỉ blacklist nếu token còn hạn
                 Date expireAt = refreshJWT.getJWTClaimsSet().getExpirationTime();
                 long ttlMillis = expireAt.getTime() - System.currentTimeMillis();
-                
+
                 if (ttlMillis > 0) {
                     String tokenId = refreshJWT.getJWTClaimsSet().getJWTID();
                     redisTokenService.blacklistToken(tokenId, Duration.ofMillis(ttlMillis));
@@ -208,15 +333,16 @@ public class AuthenticationService {
         }
 
         String userId = signedJWT.getJWTClaimsSet().getSubject();
-        
+
         // Try to find user by ID first
         Optional<User> userOptional = userRepository.findById(userId);
         User user;
-        
+
         if (userOptional.isPresent()) {
             user = userOptional.get();
         } else {
-            // Fallback: try to get username from claim for backward compatibility with old tokens
+            // Fallback: try to get username from claim for backward compatibility with old
+            // tokens
             String username = signedJWT.getJWTClaimsSet().getStringClaim("username");
             if (username != null) {
                 user = userRepository.findByUsername(username)
@@ -250,7 +376,7 @@ public class AuthenticationService {
         return signedJWT;
     }
 
-    private String generateToken(User user, long timeAmout, ChronoUnit chronoUnit,String type) throws JOSEException {
+    private String generateToken(User user, long timeAmout, ChronoUnit chronoUnit, String type) throws JOSEException {
         JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
@@ -264,7 +390,7 @@ public class AuthenticationService {
                 .jwtID(UUID.randomUUID().toString())
                 .build();
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
-        JWSObject jwsObject = new JWSObject(jwsHeader,payload);
+        JWSObject jwsObject = new JWSObject(jwsHeader, payload);
 
         try {
             jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
@@ -282,6 +408,5 @@ public class AuthenticationService {
         }
         return stringJoiner.toString();
     }
-
 
 }
