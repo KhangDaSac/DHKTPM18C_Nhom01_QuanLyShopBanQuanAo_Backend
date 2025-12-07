@@ -1,4 +1,4 @@
-package com.example.ModaMint_Backend.dto.response.cart;
+package com.example.ModaMint_Backend.dto.response.cartitem;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;

@@ -1,7 +1,7 @@
 package com.example.ModaMint_Backend.service.impl;
 
 import com.example.ModaMint_Backend.dto.request.cartitem.CartItemRequest;
-import com.example.ModaMint_Backend.dto.response.cart.CartItemResponse;
+import com.example.ModaMint_Backend.dto.response.cartitem.CartItemResponse;
 import com.example.ModaMint_Backend.dto.response.cart.CartResponse;
 import com.example.ModaMint_Backend.entity.Cart;
 import com.example.ModaMint_Backend.entity.CartItem;

@@ -88,8 +88,8 @@ public class Order {
     @OneToMany(mappedBy = "order")
     Set<Shipment> shipments;
 
-    @OneToOne(mappedBy = "order")
-    Payment payment;
+//    @OneToOne(mappedBy = "order")
+//    Payment payment;
 
     public BigDecimal totalProductPrice() {
         return orderItems.stream()

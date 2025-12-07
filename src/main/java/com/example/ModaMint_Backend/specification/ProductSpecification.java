@@ -8,13 +8,14 @@ import org.springframework.data.jpa.domain.Specification;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class ProductSpecification {
 
     /**
      * Filter products theo nhiều điều kiện
      * @param brandId - ID của brand (nullable)
-     * @param categoryId - ID của category (nullable)
+     * @param categoryIds - Set của category IDs (nullable) - hỗ trợ danh mục cha + danh mục con
      * @param minPrice - Giá tối thiểu (nullable)
      * @param maxPrice - Giá tối đa (nullable)
      * @param colors - Danh sách màu sắc (nullable)
@@ -23,7 +24,7 @@ public class ProductSpecification {
      */
     public static Specification<Product> filterProducts(
             Long brandId,
-            Long categoryId,
+            Set<Long> categoryIds,
             BigDecimal minPrice,
             BigDecimal maxPrice,
             List<String> colors,
@@ -40,9 +41,9 @@ public class ProductSpecification {
                 predicates.add(criteriaBuilder.equal(root.get("brandId"), brandId));
             }
 
-            // 2. Filter theo Category
-            if (categoryId != null) {
-                predicates.add(criteriaBuilder.equal(root.get("categoryId"), categoryId));
+            // 2. Filter theo Category (hỗ trợ danh mục cha + danh mục con)
+            if (categoryIds != null && !categoryIds.isEmpty()) {
+                predicates.add(root.get("categoryId").in(categoryIds));
             }
 
             // 3. Filter theo Price Range

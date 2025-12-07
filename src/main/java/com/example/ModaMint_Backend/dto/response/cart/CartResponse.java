@@ -1,4 +1,5 @@
 package com.example.ModaMint_Backend.dto.response.cart;
+import com.example.ModaMint_Backend.dto.response.cartitem.CartItemResponse;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import java.math.BigDecimal;
@@ -12,6 +13,6 @@ import java.util.List;
 public class CartResponse {
     Long cartId;
     String customerId;
-    List<com.example.ModaMint_Backend.dto.response.cart.CartItemResponse> items;
+    List<CartItemResponse> items;
     BigDecimal totalPrice;
 }

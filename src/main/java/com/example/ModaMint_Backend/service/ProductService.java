@@ -21,7 +21,10 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import com.example.ModaMint_Backend.entity.Category;
 
 @Service
 @RequiredArgsConstructor
@@ -125,14 +128,36 @@ public class ProductService {
     }
 
 
+    /**
+     * Lấy tất cả danh mục con (bao gồm danh mục cha và tất cả danh mục con của nó)
+     * @param categoryId - ID của danh mục cha hoặc danh mục con
+     * @return Set chứa ID của danh mục cha + tất cả danh mục con
+     */
+    private Set<Long> getAllCategoryIdsIncludingChildren(Long categoryId) {
+        Set<Long> categoryIds = new HashSet<>();
+        categoryIds.add(categoryId);
+        
+        // Lấy tất cả danh mục con của categoryId này
+        List<Category> childCategories = categoryRepository.findAllByParentId(categoryId);
+        for (Category child : childCategories) {
+            // Đệ quy lấy tất cả danh mục con cấp tiếp theo
+            categoryIds.addAll(getAllCategoryIdsIncludingChildren(child.getId()));
+        }
+        
+        return categoryIds;
+    }
+
     public List<ProductResponse> getProductsByCategoryId(Long categoryId) {
         if (!categoryRepository.existsById(categoryId)) {
             throw new AppException(ErrorCode.CATEGORY_NOT_FOUND);
         }
 
+        // Lấy tất cả danh mục con (bao gồm danh mục cha)
+        Set<Long> allCategoryIds = getAllCategoryIdsIncludingChildren(categoryId);
+
         return productRepository.findAll()
                 .stream()
-                .filter(product -> product.getCategoryId().equals(categoryId))
+                .filter(product -> allCategoryIds.contains(product.getCategoryId()))
                 .map(productMapper::toProductResponse)
                 .toList();
     }
@@ -166,7 +191,7 @@ public class ProductService {
     /**
      * Filter products theo nhiều điều kiện
      * @param brandId - ID của brand (nullable)
-     * @param categoryId - ID của category (nullable)
+     * @param categoryId - ID của category (nullable) - hỗ trợ danh mục cha + danh mục con
      * @param minPrice - Giá tối thiểu (nullable)
      * @param maxPrice - Giá tối đa (nullable)
      * @param colors - Danh sách màu sắc (nullable)
@@ -181,8 +206,14 @@ public class ProductService {
             List<String> colors,
             List<String> sizes
     ) {
+        // Nếu có categoryId, lấy tất cả danh mục con (bao gồm danh mục cha)
+        Set<Long> allCategoryIds = null;
+        if (categoryId != null) {
+            allCategoryIds = getAllCategoryIdsIncludingChildren(categoryId);
+        }
+
         Specification<Product> spec = ProductSpecification.filterProducts(
-                brandId, categoryId, minPrice, maxPrice, colors, sizes
+                brandId, allCategoryIds, minPrice, maxPrice, colors, sizes
         );
 
         return productRepository.findAll(spec)
