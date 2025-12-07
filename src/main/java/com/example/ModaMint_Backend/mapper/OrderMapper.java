@@ -28,7 +28,7 @@ public interface OrderMapper {
 
     @Mapping(target = "promotionId", ignore = true)
     @Mapping(target = "orderItems", source = "orderItems")
-    @Mapping(target = "totalAmount", source = "subTotal") // Use subTotal as final price (after discount)
+    @Mapping(target = "totalAmount", source = "subTotal")
     @Mapping(target = "shippingAddress", source = "shippingAddress")
     @Mapping(target = "shippingFee", expression = "java(new java.math.BigDecimal(30000))")
     OrderResponse toOrderResponse(Order order);
@@ -49,9 +49,8 @@ public interface OrderMapper {
     void updateOrder(OrderRequest request, @MappingTarget Order order);
 
 
-    // Mới: Mapping cho OrderItem
     @Mapping(target = "lineTotal", expression = "java(orderItem.getLineTotal())")
-    @Mapping(target = "productVariantName", source = "productVariant.product.name") // Giả sử ProductVariant có liên kết Product
+    @Mapping(target = "productVariantName", source = "productVariant.product.name") 
     @Mapping(target = "size", source = "productVariant.size")
     @Mapping(target = "color", source = "productVariant.color")
     @Mapping(target = "productVariantImage", source = "productVariant.image")

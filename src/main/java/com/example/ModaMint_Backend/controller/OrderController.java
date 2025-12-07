@@ -118,11 +118,11 @@ public class OrderController {
     }
 
     @GetMapping("/detail/{id}")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')") // Thêm dòng này
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')") 
     public ApiResponse<OrderResponse> getOrderDetailById(@PathVariable Long id) {
         return ApiResponse.<OrderResponse>builder()
                 .result(orderService.getOrderDetailById(id))
-                .message("Lấy thông tin đơn hàng và chi tiết thành công") // Cập nhật message
+                .message("Lấy thông tin đơn hàng và chi tiết thành công") 
                 .build();
     }
 }
