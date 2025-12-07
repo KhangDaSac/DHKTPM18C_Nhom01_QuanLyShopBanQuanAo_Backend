@@ -13,6 +13,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -35,6 +36,13 @@ public class AmountPromotionService {
     public List<AmountPromotionResponse> getAllAmountPromotions() {
         return amountPromotionRepository.findAll()
                 .stream()
+                .sorted((p1, p2) -> {
+                    // Sắp xếp theo expiration: khuyến mãi sắp hết hạn lên đầu
+                    if (p1.getExpiration() == null && p2.getExpiration() == null) return 0;
+                    if (p1.getExpiration() == null) return 1;
+                    if (p2.getExpiration() == null) return -1;
+                    return p1.getExpiration().compareTo(p2.getExpiration());
+                })
                 .map(amountPromotionMapper::toAmountPromotionResponse)
                 .toList();
     }
@@ -79,8 +87,43 @@ public class AmountPromotionService {
 
     // Read - Lấy các khuyến mãi số tiền đang hoạt động
     public List<AmountPromotionResponse> getActiveAmountPromotions() {
-        return amountPromotionRepository.findByIsActive(true)
+        LocalDateTime now = LocalDateTime.now();
+        return amountPromotionRepository.findAll()
                 .stream()
+                .filter(p -> {
+                    // Đang hoạt động = đã bắt đầu VÀ chưa hết hạn
+                    boolean started = p.getEffective() == null || !p.getEffective().isAfter(now);
+                    boolean notExpired = p.getExpiration() == null || p.getExpiration().isAfter(now);
+                    return started && notExpired;
+                })
+                .sorted((p1, p2) -> {
+                    if (p1.getExpiration() == null && p2.getExpiration() == null) return 0;
+                    if (p1.getExpiration() == null) return 1;
+                    if (p2.getExpiration() == null) return -1;
+                    return p1.getExpiration().compareTo(p2.getExpiration());
+                })
+                .map(amountPromotionMapper::toAmountPromotionResponse)
+                .toList();
+    }
+
+    // Read - Lấy các khuyến mãi số tiền chưa bắt đầu
+    public List<AmountPromotionResponse> getNotStartedAmountPromotions() {
+        LocalDateTime now = LocalDateTime.now();
+        return amountPromotionRepository.findAll()
+                .stream()
+                .filter(p -> p.getEffective() != null && p.getEffective().isAfter(now))
+                .sorted((p1, p2) -> p1.getEffective().compareTo(p2.getEffective()))
+                .map(amountPromotionMapper::toAmountPromotionResponse)
+                .toList();
+    }
+
+    // Read - Lấy các khuyến mãi số tiền đã hết hạn
+    public List<AmountPromotionResponse> getExpiredAmountPromotions() {
+        LocalDateTime now = LocalDateTime.now();
+        return amountPromotionRepository.findAll()
+                .stream()
+                .filter(p -> p.getExpiration() != null && p.getExpiration().isBefore(now))
+                .sorted((p1, p2) -> p2.getExpiration().compareTo(p1.getExpiration()))
                 .map(amountPromotionMapper::toAmountPromotionResponse)
                 .toList();
     }
