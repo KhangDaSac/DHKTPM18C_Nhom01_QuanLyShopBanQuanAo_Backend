@@ -24,17 +24,13 @@ import java.util.stream.Collectors;
 public class ChatService {
 
     ChatClient chatClient;
-    VectorStore vectorStore;
     JdbcChatMemoryRepository jdbcChatMemoryRepository;
-    ProductVectorLoader productVectorLoader;
+    List<Document> products;
 
     public ChatService(ChatClient.Builder builder,
                        JdbcChatMemoryRepository jdbcChatMemoryRepository,
-                       VectorStore vectorStore,
-                          ProductVectorLoader productVectorLoader
-    )
-    {
-        this.productVectorLoader = productVectorLoader;
+                       ProductVectorLoader productVectorLoader
+    ) {
         this.jdbcChatMemoryRepository = jdbcChatMemoryRepository;
         ChatMemory chatMemory = MessageWindowChatMemory.builder()
                 .chatMemoryRepository(jdbcChatMemoryRepository)
@@ -45,16 +41,15 @@ public class ChatService {
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
                 .build();
 
-        this.vectorStore = vectorStore;
+        products = productVectorLoader.loadProductsToVectorDB();
     }
 
     public ChatAiResponse chatAi(ChatAiRequest request) {
         String conversationId = SecurityContextHolder.getContext().getAuthentication().getName();
         String userMessage = request.getMessage();
 
-        List<Document> similarProducts = productVectorLoader.loadProductsToVectorDB();
 
-        String productList = similarProducts.stream()
+        String productList = products.stream()
                 .limit(50)
                 .map(Document::getText)
                 .collect(Collectors.joining("\n"));
