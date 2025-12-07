@@ -1,5 +1,6 @@
 package com.example.ModaMint_Backend.dto.response.order;
 
+import com.example.ModaMint_Backend.dto.response.customer.AddressResponse;
 import com.example.ModaMint_Backend.dto.response.orderitem.OrderItemResponse;
 import com.example.ModaMint_Backend.enums.OrderStatus;
 import com.example.ModaMint_Backend.enums.PaymentMethod;
@@ -30,6 +31,8 @@ public class OrderResponse {
     LocalDateTime createAt;
     LocalDateTime updateAt;
 
-    // THÔNG TIN MỚI: Chi tiết đơn hàng
+
     List<OrderItemResponse> orderItems;
+    AddressResponse shippingAddress;
+    BigDecimal shippingFee;
 }

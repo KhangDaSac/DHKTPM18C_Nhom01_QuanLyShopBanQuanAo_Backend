@@ -44,6 +44,9 @@ public class CartServiceImpl implements CartService {
         if (customerId == null || customerId.isBlank()) {
             return emptyCartResponseForCustomer(customerId);
         }
+        // Đảm bảo Customer tồn tại trước khi tạo Cart
+        ensureCustomerExists(customerId);
+        
         Cart cart = cartRepository.findByCustomerId(customerId)
                 .orElseGet(() -> createCartForCustomer(customerId));
         return buildCartResponse(cart);
@@ -195,20 +198,29 @@ public class CartServiceImpl implements CartService {
             // Kiểm tra User có tồn tại không
             User user = userRepository.findById(customerId)
                     .orElseThrow(() -> {
-                        log.error("User not found for customerId: {}", customerId);
-                        return new AppException(ErrorCode.USER_NOT_FOUND);
+                        log.error("User not found for customerId: {}. User may have been deleted or token is invalid. Please login again.", customerId);
+                        return new AppException(ErrorCode.UNAUTHENTICATED);
                     });
 
-            // Tạo Customer mới
-            Customer customer = Customer.builder()
-                    .customerId(customerId)
-                    .user(user)
-                    .build();
+            // Tạo Customer mới với đầy đủ thông tin từ User
+            try {
+                Customer customer = Customer.builder()
+                        .customerId(customerId)
+                        .user(user)
+                        .email(user.getEmail())
+                        .name((user.getFirstName() != null ? user.getFirstName() : "") + " " + 
+                              (user.getLastName() != null ? user.getLastName() : "").trim())
+                        .phone(user.getPhone())
+                        .build();
 
-            // Save và flush ngay để đảm bảo Customer tồn tại trong DB trước khi save Cart
-            customerRepository.save(customer);
-            entityManager.flush(); // Force flush để đảm bảo Customer được commit vào DB
-            log.info("Customer created and flushed successfully for customerId: {}", customerId);
+                // Save và flush ngay để đảm bảo Customer tồn tại trong DB trước khi save Cart
+                customerRepository.save(customer);
+                entityManager.flush(); // Force flush để đảm bảo Customer được commit vào DB
+                log.info("Customer created and flushed successfully for customerId: {}", customerId);
+            } catch (Exception e) {
+                // Customer đã tồn tại (race condition) - bỏ qua lỗi
+                log.warn("Customer record already exists for customerId: {} - {}", customerId, e.getMessage());
+            }
         }
     }
 

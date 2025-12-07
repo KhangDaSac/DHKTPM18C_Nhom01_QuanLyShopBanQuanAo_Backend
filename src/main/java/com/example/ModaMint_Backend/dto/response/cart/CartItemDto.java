@@ -17,4 +17,6 @@ public class CartItemDto {
     Long unitPrice;
     Integer quantity;
     Long totalPrice;
+    String size;
+    String color;
 }
