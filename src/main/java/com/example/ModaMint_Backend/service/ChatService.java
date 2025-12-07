@@ -25,12 +25,13 @@ public class ChatService {
 
     ChatClient chatClient;
     JdbcChatMemoryRepository jdbcChatMemoryRepository;
-    List<Document> products;
+    ProductVectorLoader productVectorLoader;
 
     public ChatService(ChatClient.Builder builder,
                        JdbcChatMemoryRepository jdbcChatMemoryRepository,
                        ProductVectorLoader productVectorLoader
     ) {
+        this.productVectorLoader = productVectorLoader;
         this.jdbcChatMemoryRepository = jdbcChatMemoryRepository;
         ChatMemory chatMemory = MessageWindowChatMemory.builder()
                 .chatMemoryRepository(jdbcChatMemoryRepository)
@@ -41,13 +42,13 @@ public class ChatService {
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
                 .build();
 
-        products = productVectorLoader.loadProductsToVectorDB();
     }
 
     public ChatAiResponse chatAi(ChatAiRequest request) {
         String conversationId = SecurityContextHolder.getContext().getAuthentication().getName();
         String userMessage = request.getMessage();
 
+        List<Document> products = productVectorLoader.loadProductsToVectorDB();
 
         String productList = products.stream()
                 .limit(50)
