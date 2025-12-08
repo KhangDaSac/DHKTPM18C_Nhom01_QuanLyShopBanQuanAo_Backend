@@ -1,11 +1,7 @@
 package com.example.ModaMint_Backend.entity;
 
-import com.example.ModaMint_Backend.entity.Conversation;
-import com.example.ModaMint_Backend.entity.Customer;
-import com.example.ModaMint_Backend.entity.Role;
 import com.example.ModaMint_Backend.enums.Gender;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -69,8 +65,6 @@ public class User {
     @OneToOne(mappedBy = "user")
     Customer customer;
 
-    @OneToMany(mappedBy = "user") 
-    Set<Conversation> conversations;
 
     @PrePersist
     public void prePersist() {

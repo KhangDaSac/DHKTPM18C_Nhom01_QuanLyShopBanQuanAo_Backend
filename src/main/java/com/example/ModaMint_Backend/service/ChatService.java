@@ -76,7 +76,7 @@ public class ChatService {
                 8. Tìm kiểm sản phẩm có những cụm từ tương tự nhau như "áo, "quần", "váy", "nam", "nữ",... thì vẫn gợi ý sản phẩm bình thường.
                 9. Trả lời được những sản phẩm bán chạy nhất trong shop.
                 10. Trả lời được tổng số sản phẩm hiện có trong shop.
-                
+                11. Nếu như câu hỏi ngoài lĩnh vực của trang web thời trang thì không trả lời ( chỉ trả lời các câu hỏi liên quan về thời gian ).
                 """.formatted(productList);
 
         SystemMessage systemMessage = new SystemMessage(systemPrompt);

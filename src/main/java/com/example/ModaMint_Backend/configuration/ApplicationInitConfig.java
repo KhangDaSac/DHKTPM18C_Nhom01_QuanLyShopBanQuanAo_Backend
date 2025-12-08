@@ -58,7 +58,7 @@ public class    ApplicationInitConfig {
             Role adminRole = roleRepository.findByName(RoleName.ADMIN).orElseThrow();
             if (userRepository.findByUsername("admin").isEmpty()) {
                 log.info("Creating admin user...");
-                
+
                 User admin = User.builder()
                         .username("admin")
                         .email("admin@orientalfashion.com")
@@ -83,7 +83,7 @@ public class    ApplicationInitConfig {
             Role staffRole = roleRepository.findByName(RoleName.STAFF).orElseThrow();
             if (userRepository.findByUsername("staff1").isEmpty()) {
                 log.info("Creating staff user...");
-                
+
                 User staff = User.builder()
                         .username("staff1")
                         .email("staff1@orientalfashion.com")
@@ -108,16 +108,16 @@ public class    ApplicationInitConfig {
             Role customerRole = roleRepository.findByName(RoleName.CUSTOMER).orElseThrow();
 
             String[] customerData = {
-                "customer1,customer1@email.com,0123456789,Nguyễn,Văn A,1990-01-15,MALE",
-                "customer2,customer2@email.com,0123456790,Trần,Thị B,1992-03-20,FEMALE",
-                "customer3,customer3@email.com,0123456791,Lê,Văn C,1988-07-10,MALE",
-                "customer4,customer4@email.com,0123456792,Phạm,Thị D,1995-11-25,FEMALE",
-                "customer5,customer5@email.com,0123456793,Hoàng,Văn E,1991-05-08,MALE",
-                "customer6,customer6@email.com,0123456794,Vũ,Thị F,1993-09-12,FEMALE",
-                "customer7,customer7@email.com,0123456795,Đặng,Văn G,1989-12-30,MALE",
-                "customer8,customer8@email.com,0123456796,Bùi,Thị H,1994-04-18,FEMALE",
-                "customer9,customer9@email.com,0123456797,Đinh,Văn I,1990-08-22,MALE",
-                "customer10,customer10@email.com,0123456798,Ngô,Thị J,1992-06-14,FEMALE"
+                    "customer1,customer1@email.com,0123456789,Nguyễn,Văn A,1990-01-15,MALE",
+                    "customer2,customer2@email.com,0123456790,Trần,Thị B,1992-03-20,FEMALE",
+                    "customer3,customer3@email.com,0123456791,Lê,Văn C,1988-07-10,MALE",
+                    "customer4,customer4@email.com,0123456792,Phạm,Thị D,1995-11-25,FEMALE",
+                    "customer5,customer5@email.com,0123456793,Hoàng,Văn E,1991-05-08,MALE",
+                    "customer6,customer6@email.com,0123456794,Vũ,Thị F,1993-09-12,FEMALE",
+                    "customer7,customer7@email.com,0123456795,Đặng,Văn G,1989-12-30,MALE",
+                    "customer8,customer8@email.com,0123456796,Bùi,Thị H,1994-04-18,FEMALE",
+                    "customer9,customer9@email.com,0123456797,Đinh,Văn I,1990-08-22,MALE",
+                    "customer10,customer10@email.com,0123456798,Ngô,Thị J,1992-06-14,FEMALE"
             };
 
             for (String data : customerData) {
@@ -148,7 +148,7 @@ public class    ApplicationInitConfig {
                     customer.setImage("https://example.com/avatar" + username.substring(8) + ".jpg");
 
                     User savedUser = userRepository.save(customer);
-                    
+
                     // Tạo Customer record với customer_id = user_id
                     Customer customerEntity = Customer.builder()
                             .customerId(savedUser.getId())
@@ -158,7 +158,7 @@ public class    ApplicationInitConfig {
                             .phone(phone)
                             .build();
                     customerRepository.save(customerEntity);
-                    
+
                     log.info("Customer user created: {}", username);
                 } else {
                     log.info("Customer user {} already exists.", username);

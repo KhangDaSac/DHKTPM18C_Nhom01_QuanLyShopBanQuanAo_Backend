@@ -148,7 +148,7 @@ public class AuthenticationService {
                         .build();
 
                 user = userRepository.save(user);
-                
+
                 // Tự động tạo Customer record cho user mới từ Google OAuth
                 log.info("Creating Customer record for new Google OAuth user: {}", user.getId());
                 try {
@@ -169,7 +169,7 @@ public class AuthenticationService {
                     user.setImage(googlePicture);
                     userRepository.save(user);
                 }
-                
+
                 // Đảm bảo Customer record tồn tại cho user hiện có
                 if (!customerRepository.existsByCustomerId(user.getId())) {
                     log.info("Creating missing Customer record for existing user: {}", user.getId());
@@ -214,9 +214,7 @@ public class AuthenticationService {
 
     public AuthenticationResponse authenticate(AuthenticationRequest request,
                                                HttpServletResponse response) throws JOSEException {
-        // Hỗ trợ đăng nhập bằng username hoặc email
         User user = userRepository.findByUsername(request.getUsername())
-                .or(() -> userRepository.findByEmail(request.getUsername()))
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
@@ -233,8 +231,8 @@ public class AuthenticationService {
                         .customerId(user.getId())
                         .user(user)
                         .email(user.getEmail())
-                        .name((user.getFirstName() != null ? user.getFirstName() : "") + " " + 
-                              (user.getLastName() != null ? user.getLastName() : "").trim())
+                        .name((user.getFirstName() != null ? user.getFirstName() : "") + " " +
+                                (user.getLastName() != null ? user.getLastName() : "").trim())
                         .phone(user.getPhone())
                         .build();
                 customerRepository.save(customer);
