@@ -149,8 +149,15 @@ public class    ApplicationInitConfig {
 
                     User savedUser = userRepository.save(customer);
                     
-                    // Tạo customer record bằng native SQL để tránh detached entity issue
-                    jdbcTemplate.update("INSERT INTO customers (user_id) VALUES (?)", savedUser.getId());
+                    // Tạo Customer record với customer_id = user_id
+                    Customer customerEntity = Customer.builder()
+                            .customerId(savedUser.getId())
+                            .user(savedUser)
+                            .email(email)
+                            .name(firstName + " " + lastName)
+                            .phone(phone)
+                            .build();
+                    customerRepository.save(customerEntity);
                     
                     log.info("Customer user created: {}", username);
                 } else {

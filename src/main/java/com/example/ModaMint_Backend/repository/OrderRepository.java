@@ -1,15 +1,18 @@
 package com.example.ModaMint_Backend.repository;
 
 import com.example.ModaMint_Backend.entity.Order;
+import com.example.ModaMint_Backend.enums.OrderStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
+@Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
-    Optional<Order> findByOrderCode(String orderCode);
-    
+
     List<Order> findByCustomerId(String customerId);
     
-    List<Order> findByOrderStatus(String status);
+    List<Order> findByOrderCode(String orderCode);
+    
+    List<Order> findByOrderStatus(OrderStatus orderStatus);
 }

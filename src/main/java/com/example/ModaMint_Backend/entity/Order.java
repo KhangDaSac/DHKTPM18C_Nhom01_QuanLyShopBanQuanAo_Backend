@@ -1,5 +1,6 @@
 package com.example.ModaMint_Backend.entity;
 
+import com.example.ModaMint_Backend.entity.*;
 import com.example.ModaMint_Backend.enums.OrderStatus;
 import com.example.ModaMint_Backend.enums.PaymentMethod;
 import jakarta.persistence.*;
@@ -33,10 +34,10 @@ public class Order {
     BigDecimal subTotal; // Tổng tiền hàng - khuyến mãi (Tổng tiền cuối cùng)
 
     @Column(name = "percentage_promotion_id")
-    Long percentagePromotionId; 
+    String percentPromotionId;
 
     @Column(name = "amount_promotion_id")
-    Long amountPromotionId; 
+    String amountPromotionId; 
 
     @Column(name = "promotion_value") 
     BigDecimal promotionValue; // Phải lưu vì theo thời gian promotion có thể thay đổi
@@ -68,7 +69,7 @@ public class Order {
 
     @ManyToOne
     @JoinColumn(name = "percentage_promotion_id", insertable = false, updatable = false)
-    PercentagePromotion percentagePromotion;
+    PercentPromotion percentPromotion;
 
     @ManyToOne
     @JoinColumn(name = "amount_promotion_id", insertable = false, updatable = false)

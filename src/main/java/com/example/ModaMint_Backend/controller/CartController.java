@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/carts")
 @RequiredArgsConstructor
 public class CartController {
+
+
     private final CartService cartService;
 
     @PreAuthorize("hasRole('CUSTOMER')")
@@ -37,9 +39,9 @@ public class CartController {
             System.out.println("CartController.addItem - request: " + request);
             System.out.println("CartController.addItem - variantId: " + (request != null ? request.getVariantId() : "null"));
             System.out.println("CartController.addItem - quantity: " + (request != null ? request.getQuantity() : "null"));
-            
+
             CartResponse result = cartService.addItem(customerId, request);
-            
+
             return ApiResponse.<CartResponse>builder()
                     .code(1000)
                     .message("Item added successfully")

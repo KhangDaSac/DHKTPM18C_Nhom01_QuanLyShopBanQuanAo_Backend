@@ -2,10 +2,17 @@ spring:
   application:
     name: ModaMint_Backend
 
+  # Cấu hình upload file
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB # Giới hạn kích thước mỗi file
+      max-request-size: 50MB # Giới hạn tổng kích thước request (nhiều files)
+
   datasource:
     url: jdbc:mariadb://localhost:3306/modamint_db?authenticationPlugins=mysql_native_password
     username: root
-    password: 123
+    password: 123456789
     driver-class-name: org.mariadb.jdbc.Driver
     hikari:
       maximum-pool-size: 10
@@ -50,7 +57,6 @@ spring:
           max-idle: 10
           min-idle: 5
           max-wait: 5000ms
-
   ai:
     google:
       genai:
@@ -73,6 +79,23 @@ spring:
         repository:
           jdbc:
             initialize-schema: always
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${EMAIL_USERNAME:your-email@gmail.com}
+    password: ${EMAIL_PASSWORD:your-app-password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
 server:
   port: 8080
   servlet:
@@ -80,6 +103,13 @@ server:
 
 jwt:
   signer-key: "wDhbSSpxZfV5HKciZOEUlvBExqAuzHmHhLDAuO6PALLAqTP163lNPxLYsUxs3UUI"
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+
+  api-key: ${CLOUDINARY_API_KEY}
+
+  api-secret: ${CLOUDINARY_API_SECRET}
 
 vnpay:
   tmnCode: ${VNPAY_TMN_CODE}

@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Set;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -19,6 +21,8 @@ public class ReviewRequest {
     String customerId;
 
     Long orderItemId;
+
+    Set<String> images;
 
     @NotNull(message = "Đánh giá không được để trống")
     @Min(value = 1, message = "Đánh giá tối thiểu là 1")

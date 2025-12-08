@@ -38,7 +38,7 @@ public class AmountPromotionController {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<AmountPromotionResponse> getAmountPromotionById(@PathVariable Long id) {
+    public ApiResponse<AmountPromotionResponse> getAmountPromotionById(@PathVariable String id) {
         return ApiResponse.<AmountPromotionResponse>builder()
                 .result(amountPromotionService.getAmountPromotionById(id))
                 .message("Lấy thông tin khuyến mãi số tiền thành công")
@@ -56,7 +56,7 @@ public class AmountPromotionController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<AmountPromotionResponse> updateAmountPromotion(
-            @PathVariable Long id,
+            @PathVariable String id,
             @RequestBody @Valid AmountPromotionRequest request) {
         return ApiResponse.<AmountPromotionResponse>builder()
                 .result(amountPromotionService.updateAmountPromotion(id, request))
@@ -66,7 +66,7 @@ public class AmountPromotionController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<String> deleteAmountPromotion(@PathVariable Long id) {
+    public ApiResponse<String> deleteAmountPromotion(@PathVariable String id) {
         amountPromotionService.deleteAmountPromotion(id);
         return ApiResponse.<String>builder()
                 .result("Khuyến mãi số tiền đã được xóa")
@@ -79,6 +79,22 @@ public class AmountPromotionController {
         return ApiResponse.<List<AmountPromotionResponse>>builder()
                 .result(amountPromotionService.getActiveAmountPromotions())
                 .message("Lấy danh sách khuyến mãi số tiền đang hoạt động thành công")
+                .build();
+    }
+
+    @GetMapping("/not-started")
+    public ApiResponse<List<AmountPromotionResponse>> getNotStartedAmountPromotions() {
+        return ApiResponse.<List<AmountPromotionResponse>>builder()
+                .result(amountPromotionService.getNotStartedAmountPromotions())
+                .message("Lấy danh sách khuyến mãi số tiền chưa bắt đầu thành công")
+                .build();
+    }
+
+    @GetMapping("/expired")
+    public ApiResponse<List<AmountPromotionResponse>> getExpiredAmountPromotions() {
+        return ApiResponse.<List<AmountPromotionResponse>>builder()
+                .result(amountPromotionService.getExpiredAmountPromotions())
+                .message("Lấy danh sách khuyến mãi số tiền đã hết hạn thành công")
                 .build();
     }
 
@@ -95,6 +111,38 @@ public class AmountPromotionController {
         return ApiResponse.<Long>builder()
                 .result(amountPromotionService.getActiveAmountPromotionCount())
                 .message("Lấy tổng số lượng khuyến mãi số tiền đang hoạt động thành công")
+                .build();
+    }
+
+    @PostMapping("/validate")
+    public ApiResponse<String> validatePromotion(
+            @RequestParam String code,
+            @RequestParam java.math.BigDecimal orderTotal) {
+        amountPromotionService.validateAndGetPromotion(code, orderTotal);
+        return ApiResponse.<String>builder()
+                .result("Mã khuyến mãi hợp lệ")
+                .message("Xác thực mã khuyến mãi số tiền thành công")
+                .build();
+    }
+
+    @PostMapping("/apply")
+    public ApiResponse<java.math.BigDecimal> applyPromotion(
+            @RequestParam String code,
+            @RequestParam java.math.BigDecimal orderTotal) {
+        java.math.BigDecimal discount = amountPromotionService.applyPromotionToOrder(code, orderTotal);
+        return ApiResponse.<java.math.BigDecimal>builder()
+                .result(discount)
+                .message("Áp dụng mã khuyến mãi số tiền thành công")
+                .build();
+    }
+
+    @PostMapping("/{id}/increase-quantity")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<String> increaseQuantity(@PathVariable String id) {
+        amountPromotionService.increaseQuantity(id);
+        return ApiResponse.<String>builder()
+                .result("Đã tăng số lượng mã khuyến mãi")
+                .message("Tăng số lượng mã khuyến mãi số tiền thành công")
                 .build();
     }
 }

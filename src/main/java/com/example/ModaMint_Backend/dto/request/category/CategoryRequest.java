@@ -19,4 +19,9 @@ public class CategoryRequest {
 
     // ID danh mục cha (có thể null nếu là danh mục cấp 1)
     Long parentId;
+    
+    /**
+     * URL ảnh của category từ Cloudinary
+     */
+    String image;
 }

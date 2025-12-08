@@ -24,7 +24,6 @@ import javax.crypto.spec.SecretKeySpec;
 import java.util.List;
 
 @Configuration
-@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
     @Value("${jwt.signer-key}")
     private String signerKey;
@@ -37,16 +36,46 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         // === PUBLIC ENDPOINTS ===
+
                         .requestMatchers("/auth/**").permitAll()  // Login, logout, refresh
                         .requestMatchers(HttpMethod.POST, "/users").permitAll()  // Đăng ký tài khoản
+                        .requestMatchers(HttpMethod.GET, "/products/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/product-variants/**").permitAll()// Xem sản phẩm
                         .requestMatchers(HttpMethod.GET, "/products/**").permitAll()  // Xem sản phẩm
                         .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()  // Xem danh mục
                         .requestMatchers(HttpMethod.GET, "/brands/**").permitAll()  // Xem thương hiệu
                         .requestMatchers(HttpMethod.GET, "/percentage-promotions/**").permitAll()  // Xem khuyến mãi %
                         .requestMatchers(HttpMethod.GET, "/amount-promotions/**").permitAll()  // Xem khuyến mãi giá cố định
+                        .requestMatchers(HttpMethod.GET, "/product-variants/colors").permitAll()  // Xem màu
+                        .requestMatchers(HttpMethod.POST, "/payment/create-payment").permitAll()  // Thanh toán
+                        .requestMatchers(HttpMethod.GET, "/payment/vnpay-return").permitAll()  //Url trả về
+
+                        // === CART ENDPOINTS ===
+                        // Cho phép cả guest (sessionId) và user đã đăng nhập (JWT token)
+                        .requestMatchers("/carts/**").permitAll()  // Guest + authenticated users
+
+                        // === CHECKOUT & ORDER ENDPOINTS ===
+                        // Allow guest checkout - backend will handle authentication internally
+                        .requestMatchers("/checkout/**").permitAll()  // Guest + authenticated checkout
+                        .requestMatchers(HttpMethod.POST, "/orders").permitAll()  // Guest orders
+                        .requestMatchers(HttpMethod.POST, "/addresses").permitAll()  // Guest address creation
+
                         .requestMatchers(HttpMethod.POST, "/cart/**").hasRole("CUSTOMER") // bắt buộc CUSTOMER// Xem giỏ hàng
+                        .requestMatchers(HttpMethod.POST, "/orders/detail/**").hasAnyRole("CUSTOMER", "ADMIN") // bắt buộc CUSTOMER// Xem giỏ hàng
+                        .requestMatchers(HttpMethod.GET, "/product-variants/colors").permitAll()  // Lấy màu
+
+                        .requestMatchers(HttpMethod.GET, "/reviews/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/reviews/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/chat").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // CORS
+                        
+                        // === DASHBOARD CHART ENDPOINTS (ADMIN ONLY) ===
+                        .requestMatchers("/api/charts/**").hasRole("ADMIN")  // All chart endpoints require ADMIN role
+                        
+                        // === USER MANAGEMENT (ADMIN ONLY) ===
+                        .requestMatchers(HttpMethod.POST, "/users/deactivate").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/users/activate").hasRole("ADMIN")
+                        
                         // === TẤT CẢ ENDPOINTS KHÁC CẦN AUTHENTICATION ===
                         .anyRequest().authenticated()
                 )

@@ -1,12 +1,11 @@
 package com.example.ModaMint_Backend.entity;
 
-import com.example.ModaMint_Backend.converter.StringSetConverter;
+import com.example.ModaMint_Backend.utils.StringSetConverter;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Set;
 

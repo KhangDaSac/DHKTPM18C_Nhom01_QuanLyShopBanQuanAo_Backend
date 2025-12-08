@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ProductVariantRequest {
+public class    ProductVariantRequest {
     @NotNull(message = "Mã sản phẩm không được để trống")
     Long productId;
 
@@ -19,7 +19,10 @@ public class ProductVariantRequest {
 
     String color;
     
-    String image;
+    /**
+     * URL ảnh của variant từ Cloudinary
+     */
+    String imageUrl;
 
     @NotNull(message = "Giá không được để trống")
     BigDecimal price;
@@ -30,4 +33,6 @@ public class ProductVariantRequest {
     Integer quantity;
 
     BigDecimal additionalPrice;
+
+    Boolean active;
 }

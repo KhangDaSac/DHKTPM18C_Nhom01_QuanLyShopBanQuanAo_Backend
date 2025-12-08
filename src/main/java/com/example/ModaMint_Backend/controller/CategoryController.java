@@ -133,4 +133,16 @@ public class CategoryController {
                 .message("Lấy số lượng danh mục đang hoạt ��ộng thành công")
                 .build();
     }
+
+
+    //QuocHuy
+    @GetMapping("/top-8-active-by-products") // <-- THAY ĐỔI URL ENDPOINT
+    public ApiResponse<List<CategoryResponse>> getTop8ActiveCategoriesByProductCount() {
+        return ApiResponse.<List<CategoryResponse>>builder()
+                // Gọi phương thức service đã cập nhật
+                .result(categoryService.getTopActiveLeafCategoriesByProductCount())
+                // Cập nhật message
+                .message("Lấy top 8 danh mục (lá) active có nhiều sản phẩm nhất thành công")
+                .build();
+    }
 }

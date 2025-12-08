@@ -2,7 +2,9 @@ package com.example.ModaMint_Backend.controller;
 
 import com.example.ModaMint_Backend.dto.request.productvariant.ProductVariantRequest;
 import com.example.ModaMint_Backend.dto.response.ApiResponse;
+import com.example.ModaMint_Backend.dto.response.productvariant.ProductVariantColorResponse;
 import com.example.ModaMint_Backend.dto.response.productvariant.ProductVariantResponse;
+import com.example.ModaMint_Backend.dto.response.productvariant.VariantMatrixResponse;
 import com.example.ModaMint_Backend.service.ProductVariantService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -92,8 +94,18 @@ public class ProductVariantController {
     public ApiResponse<String> deleteProductVariant(@PathVariable Long id) {
         productVariantService.deleteProductVariant(id);
         return ApiResponse.<String>builder()
-                .result("Biến thể sản phẩm đã được xóa")
-                .message("Xóa biến thể sản phẩm thành công")
+                .result("Biến thể sản phẩm đã được vô hiệu hóa")
+                .message("Vô hiệu hóa biến thể sản phẩm thành công")
+                .build();
+    }
+
+    @PutMapping("/{id}/restore")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<String> restoreProductVariant(@PathVariable Long id) {
+        productVariantService.restoreProductVariant(id);
+        return ApiResponse.<String>builder()
+                .result("Biến thể sản phẩm đã được khôi phục")
+                .message("Khôi phục biến thể sản phẩm thành công")
                 .build();
     }
 
@@ -102,6 +114,22 @@ public class ProductVariantController {
         return ApiResponse.<Long>builder()
                 .result(productVariantService.getTotalProductVariantCount())
                 .message("Lấy tổng số lượng biến thể sản phẩm thành công")
+                .build();
+    }
+
+    @GetMapping("/colors")
+    public ApiResponse<List<ProductVariantColorResponse>> getTopColors() {
+        return ApiResponse.<List<ProductVariantColorResponse>>builder()
+                .result(productVariantService.getTopColors(4))  // Hardcode limit 4, hoặc làm param nếu cần
+                .message("Lấy danh sách màu phổ biến thành công")
+                .build();
+    }
+
+    @GetMapping("/matrix")
+    public ApiResponse<List<VariantMatrixResponse>> getVariantMatrix() {
+        return ApiResponse.<List<VariantMatrixResponse>>builder()
+                .result(productVariantService.getVariantMatrix())
+                .message("Lấy ma trận biến thể thành công")
                 .build();
     }
 }

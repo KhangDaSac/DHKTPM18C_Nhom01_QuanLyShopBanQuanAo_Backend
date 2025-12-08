@@ -2,12 +2,19 @@ package com.example.ModaMint_Backend.mapper;
 
 import com.example.ModaMint_Backend.dto.request.product.ProductRequest;
 import com.example.ModaMint_Backend.dto.response.product.ProductResponse;
+import com.example.ModaMint_Backend.dto.response.product.ProductVariantResponse;
 import com.example.ModaMint_Backend.entity.Product;
+
+import com.example.ModaMint_Backend.entity.ProductVariant;
+import org.mapstruct.Named;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
 public interface ProductMapper {
@@ -18,11 +25,22 @@ public interface ProductMapper {
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "productVariants", ignore = true)
     @Mapping(target = "reviews", ignore = true)
+    @Mapping(target = "images", source = "imageUrls", qualifiedByName = "listToSet")
     Product toProduct(ProductRequest request);
 
+    @Named("listToSet")
+    default Set<String> listToSet(List<String> list) {
+        if (list == null || list.isEmpty()) {
+            return Set.of();
+        }
+        return Set.copyOf(list);
+    }
+
+    @Mapping(source = "createAt", target = "createAt")
+    @Mapping(source = "updateAt", target = "updateAt")
     @Mapping(source = "brand.name", target = "brandName")
     @Mapping(source = "category.name", target = "categoryName")
-    @Mapping(target = "price", expression = "java(getMinPriceFromVariants(product))")
+    @Mapping(source = "productVariants", target = "productVariants", qualifiedByName = "mapProductVariants")
     @Mapping(target = "quantity", expression = "java(getTotalQuantityFromVariants(product))")
     @Mapping(source = "images", target = "images")
     ProductResponse toProductResponse(Product product);
@@ -63,5 +81,29 @@ public interface ProductMapper {
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "productVariants", ignore = true)
     @Mapping(target = "reviews", ignore = true)
+    @Mapping(target = "images", source = "imageUrls", qualifiedByName = "listToSet")
     void updateProduct(ProductRequest request, @MappingTarget Product product);
+
+
+    // Removed duplicate simple-mapping for price; using getMinPriceFromVariants(product) to compute price
+
+    @Named("mapProductVariants")
+    default List<ProductVariantResponse> mapProductVariants(Set<ProductVariant> productVariants) {
+        if (productVariants == null || productVariants.isEmpty()) {
+            return List.of();
+        }
+        return productVariants.stream()
+                .map(v -> ProductVariantResponse.builder()
+                        .id(v.getId())
+                        .productId(v.getProduct() != null ? v.getProduct().getId() : null)
+                        .size(v.getSize())
+                        .color(v.getColor())
+                        .price(v.getPrice())
+                        .discount(v.getDiscount())
+                        .quantity(v.getQuantity())
+                        .additionalPrice(v.getAdditionalPrice())
+                        .active(v.getActive() != null ? v.getActive() : true)
+                        .build())
+                .collect(Collectors.toList());
+    }
 }

@@ -12,4 +12,5 @@ public class AddCartItemRequest {
     Long variantId;
     Long productId;
     Integer quantity;
+    String sessionId;
 }

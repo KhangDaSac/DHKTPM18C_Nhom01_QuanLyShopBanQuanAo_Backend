@@ -12,7 +12,7 @@ import java.util.List;
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class CartDto {
     Long id;
-    String customerId;
+    String sessionId;
     List<CartItemDto> items;
     Long subtotal;
     Long shipping;

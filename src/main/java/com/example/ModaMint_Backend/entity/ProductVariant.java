@@ -1,5 +1,8 @@
 package com.example.ModaMint_Backend.entity;
 
+import com.example.ModaMint_Backend.entity.CartItem;
+import com.example.ModaMint_Backend.entity.OrderItem;
+import com.example.ModaMint_Backend.entity.Product;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -32,6 +35,10 @@ public class ProductVariant {
     @Column(name = "additional_price")
     BigDecimal additionalPrice;
 
+    @Builder.Default
+    @Column(name = "active", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    Boolean active = true;
+
     @CreationTimestamp
     @Column(name = "create_at")
     LocalDateTime createAt;
@@ -39,8 +46,6 @@ public class ProductVariant {
     @ManyToOne
     @JoinColumn(name = "product_id", insertable = false, updatable = false)
     Product product;
-
-
 
 
     @OneToMany(mappedBy = "productVariant")

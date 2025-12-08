@@ -113,5 +113,4 @@ public class CustomerService {
         customerRepository.delete(customer);
         log.info("Customer deleted successfully with customerId: {}", customerId);
     }
-
 }

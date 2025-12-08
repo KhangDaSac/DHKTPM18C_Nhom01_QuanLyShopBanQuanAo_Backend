@@ -116,4 +116,18 @@ public class ReviewController {
                 .message("Lấy tổng số lượng đánh giá thành công")
                 .build();
     }
+    @GetMapping("/latest")
+    public ApiResponse<List<ReviewResponse>> getLatest10Reviews() {
+        return ApiResponse.<List<ReviewResponse>>builder()
+                .result(reviewService.getLatest10Reviews())
+                .message("Lấy 10 đánh giá mới nhất thành công")
+                .build();
+    }
+    @GetMapping("/order-item/{orderItemId}")
+    public ApiResponse<List<ReviewResponse>> getReviewsByOrderItemId(@PathVariable Long orderItemId) {
+        return ApiResponse.<List<ReviewResponse>>builder()
+                .result(reviewService.getReviewsByOrderItemId(orderItemId))
+                .message("Lấy danh sách đánh giá theo Order Item thành công")
+                .build();
+    }
 }

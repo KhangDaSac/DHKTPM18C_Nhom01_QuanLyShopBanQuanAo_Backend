@@ -4,6 +4,8 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Data
@@ -14,11 +16,13 @@ import java.util.Set;
 public class ProductResponse {
     Long id;
     String name;
-    BigDecimal price;
     Boolean active;
     String description;
-    Set<String> images;
     String brandName;
     String categoryName;
+    List<String> images; // Danh sách URL ảnh
+    List<ProductVariantResponse> productVariants; // Danh sách variants
     Integer quantity; // Tổng số lượng từ tất cả variants
+    LocalDateTime createAt;
+    LocalDateTime updateAt;
 }

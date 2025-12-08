@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xác nhận đơn hàng</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 0 0 5px 5px;
+        }
+        .order-info {
+            background-color: white;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .order-info h3 {
+            margin-top: 0;
+            color: #4CAF50;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .total-section {
+            background-color: white;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+        }
+        .total-row.final {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #4CAF50;
+            border-top: 2px solid #4CAF50;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎉 Đặt hàng thành công!</h1>
+        <p>Cảm ơn bạn đã mua hàng tại ModaMint</p>
+    </div>
+    
+    <div class="content">
+        <div class="order-info">
+            <h3>Thông tin đơn hàng</h3>
+            <p><strong>Mã đơn hàng:</strong> <span th:text="${orderCode}"></span></p>
+            <p><strong>Tên khách hàng:</strong> <span th:text="${customerName}"></span></p>
+            <p><strong>Email:</strong> <span th:text="${customerEmail}"></span></p>
+            <p><strong>Số điện thoại:</strong> <span th:text="${customerPhone}"></span></p>
+            <p><strong>Địa chỉ giao hàng:</strong> <span th:text="${shippingAddress}"></span></p>
+            <p><strong>Phương thức thanh toán:</strong> <span th:text="${paymentMethod}"></span></p>
+        </div>
+        
+        <div class="order-info">
+            <h3>Sản phẩm đã đặt</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Sản phẩm</th>
+                        <th>Số lượng</th>
+                        <th>Đơn giá</th>
+                        <th>Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="item : ${orderItems}">
+                        <td th:text="${item.productName}"></td>
+                        <td th:text="${item.quantity}"></td>
+                        <td th:text="${#numbers.formatDecimal(item.unitPrice, 0, 'COMMA', 0, 'POINT')} + 'đ'"></td>
+                        <td th:text="${#numbers.formatDecimal(item.totalPrice, 0, 'COMMA', 0, 'POINT')} + 'đ'"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="total-section">
+            <h3>Chi tiết thanh toán</h3>
+            <div class="total-row">
+                <span>Tạm tính:</span>
+                <span th:text="${subtotal}"></span>
+            </div>
+            <div class="total-row">
+                <span>Phí vận chuyển:</span>
+                <span th:text="${shippingFee}"></span>
+            </div>
+            <div class="total-row" th:if="${discountAmount != null && discountAmount.compareTo(0) > 0}">
+                <span>Giảm giá:</span>
+                <span th:text="'-' + ${discountAmount}" style="color: #f44336;"></span>
+            </div>
+            <div class="total-row final">
+                <span>Tổng cộng:</span>
+                <span th:text="${totalAmount}"></span>
+            </div>
+        </div>
+        
+        <div class="order-info">
+            <p>✓ Đơn hàng của bạn đang được xử lý</p>
+            <p>✓ Thời gian giao hàng dự kiến: 3-5 ngày làm việc</p>
+            <p>✓ Chúng tôi sẽ liên hệ với bạn sớm nhất để xác nhận đơn hàng</p>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi:</p>
+        <p>📧 Email: support@modamint.com | 📞 Hotline: 1900-xxxx</p>
+        <p>&copy; 2025 ModaMint. All rights reserved.</p>
+    </div>
+</body>
+</html>

@@ -20,10 +20,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.security.access.AccessDeniedException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -47,6 +44,9 @@ public class CartServiceImpl implements CartService {
         if (customerId == null || customerId.isBlank()) {
             return emptyCartResponseForCustomer(customerId);
         }
+        // Đảm bảo Customer tồn tại trước khi tạo Cart
+        ensureCustomerExists(customerId);
+        
         Cart cart = cartRepository.findByCustomerId(customerId)
                 .orElseGet(() -> createCartForCustomer(customerId));
         return buildCartResponse(cart);
@@ -55,10 +55,10 @@ public class CartServiceImpl implements CartService {
     @Override
     @Transactional
     public CartResponse addItem(String customerId, CartItemRequest request) {
-        log.info("Adding item to cart for customerId: {}, variantId: {}, quantity: {}", 
-                customerId, request != null ? request.getVariantId() : null, 
+        log.info("Adding item to cart for customerId: {}, variantId: {}, quantity: {}",
+                customerId, request != null ? request.getVariantId() : null,
                 request != null ? request.getQuantity() : null);
-        
+
         if (customerId == null || customerId.isBlank()) {
             log.error("customerId is required");
             throw new IllegalArgumentException("customerId is required");
@@ -67,10 +67,10 @@ public class CartServiceImpl implements CartService {
             log.error("variantId is required");
             throw new IllegalArgumentException("variantId is required");
         }
-        
+
         // Đảm bảo Customer tồn tại, nếu không thì tạo mới
         ensureCustomerExists(customerId);
-        
+
         Cart cart = resolveOrCreateCart(customerId);
 
         Long variantId = request.getVariantId();
@@ -98,16 +98,16 @@ public class CartServiceImpl implements CartService {
         int oldQuantity = item.getQuantity() == null ? 0 : item.getQuantity();
         int newQuantity = oldQuantity + addQty;
         item.setQuantity(newQuantity);
-        
-        log.info("Updating CartItem: cartItemId={}, variantId={}, oldQty={}, newQty={}", 
+
+        log.info("Updating CartItem: cartItemId={}, variantId={}, oldQty={}, newQty={}",
                 item.getId(), variantId, oldQuantity, newQuantity);
-        
+
         try {
             cartItemRepository.save(item);
             entityManager.flush(); // Ensure CartItem is saved before building response
             log.info("CartItem saved successfully");
         } catch (Exception e) {
-            log.error("Error saving CartItem: cartItemId={}, variantId={}, quantity={}", 
+            log.error("Error saving CartItem: cartItemId={}, variantId={}, quantity={}",
                     item.getId(), variantId, newQuantity, e);
             throw new RuntimeException("Failed to save cart item: " + e.getMessage(), e);
         }
@@ -118,9 +118,9 @@ public class CartServiceImpl implements CartService {
                     log.error("Cart not found after saving item: cartId={}", cart.getId());
                     return new RuntimeException("Cart not found after saving item");
                 });
-        
+
         log.info("Building cart response for cartId: {}", updatedCart.getId());
-        
+
         // trả về cart cập nhật
         try {
             CartResponse response = buildCartResponse(updatedCart);
@@ -160,9 +160,9 @@ public class CartServiceImpl implements CartService {
             throw new IllegalArgumentException("customerId is required");
         }
         Cart cart = resolveCartOrThrow(customerId);
-        
+
         log.info("Removing item completely - customerId: {}, variantId: {}", customerId, variantId);
-        
+
         // Xóa hoàn toàn item này (không phân biệt quantity)
         cartItemRepository.deleteByCartIdAndVariantId(cart.getId(), variantId);
         log.info("Item completely removed from cart");
@@ -194,24 +194,33 @@ public class CartServiceImpl implements CartService {
     private void ensureCustomerExists(String customerId) {
         if (!customerRepository.existsByCustomerId(customerId)) {
             log.info("Customer not found for customerId: {}, creating new customer", customerId);
-            
+
             // Kiểm tra User có tồn tại không
             User user = userRepository.findById(customerId)
                     .orElseThrow(() -> {
-                        log.error("User not found for customerId: {}", customerId);
-                        return new AppException(ErrorCode.USER_NOT_FOUND);
+                        log.error("User not found for customerId: {}. User may have been deleted or token is invalid. Please login again.", customerId);
+                        return new AppException(ErrorCode.UNAUTHENTICATED);
                     });
-            
-            // Tạo Customer mới
-            Customer customer = Customer.builder()
-                    .customerId(customerId)
-                    .user(user)
-                    .build();
-            
-            // Save và flush ngay để đảm bảo Customer tồn tại trong DB trước khi save Cart
-            customerRepository.save(customer);
-            entityManager.flush(); // Force flush để đảm bảo Customer được commit vào DB
-            log.info("Customer created and flushed successfully for customerId: {}", customerId);
+
+            // Tạo Customer mới với đầy đủ thông tin từ User
+            try {
+                Customer customer = Customer.builder()
+                        .customerId(customerId)
+                        .user(user)
+                        .email(user.getEmail())
+                        .name((user.getFirstName() != null ? user.getFirstName() : "") + " " + 
+                              (user.getLastName() != null ? user.getLastName() : "").trim())
+                        .phone(user.getPhone())
+                        .build();
+
+                // Save và flush ngay để đảm bảo Customer tồn tại trong DB trước khi save Cart
+                customerRepository.save(customer);
+                entityManager.flush(); // Force flush để đảm bảo Customer được commit vào DB
+                log.info("Customer created and flushed successfully for customerId: {}", customerId);
+            } catch (Exception e) {
+                // Customer đã tồn tại (race condition) - bỏ qua lỗi
+                log.warn("Customer record already exists for customerId: {} - {}", customerId, e.getMessage());
+            }
         }
     }
 
@@ -252,7 +261,7 @@ public class CartServiceImpl implements CartService {
             List<CartItemResponse> itemResponses = items.stream().map(ci -> {
                 try {
                     ProductVariant variant = productVariantRepository.findById(ci.getVariantId()).orElse(null);
-                    
+
                     if (variant == null) {
                         log.warn("ProductVariant not found for variantId: {}", ci.getVariantId());
                     }
@@ -281,7 +290,7 @@ public class CartServiceImpl implements CartService {
                             .imageUrl(variant != null ? variant.getImage() : null)
                             .build();
                 } catch (Exception e) {
-                    log.error("Error building CartItemResponse for cartItemId: {}, variantId: {}", 
+                    log.error("Error building CartItemResponse for cartItemId: {}, variantId: {}",
                             ci.getId(), ci.getVariantId(), e);
                     // Return a basic response even if there's an error
                     return CartItemResponse.builder()
@@ -316,7 +325,7 @@ public class CartServiceImpl implements CartService {
                     .items(itemResponses)
                     .totalPrice(total)
                     .build();
-            
+
             log.debug("Cart response built successfully with {} items, total: {}", itemResponses.size(), total);
             return response;
         } catch (Exception e) {
