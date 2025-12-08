@@ -17,4 +17,15 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
             "GROUP BY pv.color " +
             "ORDER BY COUNT(pv.id) DESC")
     List<Object[]> findTopColors();
+    
+    /**
+     * Query for Variant Matrix (Heatmap data)
+     * Returns: color, size, total quantity
+     */
+    @Query("SELECT pv.color, pv.size, SUM(pv.quantity) " +
+           "FROM ProductVariant pv " +
+           "WHERE pv.active = true " +
+           "GROUP BY pv.color, pv.size " +
+           "ORDER BY pv.color, pv.size")
+    List<Object[]> findVariantMatrix();
 }

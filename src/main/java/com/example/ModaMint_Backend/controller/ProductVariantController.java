@@ -4,6 +4,7 @@ import com.example.ModaMint_Backend.dto.request.productvariant.ProductVariantReq
 import com.example.ModaMint_Backend.dto.response.ApiResponse;
 import com.example.ModaMint_Backend.dto.response.productvariant.ProductVariantColorResponse;
 import com.example.ModaMint_Backend.dto.response.productvariant.ProductVariantResponse;
+import com.example.ModaMint_Backend.dto.response.productvariant.VariantMatrixResponse;
 import com.example.ModaMint_Backend.service.ProductVariantService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -121,6 +122,14 @@ public class ProductVariantController {
         return ApiResponse.<List<ProductVariantColorResponse>>builder()
                 .result(productVariantService.getTopColors(4))  // Hardcode limit 4, hoặc làm param nếu cần
                 .message("Lấy danh sách màu phổ biến thành công")
+                .build();
+    }
+
+    @GetMapping("/matrix")
+    public ApiResponse<List<VariantMatrixResponse>> getVariantMatrix() {
+        return ApiResponse.<List<VariantMatrixResponse>>builder()
+                .result(productVariantService.getVariantMatrix())
+                .message("Lấy ma trận biến thể thành công")
                 .build();
     }
 }

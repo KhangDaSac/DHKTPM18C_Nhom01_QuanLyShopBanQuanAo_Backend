@@ -12,5 +12,6 @@ public interface CustomerMapper {
     @Mapping(target = "user", ignore = true)
     Customer toCustomer(CustomerRequest request);
     
+    // MapStruct sẽ tự động map name, email, phone từ Customer entity
     CustomerResponse toCustomerResponse(Customer customer);
 }

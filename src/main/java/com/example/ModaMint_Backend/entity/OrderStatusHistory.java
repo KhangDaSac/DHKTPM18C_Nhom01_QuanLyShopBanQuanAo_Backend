@@ -30,4 +30,7 @@ public class OrderStatusHistory {
     @CreationTimestamp
     @Column(name = "created_at")
     LocalDateTime createdAt;
+
+    @Column(name = "actor")
+    String actor;
 }

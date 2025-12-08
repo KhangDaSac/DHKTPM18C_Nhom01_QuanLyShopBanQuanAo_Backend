@@ -4,10 +4,13 @@ import com.example.ModaMint_Backend.dto.request.payment.PaymentRequest;
 import com.example.ModaMint_Backend.dto.response.ApiResponse;
 import com.example.ModaMint_Backend.dto.response.payment.PaymentResponse;
 import com.example.ModaMint_Backend.entity.Order;
+import com.example.ModaMint_Backend.entity.Payment;
 import com.example.ModaMint_Backend.enums.OrderStatus;
+import com.example.ModaMint_Backend.enums.PaymentMethod;
 import com.example.ModaMint_Backend.exception.AppException;
 import com.example.ModaMint_Backend.exception.ErrorCode;
 import com.example.ModaMint_Backend.repository.OrderRepository;
+import com.example.ModaMint_Backend.repository.PaymentRepository;
 import com.example.ModaMint_Backend.service.VnPayService;
 import com.example.ModaMint_Backend.service.OrderService;
 import com.example.ModaMint_Backend.service.CartService;
@@ -29,6 +32,7 @@ public class PaymentController {
     private final VnPayService vnPayService;
     private final OrderService orderService;
     private final OrderRepository orderRepository;
+    private final PaymentRepository paymentRepository;
     private final CartService cartService;
 
     // Xử lý tạo URL thanh toán
@@ -102,21 +106,54 @@ public class PaymentController {
 
         if (status == 1) {
             try {
-                orderService.updateOrderStatus(Long.valueOf(orderId), OrderStatus.PREPARING);
-                Order order = orderRepository.findById(Long.valueOf(orderId))
+                Long orderIdLong = Long.valueOf(orderId);
+                Order order = orderRepository.findById(orderIdLong)
                         .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+
+                // Lưu Payment record vào database
+                String transactionId = request.getParameter("vnp_TransactionNo");
+                String responseCode = request.getParameter("vnp_ResponseCode");
+                String paymentAmount = request.getParameter("vnp_Amount");
+                String bankCode = request.getParameter("vnp_BankCode");
+                String bankTranNo = request.getParameter("vnp_BankTranNo");
+
+                // Convert amount từ VND (đã nhân 100) về đơn vị ban đầu
+                Long amount = paymentAmount != null ? Long.parseLong(paymentAmount) / 100 : 0L;
+
+                // Tạo payload JSON chứa thông tin quan trọng (giới hạn dung lượng)
+                String payload = String.format(
+                        "{\"responseCode\":\"%s\",\"bankCode\":\"%s\",\"bankTranNo\":\"%s\",\"transactionNo\":\"%s\"}",
+                        responseCode != null ? responseCode : "",
+                        bankCode != null ? bankCode : "",
+                        bankTranNo != null ? bankTranNo : "",
+                        transactionId != null ? transactionId : ""
+                );
+
+                Payment payment = Payment.builder()
+                        .orderId(orderIdLong)
+                        .paymentMethod(PaymentMethod.BANK_TRANSFER)
+                        .amount(java.math.BigDecimal.valueOf(amount))
+                        .paymentStatus("PAID")
+                        .transactionId(transactionId)
+                        .payload(payload)
+                        .build();
+
+                paymentRepository.save(payment);
+
+                // Cập nhật trạng thái Order
+                orderService.updateOrderStatus(orderIdLong, OrderStatus.PREPARING);
+
                 String customerId = order.getCustomerId();
-                
+
                 if (customerId != null && !customerId.startsWith("GUEST_")) {
                     try {
                         cartService.clearCart(customerId);
                     } catch (Exception cartException) {
-
+                        // Log hoặc xử lý lỗi nếu cần
                     }
-                } else {
-
                 }
-                orderService.sendOrderConfirmationEmailById(Long.valueOf(orderId));
+
+                orderService.sendOrderConfirmationEmailById(orderIdLong);
                 response.sendRedirect("http://localhost:5173/order-success/" + orderId);
             } catch (Exception e) {
                 e.printStackTrace();

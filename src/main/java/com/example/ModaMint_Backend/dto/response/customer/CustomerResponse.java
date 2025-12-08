@@ -13,6 +13,9 @@ import java.util.Set;
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class CustomerResponse {
     String customerId;
+    String name;        // Thêm field name từ bảng customers
+    String email;       // Thêm field email từ bảng customers
+    String phone;       // Thêm field phone từ bảng customers
     UserResponse user;
     Set<AddressResponse> addresses;
     CartResponse cart;

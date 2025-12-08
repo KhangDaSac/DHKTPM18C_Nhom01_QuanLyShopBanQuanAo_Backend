@@ -20,6 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -31,6 +33,7 @@ import java.util.List;
 public class OrderService {
     OrderRepository orderRepository;
     OrderStatusHistoryRepository orderStatusHistoryRepository;
+    com.example.ModaMint_Backend.repository.PaymentRepository paymentRepository;
     OrderMapper orderMapper;
     EmailService emailService;
 
@@ -42,28 +45,63 @@ public class OrderService {
 
     public List<OrderResponse> getAllOrders() {
         return orderRepository.findAll()
-                .stream()
-                .map(orderMapper::toOrderResponse)
-                .toList();
+            .stream()
+            .map(order -> {
+                OrderResponse resp = orderMapper.toOrderResponse(order);
+                String payStatus = paymentRepository.findByOrderId(order.getId())
+                    .map(p -> p.getPaymentStatus())
+                    .orElse("PENDING");
+                resp.setPaymentStatus(payStatus);
+                return resp;
+            })
+            .toList();
     }
 
     public OrderResponse getOrderById(Long id) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
-        return orderMapper.toOrderResponse(order);
+        OrderResponse resp = orderMapper.toOrderResponse(order);
+        String payStatus = paymentRepository.findByOrderId(order.getId())
+            .map(p -> p.getPaymentStatus())
+            .orElse("PENDING");
+        resp.setPaymentStatus(payStatus);
+        return resp;
     }
 
     public Page<OrderResponse> getOrdersWithPagination(Pageable pageable) {
         Page<Order> orderPage = orderRepository.findAll(pageable);
-        return orderPage.map(orderMapper::toOrderResponse);
+        return orderPage.map(order -> {
+            OrderResponse resp = orderMapper.toOrderResponse(order);
+            String payStatus = paymentRepository.findByOrderId(order.getId())
+                    .map(p -> p.getPaymentStatus())
+                    .orElse("PENDING");
+            resp.setPaymentStatus(payStatus);
+            return resp;
+        });
     }
 
     public OrderResponse updateOrder(Long id, OrderRequest request) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
+        // Lưu trạng thái cũ để so sánh
+        OrderStatus oldStatus = order.getOrderStatus();
+
         orderMapper.updateOrder(request, order);
         Order updatedOrder = orderRepository.save(order);
+
+        // Nếu trạng thái thay đổi thì lưu lịch sử
+        OrderStatus newStatus = updatedOrder.getOrderStatus();
+        if (newStatus != null && (oldStatus == null || newStatus != oldStatus)) {
+            OrderStatusHistory history = OrderStatusHistory.builder()
+                .order(updatedOrder)
+                .orderStatus(newStatus)
+                .message("Cập nhật bởi admin")
+                .actor(getCurrentUsername())
+                .build();
+            orderStatusHistoryRepository.save(history);
+        }
+
         return orderMapper.toOrderResponse(updatedOrder);
     }
 
@@ -76,24 +114,50 @@ public class OrderService {
 
     public List<OrderResponse> getOrdersByCustomerId(String customerId) {
         return orderRepository.findByCustomerId(customerId)
-                .stream()
-                .map(orderMapper::toOrderResponse)
-                .toList();
+            .stream()
+            .map(order -> {
+                OrderResponse resp = orderMapper.toOrderResponse(order);
+                String payStatus = paymentRepository.findByOrderId(order.getId())
+                    .map(p -> p.getPaymentStatus())
+                    .orElse("PENDING");
+                resp.setPaymentStatus(payStatus);
+                return resp;
+            })
+            .toList();
     }
 
     public List<OrderResponse> getOrdersByStatus(String status) {
         OrderStatus orderStatus = OrderStatus.valueOf(status);
         return orderRepository.findByOrderStatus(orderStatus)
-                .stream()
-                .map(orderMapper::toOrderResponse)
-                .toList();
+            .stream()
+            .map(order -> {
+                OrderResponse resp = orderMapper.toOrderResponse(order);
+                String payStatus = paymentRepository.findByOrderId(order.getId())
+                    .map(p -> p.getPaymentStatus())
+                    .orElse("PENDING");
+                resp.setPaymentStatus(payStatus);
+                return resp;
+            })
+            .toList();
     }
 
     public void updateOrderStatus(Long id, OrderStatus status) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
-        order.setOrderStatus(status);
-        orderRepository.save(order);
+        // Chỉ cập nhật và lưu history khi trạng thái thực sự thay đổi
+        OrderStatus oldStatus = order.getOrderStatus();
+        if (oldStatus == null || oldStatus != status) {
+            order.setOrderStatus(status);
+            Order saved = orderRepository.save(order);
+
+                OrderStatusHistory history = OrderStatusHistory.builder()
+                    .order(saved)
+                    .orderStatus(status)
+                    .message("Cập nhật bởi hệ thống")
+                    .actor(getCurrentUsername())
+                    .build();
+                orderStatusHistoryRepository.save(history);
+        }
     }
 
     public void cancelOrder(Long id, String customerId, String cancelReason) {
@@ -118,10 +182,11 @@ public class OrderService {
         
         // Lưu lịch sử hủy đơn với lý do
         OrderStatusHistory history = OrderStatusHistory.builder()
-                .order(order)
-                .orderStatus(OrderStatus.CANCELLED)
-                .message(cancelReason)
-                .build();
+            .order(order)
+            .orderStatus(OrderStatus.CANCELLED)
+            .message(cancelReason)
+            .actor(getCurrentUsername())
+            .build();
         orderStatusHistoryRepository.save(history);
         
         log.info("Order {} cancelled successfully by customer {}", id, customerId);
@@ -134,7 +199,12 @@ public class OrderService {
     public OrderResponse getOrderDetailById(Long id) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
-        return orderMapper.toOrderResponse(order);
+        OrderResponse resp = orderMapper.toOrderResponse(order);
+        String payStatus = paymentRepository.findByOrderId(order.getId())
+            .map(p -> p.getPaymentStatus())
+            .orElse("PENDING");
+        resp.setPaymentStatus(payStatus);
+        return resp;
     }
 
     public void sendOrderConfirmationEmailById(Long orderId) {
@@ -207,5 +277,16 @@ public class OrderService {
                 .orderStatus(order.getOrderStatus().toString())
                 .message("Thanh toán thành công!")
                 .build();
+    }
+
+    private String getCurrentUsername() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.getName() != null) {
+                return auth.getName();
+            }
+        } catch (Exception ignored) {
+        }
+        return "SYSTEM";
     }
 }
