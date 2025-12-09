@@ -3,6 +3,7 @@ package com.example.ModaMint_Backend.service;
 import com.example.ModaMint_Backend.dto.request.productvariant.ProductVariantRequest;
 import com.example.ModaMint_Backend.dto.response.productvariant.ProductVariantColorResponse;
 import com.example.ModaMint_Backend.dto.response.productvariant.ProductVariantResponse;
+import com.example.ModaMint_Backend.dto.response.productvariant.VariantMatrixResponse;
 import com.example.ModaMint_Backend.entity.Product;
 import com.example.ModaMint_Backend.entity.ProductVariant;
 import com.example.ModaMint_Backend.exception.AppException;
@@ -126,11 +127,27 @@ public class ProductVariantService {
     public long getTotalProductVariantCount() {
         return productVariantRepository.count();
     }
+    
     public List<ProductVariantColorResponse> getTopColors(int limit) {
         List<Object[]> results = productVariantRepository.findTopColors();
         return results.stream()
                 .limit(limit)  // Limit top 4
                 .map(row -> new ProductVariantColorResponse((String) row[0], (Long) row[1]))
+                .collect(Collectors.toList());
+    }
+    
+    /**
+     * Get variant matrix data for heatmap visualization
+     * Returns list of {color, size, quantity} combinations
+     */
+    public List<VariantMatrixResponse> getVariantMatrix() {
+        List<Object[]> results = productVariantRepository.findVariantMatrix();
+        return results.stream()
+                .map(row -> VariantMatrixResponse.builder()
+                        .color((String) row[0])
+                        .size((String) row[1])
+                        .quantity(((Number) row[2]).intValue())
+                        .build())
                 .collect(Collectors.toList());
     }
 }

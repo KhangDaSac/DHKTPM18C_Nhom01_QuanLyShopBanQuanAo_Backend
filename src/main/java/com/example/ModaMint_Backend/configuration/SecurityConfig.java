@@ -68,11 +68,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/reviews/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/chat").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // CORS
-                        
+
                         // === USER MANAGEMENT (ADMIN ONLY) ===
                         .requestMatchers(HttpMethod.POST, "/users/deactivate").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/users/activate").hasRole("ADMIN")
-                        
+
                         // === TẤT CẢ ENDPOINTS KHÁC CẦN AUTHENTICATION ===
                         .anyRequest().authenticated()
                 )

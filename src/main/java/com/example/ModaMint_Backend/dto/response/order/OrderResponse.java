@@ -2,6 +2,7 @@ package com.example.ModaMint_Backend.dto.response.order;
 
 import com.example.ModaMint_Backend.dto.response.customer.AddressResponse;
 import com.example.ModaMint_Backend.dto.response.orderitem.OrderItemResponse;
+import com.example.ModaMint_Backend.dto.response.order.OrderStatusHistoryResponse;
 import com.example.ModaMint_Backend.enums.OrderStatus;
 import com.example.ModaMint_Backend.enums.PaymentMethod;
 import lombok.*;
@@ -30,9 +31,9 @@ public class OrderResponse {
     String phone;
     LocalDateTime createAt;
     LocalDateTime updateAt;
-
-
     List<OrderItemResponse> orderItems;
     AddressResponse shippingAddress;
     BigDecimal shippingFee;
+    List<OrderStatusHistoryResponse> orderStatusHistories;
+    String paymentStatus;
 }

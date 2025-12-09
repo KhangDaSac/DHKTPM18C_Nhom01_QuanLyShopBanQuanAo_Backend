@@ -1,122 +1,110 @@
 package com.example.ModaMint_Backend.service;
 
-import com.example.ModaMint_Backend.dto.request.chat.MessageRequest;
-import com.example.ModaMint_Backend.dto.response.chat.ConversationResponse;
-import com.example.ModaMint_Backend.dto.response.chat.MessageResponse;
-import com.example.ModaMint_Backend.entity.Conversation;
-import com.example.ModaMint_Backend.entity.Message;
-import com.example.ModaMint_Backend.entity.User;
-import com.example.ModaMint_Backend.enums.SenderType;
-import com.example.ModaMint_Backend.exception.AppException;
-import com.example.ModaMint_Backend.exception.ErrorCode;
-import com.example.ModaMint_Backend.mapper.ConversationMapper;
-import com.example.ModaMint_Backend.mapper.MessageMapper;
-import com.example.ModaMint_Backend.repository.ConversationRepository;
-import com.example.ModaMint_Backend.repository.MessageRepository;
-import com.example.ModaMint_Backend.repository.UserRepository;
+import com.example.ModaMint_Backend.dto.request.chat.ChatAiRequest;
+import com.example.ModaMint_Backend.dto.response.chat.ChatAiResponse;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.memory.MessageWindowChatMemory;
+import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryRepository;
+import org.springframework.ai.chat.messages.SystemMessage;
+import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.document.Document;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ChatService {
 
     ChatClient chatClient;
+    JdbcChatMemoryRepository jdbcChatMemoryRepository;
+    ProductVectorLoader productVectorLoader;
 
-    MessageRepository messageRepository;
-    ConversationRepository conversationRepository;
-    UserRepository userRepository;
-
-    MessageMapper messageMapper;
-    ConversationMapper conversationMapper;
-
-    public ChatService(
-            ChatClient.Builder chatClientBuilder,
-            MessageRepository messageRepository,
-            ConversationRepository conversationRepository,
-            UserRepository userRepository,
-            MessageMapper messageMapper,
-            ConversationMapper conversationMapper
+    public ChatService(ChatClient.Builder builder,
+                       JdbcChatMemoryRepository jdbcChatMemoryRepository,
+                       ProductVectorLoader productVectorLoader
     ) {
-        this.chatClient = chatClientBuilder.build();
-        this.messageMapper = messageMapper;
-        this.conversationMapper = conversationMapper;
-        this.messageRepository = messageRepository;
-        this.conversationRepository = conversationRepository;
-        this.userRepository = userRepository;
+        this.productVectorLoader = productVectorLoader;
+        this.jdbcChatMemoryRepository = jdbcChatMemoryRepository;
+        ChatMemory chatMemory = MessageWindowChatMemory.builder()
+                .chatMemoryRepository(jdbcChatMemoryRepository)
+                .maxMessages(100)
+                .build();
+
+        this.chatClient = builder
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+                .build();
+
     }
 
-    public MessageResponse chatWithAi(MessageRequest request) {
+    public ChatAiResponse chatAi(ChatAiRequest request) {
+        String conversationId = SecurityContextHolder.getContext().getAuthentication().getName();
+        String userMessage = request.getMessage();
 
-        Conversation conversation = conversationRepository.findById(request.getConversationId())
-                .orElseThrow(() -> new AppException(ErrorCode.CONVERSATION_NOT_FOUND));
+        List<Document> products = productVectorLoader.loadProductsToVectorDB();
 
-        String content = chatClient.prompt()
-                .system("""
-                        Bạn là trợ lý AI bán hàng của cửa hàng thời trang ModaMint.
-                        Hãy trả lời thân thiện, chuyên nghiệp, gợi ý thêm sản phẩm phù hợp.
-                        Nếu không chắc câu trả lời, hãy nói lịch sự rằng bạn sẽ tìm hiểu thêm.
-                        """)
-                .user(request.getContent())
+        String productList = products.stream()
+                .limit(500)
+                .map(Document::getText)
+                .collect(Collectors.joining("\n"));
+
+        String systemPrompt = """
+                Bạn là ModaMint AI — trợ lý thời trang thông minh và dễ thương của shop ModaMint.
+                
+                Phong cách: thân thiện, trẻ trung, dùng emoji nhẹ nhàng, tư vấn như bạn thân.
+                Chỉ trả lời tiếng Việt.
+                Nói gọn nhưng đầy đủ ý.
+                
+                Dưới đây là các sản phẩm hiện có trong shop (chỉ gợi ý khi phù hợp):
+                
+                %s
+                
+                QUY TẮC BẮT BUỘC:
+                1. Chỉ gợi ý sản phẩm trong danh sách trên.
+                2. Không được bịa ra sản phẩm không tồn tại.
+                3. Nếu khách hỏi mẫu không có → trả lời lịch sự rồi gợi ý mẫu tương tự.
+                4. Kết thúc mỗi câu trả lời bằng 1 câu hỏi ngắn để khách dễ tiếp tục.
+                5. Khi khách hàng muốn thông tin chi tiết về một sản phẩm cụ thẻ nào đó thì trả lời về sản phẩm phải cho biết đầy đủ thông tin về sản phẩm đó như các biến thể, thương hiệu, các loại size, màu sắc,.... và bắt buộc phải có giá của từng biến thể của sản phẩm
+                6. Khi khách hàng muốn tư vần về một loại sản phẩm thì hãy liệt kê một vài sản phẩm phù hợp với yêu cầu của khách hàng càng nhiều thông tin về sản phẩm càng tốt.
+                7. Nếu biết tên khách hàng thì hãy gọi tên khách hàng trong câu trả lời để tạo sự thân mật.
+                8. Tìm kiểm sản phẩm có những cụm từ tương tự nhau như "áo, "quần", "váy", "nam", "nữ",... thì vẫn gợi ý sản phẩm bình thường.
+                9. Trả lời được những sản phẩm bán chạy nhất trong shop.
+                10. Trả lời được tổng số sản phẩm hiện có trong shop.
+                11. Nếu như câu hỏi ngoài lĩnh vực của trang web thời trang thì không trả lời ( chỉ trả lời các câu hỏi liên quan về thời gian ).
+                """.formatted(productList);
+
+        SystemMessage systemMessage = new SystemMessage(systemPrompt);
+        UserMessage userMsg = new UserMessage(userMessage);
+
+        String response = chatClient.prompt()
+                .messages(systemMessage, userMsg)
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, conversationId))
                 .call()
                 .content();
 
-        Message message = Message.builder()
-                .conversation(conversation)
-                .content(content)
-                .timestamp(LocalDateTime.now())
-                .senderType(SenderType.AI)
+        return ChatAiResponse.builder()
+                .message(response)
+                .type("ASSISTANT")
                 .build();
-
-        Message messageSaved = messageRepository.save(message);
-        return messageMapper.toMessageResponse(messageSaved);
     }
 
-    public MessageResponse chatWithShop(MessageRequest request) {
 
-        Conversation conversation = conversationRepository.findById(request.getConversationId())
-                .orElseThrow(() -> new AppException(ErrorCode.CONVERSATION_NOT_FOUND));
 
-        Message message = Message.builder()
-                .conversation(conversation)
-                .content(request.getContent())
-                .timestamp(LocalDateTime.now())
-                .senderType(request.getSenderType())
-                .build();
-
-        Message messageSaved = messageRepository.save(message);
-        return messageMapper.toMessageResponse(messageSaved);
-    }
-
-    public ConversationResponse getConversationById(String userId) {
-
-        Conversation conversation = conversationRepository.findByUserId(userId)
-                .orElseGet(() -> {
-                    User user = userRepository.findById(userId)
-                            .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-                    Conversation newConversation = Conversation.builder()
-                            .user(user)
-                            .build();
-                    return conversationRepository.save(newConversation);
-                });
-
-        return conversationMapper.toConversationResponse(conversation);
-    }
-
-    public List<MessageResponse> getChatHistory(Long conversationId) {
-
-        Conversation conversation = conversationRepository.findById(conversationId)
-                .orElseThrow(() -> new AppException(ErrorCode.CONVERSATION_NOT_FOUND));
-
-        List<Message> messages = messageRepository.findByConversationOrderByTimestampAsc(conversation);
-
-        return messages.stream()
-                .map(messageMapper::toMessageResponse)
+    public List<ChatAiResponse> getFullHistory() {
+        String conversationId = SecurityContextHolder.getContext().getAuthentication().getName();
+        return jdbcChatMemoryRepository.findByConversationId(conversationId)
+                .stream()
+                .map(m -> ChatAiResponse.builder()
+                        .type(m.getMessageType().toString())
+                        .message(m.getText())
+                        .build()
+                )
                 .toList();
     }
 }

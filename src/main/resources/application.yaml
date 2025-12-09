@@ -10,9 +10,9 @@ spring:
       max-request-size: 50MB # Giới hạn tổng kích thước request (nhiều files)
 
   datasource:
-    url: jdbc:mariadb://localhost:3306/modamint_db
+    url: jdbc:mariadb://localhost:3306/modamint_db_test?authenticationPlugins=mysql_native_password
     username: root
-    password: root
+    password: 123456789
     driver-class-name: org.mariadb.jdbc.Driver
     hikari:
       maximum-pool-size: 10
@@ -46,6 +46,7 @@ spring:
             token-uri: https://oauth2.googleapis.com/token
             user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
             user-name-attribute: sub
+
   data:
     redis:
       host: localhost
@@ -64,22 +65,17 @@ spring:
         api-key: ${GEMINI_API_KEY}
         chat:
           options:
-            model: gemini-2.0-flash
+            model: gemini-2.5-flash
         embedding:
           api-key: ${GEMINI_API_KEY}
-    vectorstore:
+          text:
+            options:
+              model: text-embedding-004
+    vector-store:
       chroma:
-        collection-name: products1
+        collection-name: products
         database-name: default_database
         tenant-name: default_tenant
-
-    openai:
-      api-key: ${GEMINI_API_KEY}
-      chat:
-        base-url: https://generativelanguage.googleapis.com
-        completions-path: /v1beta/openai/chat/completions
-        options:
-          model: gemini-2.0-flash
     chat:
       memory:
         repository:
@@ -101,6 +97,12 @@ spring:
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
+        # Tin cậy host SMTP (tạm thời, tiện debug)
+        smtp.ssl.trust: smtp.gmail.com
+        # Nếu cần ép dùng TLSv1.2:
+        smtp.ssl.protocols: TLSv1.2
+    # Thử kết nối mail khi ứng dụng khởi động (hiện báo lỗi sớm)
+    test-connection: true
 
 server:
   port: 8080
@@ -112,9 +114,7 @@ jwt:
 
 cloudinary:
   cloud-name: ${CLOUDINARY_CLOUD_NAME}
-
   api-key: ${CLOUDINARY_API_KEY}
-
   api-secret: ${CLOUDINARY_API_SECRET}
 
 vnpay:

@@ -31,6 +31,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import com.example.ModaMint_Backend.entity.Category;
 
 import java.util.stream.Collectors;
 
@@ -97,21 +99,42 @@ public class ProductService {
         return productMapper.toProductResponse(updatedProduct);
     }
 
+    @Transactional
     public void deleteProduct(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
 
+        // Set product inactive
         product.setActive(false);
         productRepository.save(product);
+        
+        // Set all variants of this product inactive
+        List<ProductVariant> variants = productVariantRepository.findByProductId(id);
+        if (!variants.isEmpty()) {
+            variants.forEach(variant -> variant.setActive(false));
+            productVariantRepository.saveAll(variants);
+            log.info("Deactivated {} variants for product id: {}", variants.size(), id);
+        }
     }
 
     // Restore - Kích hoạt lại sản phẩm (chuyển từ active = false về true)
+    @Transactional
     public ProductResponse restoreProduct(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
 
+        // Set product active
         product.setActive(true);
         Product restoredProduct = productRepository.save(product);
+        
+        // Set all variants of this product active
+        List<ProductVariant> variants = productVariantRepository.findByProductId(id);
+        if (!variants.isEmpty()) {
+            variants.forEach(variant -> variant.setActive(true));
+            productVariantRepository.saveAll(variants);
+            log.info("Activated {} variants for product id: {}", variants.size(), id);
+        }
+        
         return productMapper.toProductResponse(restoredProduct);
     }
 
@@ -127,6 +150,41 @@ public class ProductService {
                 .map(productMapper::toProductResponse)
                 .toList();
     }
+
+    /**
+     * Lấy tất cả danh mục con (bao gồm danh mục cha và tất cả danh mục con của nó)
+     * @param categoryId - ID của danh mục cha hoặc danh mục con
+     * @return Set chứa ID của danh mục cha + tất cả danh mục con
+     */
+    private Set<Long> getAllCategoryIdsIncludingChildren(Long categoryId) {
+        Set<Long> categoryIds = new HashSet<>();
+        categoryIds.add(categoryId);
+
+        // Lấy tất cả danh mục con của categoryId này
+        List<Category> childCategories = categoryRepository.findAllByParentId(categoryId);
+        for (Category child : childCategories) {
+            // Đệ quy lấy tất cả danh mục con cấp tiếp theo
+            categoryIds.addAll(getAllCategoryIdsIncludingChildren(child.getId()));
+        }
+
+        return categoryIds;
+    }
+
+    public List<ProductResponse> getProductsByCategoryId(Long categoryId) {
+        if (!categoryRepository.existsById(categoryId)) {
+            throw new AppException(ErrorCode.CATEGORY_NOT_FOUND);
+        }
+
+        // Lấy tất cả danh mục con (bao gồm danh mục cha)
+        Set<Long> allCategoryIds = getAllCategoryIdsIncludingChildren(categoryId);
+
+        return productRepository.findAll()
+                .stream()
+                .filter(product -> allCategoryIds.contains(product.getCategoryId()))
+                .map(productMapper::toProductResponse)
+                .toList();
+    }
+
 
     public List<ProductResponse> getActiveProducts() {
         return productRepository.findAll()
@@ -202,13 +260,14 @@ public class ProductService {
 
     /**
      * Filter products theo nhiều điều kiện
-     * 
-     * @param brandId    - ID của brand (nullable)
-     * @param categoryId - ID của category (nullable)
-     * @param minPrice   - Giá tối thiểu (nullable)
-     * @param maxPrice   - Giá tối đa (nullable)
-     * @param colors     - Danh sách màu sắc (nullable)
-     * @param sizes      - Danh sách size (nullable)
+
+     * @param brandId - ID của brand (nullable)
+     * @param categoryId - ID của category (nullable) - hỗ trợ danh mục cha + danh mục con
+     * @param minPrice - Giá tối thiểu (nullable)
+     * @param maxPrice - Giá tối đa (nullable)
+     * @param colors - Danh sách màu sắc (nullable)
+     * @param sizes - Danh sách size (nullable)
+
      * @return List<ProductResponse>
      */
     public List<ProductResponse> filterProducts(
@@ -217,9 +276,17 @@ public class ProductService {
             BigDecimal minPrice,
             BigDecimal maxPrice,
             List<String> colors,
-            List<String> sizes) {
+            List<String> sizes
+    ) {
+        // Nếu có categoryId, lấy tất cả danh mục con (bao gồm danh mục cha)
+        Set<Long> allCategoryIds = null;
+        if (categoryId != null) {
+            allCategoryIds = getAllCategoryIdsIncludingChildren(categoryId);
+        }
+
         Specification<Product> spec = ProductSpecification.filterProducts(
-                brandId, categoryId, minPrice, maxPrice, colors, sizes);
+                brandId, allCategoryIds, minPrice, maxPrice, colors, sizes
+        );
 
         return productRepository.findAll(spec)
                 .stream()
@@ -299,19 +366,19 @@ public class ProductService {
     /**
      * Tạo Product + Variants trong 1 transaction duy nhất
      * Đảm bảo atomicity và Product luôn có ít nhất 1 Variant
-     * 
+     *
      * Hỗ trợ upload ảnh từ Cloudinary:
      * - Product.images: Set<String> từ imageUrls trong ProductRequest
      * - ProductVariant.image: String từ imageUrl trong CreateProductVariantRequest
-     * 
+     *
      * @param request - CreateProductWithVariantsRequest chứa product + variants
      * @return ProductResponse đầy đủ bao gồm variants
      */
     @Transactional
     public ProductResponse createProductWithVariants(CreateProductWithVariantsRequest request) {
-        log.info("[CREATE_PRODUCT_WITH_VARIANTS] Starting - Product name: {}, Variants count: {}", 
+        log.info("[CREATE_PRODUCT_WITH_VARIANTS] Starting - Product name: {}, Variants count: {}",
                 request.getProduct().getName(), request.getVariants().size());
-        
+
         try {
             // Validate brand
             log.debug("[CREATE_PRODUCT_WITH_VARIANTS] Validating brand ID: {}", request.getProduct().getBrandId());
@@ -329,18 +396,18 @@ public class ProductService {
 
             // Bước 1: Tạo và lưu Product
             log.debug("[CREATE_PRODUCT_WITH_VARIANTS] Mapping ProductRequest to Product entity");
-            log.debug("[CREATE_PRODUCT_WITH_VARIANTS] Image URLs count: {}", 
+            log.debug("[CREATE_PRODUCT_WITH_VARIANTS] Image URLs count: {}",
                     request.getProduct().getImageUrls() != null ? request.getProduct().getImageUrls().size() : 0);
-            
+
             Product product = productMapper.toProduct(request.getProduct());
             log.debug("[CREATE_PRODUCT_WITH_VARIANTS] Product entity created, saving to database");
-            
+
             Product savedProduct = productRepository.save(product);
             log.info("[CREATE_PRODUCT_WITH_VARIANTS] Product saved successfully with ID: {}", savedProduct.getId());
 
             // Bước 2: Tạo danh sách ProductVariant từ request
             log.debug("[CREATE_PRODUCT_WITH_VARIANTS] Creating {} variants", request.getVariants().size());
-            
+
             List<ProductVariant> variants = request.getVariants().stream()
                     .map(variantRequest -> {
                         log.debug("[CREATE_PRODUCT_WITH_VARIANTS] Creating variant - Size: {}, Color: {}, Price: {}",
@@ -374,11 +441,11 @@ public class ProductService {
             ProductResponse response = productMapper.toProductResponse(productWithVariants);
             log.info("[CREATE_PRODUCT_WITH_VARIANTS] Successfully created product ID: {} with {} variants",
                     savedProduct.getId(), savedVariants.size());
-            
+
             return response;
-            
+
         } catch (AppException e) {
-            log.error("[CREATE_PRODUCT_WITH_VARIANTS] AppException - Code: {}, Message: {}", 
+            log.error("[CREATE_PRODUCT_WITH_VARIANTS] AppException - Code: {}, Message: {}",
                     e.getErrorCode(), e.getMessage());
             throw e;
         } catch (Exception e) {
@@ -390,11 +457,11 @@ public class ProductService {
     /**
      * Cập nhật Product + Variants trong 1 transaction
      * Xóa toàn bộ variants cũ và tạo mới theo request
-     * 
+     *
      * Hỗ trợ upload ảnh từ Cloudinary:
      * - Product.images: Set<String> từ imageUrls trong ProductRequest
      * - ProductVariant.image: String từ imageUrl trong CreateProductVariantRequest
-     * 
+     *
      * @param id ID của product cần update
      * @param request Chứa thông tin Product và danh sách Variants mới
      * @return ProductResponse đầy đủ bao gồm variants

@@ -25,6 +25,11 @@ public class EmailService {
 
     @Async
     public void sendOrderConfirmationEmail(CheckoutResponse orderData, String recipientEmail) {
+        if (recipientEmail == null || recipientEmail.isBlank()) {
+            log.warn("Recipient email is null/empty - skipping sending order confirmation for order {}", orderData != null ? orderData.getOrderCode() : "<unknown>");
+            return;
+        }
+
         try {
             log.info("Sending order confirmation email to: {}", recipientEmail);
             

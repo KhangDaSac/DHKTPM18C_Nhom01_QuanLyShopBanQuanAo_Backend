@@ -4,6 +4,8 @@ import com.example.ModaMint_Backend.dto.request.order.OrderRequest;
 import com.example.ModaMint_Backend.dto.response.order.OrderResponse;
 import com.example.ModaMint_Backend.dto.response.orderitem.OrderItemResponse;
 import com.example.ModaMint_Backend.entity.Order;
+import com.example.ModaMint_Backend.entity.OrderStatusHistory;
+import com.example.ModaMint_Backend.dto.response.order.OrderStatusHistoryResponse;
 import com.example.ModaMint_Backend.entity.OrderItem;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -28,10 +30,14 @@ public interface OrderMapper {
 
     @Mapping(target = "promotionId", ignore = true)
     @Mapping(target = "orderItems", source = "orderItems")
+    @Mapping(target = "orderStatusHistories", source = "orderStatusHistories")
     @Mapping(target = "totalAmount", source = "subTotal")
     @Mapping(target = "shippingAddress", source = "shippingAddress")
     @Mapping(target = "shippingFee", expression = "java(new java.math.BigDecimal(30000))")
     OrderResponse toOrderResponse(Order order);
+
+    // Map entity history to DTO
+    OrderStatusHistoryResponse toOrderStatusHistoryResponse(OrderStatusHistory history);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createAt", ignore = true)

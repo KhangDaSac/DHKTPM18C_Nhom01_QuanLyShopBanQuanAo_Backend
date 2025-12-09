@@ -37,6 +37,13 @@ public class PercentPromotionService {
     public List<PercentPromotionResponse> getAllPercentagePromotions() {
         return percentPromotionRepository.findAll()
                 .stream()
+                .sorted((p1, p2) -> {
+                    // Sắp xếp theo expiration: khuyến mãi sắp hết hạn lên đầu
+                    if (p1.getExpiration() == null && p2.getExpiration() == null) return 0;
+                    if (p1.getExpiration() == null) return 1;
+                    if (p2.getExpiration() == null) return -1;
+                    return p1.getExpiration().compareTo(p2.getExpiration());
+                })
                 .map(percentPromotionMapper::toPercentPromotionResponse)
                 .toList();
     }
@@ -76,8 +83,41 @@ public class PercentPromotionService {
     }
 
     public List<PercentPromotionResponse> getActivePercentagePromotions() {
-        return percentPromotionRepository.findByIsActive(true)
+        LocalDateTime now = LocalDateTime.now();
+        return percentPromotionRepository.findAll()
                 .stream()
+                .filter(p -> {
+                    // Đang hoạt động = đã bắt đầu VÀ chưa hết hạn
+                    boolean started = p.getEffective() == null || !p.getEffective().isAfter(now);
+                    boolean notExpired = p.getExpiration() == null || p.getExpiration().isAfter(now);
+                    return started && notExpired;
+                })
+                .sorted((p1, p2) -> {
+                    if (p1.getExpiration() == null && p2.getExpiration() == null) return 0;
+                    if (p1.getExpiration() == null) return 1;
+                    if (p2.getExpiration() == null) return -1;
+                    return p1.getExpiration().compareTo(p2.getExpiration());
+                })
+                .map(percentPromotionMapper::toPercentPromotionResponse)
+                .toList();
+    }
+
+    public List<PercentPromotionResponse> getNotStartedPercentagePromotions() {
+        LocalDateTime now = LocalDateTime.now();
+        return percentPromotionRepository.findAll()
+                .stream()
+                .filter(p -> p.getEffective() != null && p.getEffective().isAfter(now))
+                .sorted((p1, p2) -> p1.getEffective().compareTo(p2.getEffective()))
+                .map(percentPromotionMapper::toPercentPromotionResponse)
+                .toList();
+    }
+
+    public List<PercentPromotionResponse> getExpiredPercentagePromotions() {
+        LocalDateTime now = LocalDateTime.now();
+        return percentPromotionRepository.findAll()
+                .stream()
+                .filter(p -> p.getExpiration() != null && p.getExpiration().isBefore(now))
+                .sorted((p1, p2) -> p2.getExpiration().compareTo(p1.getExpiration()))
                 .map(percentPromotionMapper::toPercentPromotionResponse)
                 .toList();
     }
