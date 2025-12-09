@@ -2,6 +2,11 @@ package com.example.ModaMint_Backend.service.chart;
 
 import com.example.ModaMint_Backend.dto.response.charts.SalesChartResponse;
 import com.example.ModaMint_Backend.repository.chart.SalesChartRepository;
+import com.example.ModaMint_Backend.dto.response.charts.DailySalesPoint;
+import com.example.ModaMint_Backend.dto.response.charts.MonthlySalesPoint;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -51,6 +56,43 @@ public class SalesChartService {
                 .totalOrders(totalOrders)
                 .avgOrderValue(avgOrderValue)
                 .build();
+    }
+
+    /**
+     * Return daily timeseries (date, revenue, orders) using DB aggregation
+     */
+    public List<DailySalesPoint> getDailySales(LocalDateTime dateFrom, LocalDateTime dateTo) {
+        List<Object[]> rows = salesChartRepository.findDailySales(dateFrom, dateTo);
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        return rows.stream().map(r -> {
+            Object dt = r[0];
+            Object revenue = r[1];
+            Object orders = r[2];
+            String dateStr = dt != null ? dt.toString() : null;
+            return DailySalesPoint.builder()
+                    .date(dateStr)
+                    .revenue(revenue instanceof java.math.BigDecimal ? (java.math.BigDecimal) revenue : new java.math.BigDecimal(String.valueOf(revenue)))
+                    .orders(orders != null ? Long.valueOf(String.valueOf(orders)) : 0L)
+                    .build();
+        }).collect(Collectors.toList());
+    }
+
+    /**
+     * Return monthly timeseries (YYYY-MM, revenue, orders)
+     */
+    public List<MonthlySalesPoint> getMonthlySales(LocalDateTime dateFrom, LocalDateTime dateTo) {
+        List<Object[]> rows = salesChartRepository.findMonthlySales(dateFrom, dateTo);
+        return rows.stream().map(r -> {
+            Object m = r[0];
+            Object revenue = r[1];
+            Object orders = r[2];
+            String monthStr = m != null ? m.toString() : null;
+            return MonthlySalesPoint.builder()
+                    .month(monthStr)
+                    .revenue(revenue instanceof java.math.BigDecimal ? (java.math.BigDecimal) revenue : new java.math.BigDecimal(String.valueOf(revenue)))
+                    .orders(orders != null ? Long.valueOf(String.valueOf(orders)) : 0L)
+                    .build();
+        }).collect(Collectors.toList());
     }
 
     private void validateDateRange(LocalDateTime dateFrom, LocalDateTime dateTo) {

@@ -1,0 +1,17 @@
+package com.example.ModaMint_Backend.dto.response.charts;
+
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class InventoryProductChartResponse {
+    Long productId;
+    String productName;
+    Integer quantity;
+    String categoryName;
+}

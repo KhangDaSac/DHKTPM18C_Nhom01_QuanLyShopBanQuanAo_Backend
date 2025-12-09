@@ -2,6 +2,8 @@ package com.example.ModaMint_Backend.controller.chart;
 
 import com.example.ModaMint_Backend.dto.response.ApiResponse;
 import com.example.ModaMint_Backend.dto.response.charts.SalesChartResponse;
+import com.example.ModaMint_Backend.dto.response.charts.DailySalesPoint;
+import com.example.ModaMint_Backend.dto.response.charts.MonthlySalesPoint;
 import com.example.ModaMint_Backend.service.chart.SalesChartService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -80,7 +82,7 @@ public class SalesChartController {
      * @return Daily sales breakdown
      */
     @GetMapping("/daily")
-    public ResponseEntity<ApiResponse<SalesChartResponse>> getDailySales(
+        public ResponseEntity<ApiResponse<java.util.List<DailySalesPoint>>> getDailySales(
             @RequestParam(required = false) 
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) 
             LocalDateTime dateFrom,
@@ -91,9 +93,8 @@ public class SalesChartController {
         
         log.info("GET /api/charts/sales/daily - dateFrom: {}, dateTo: {}", dateFrom, dateTo);
         
-        // Reuse same service method - filtering by date range gives daily granularity
-        SalesChartResponse data = salesChartService.getSalesData(dateFrom, dateTo);
-        return ResponseEntity.ok(ApiResponse.<SalesChartResponse>builder()
+        java.util.List<DailySalesPoint> data = salesChartService.getDailySales(dateFrom, dateTo);
+        return ResponseEntity.ok(ApiResponse.<java.util.List<DailySalesPoint>>builder()
                 .result(data)
                 .message("Lấy dữ liệu doanh số theo ngày thành công")
                 .build());
@@ -108,7 +109,7 @@ public class SalesChartController {
      * @return Monthly sales summary
      */
     @GetMapping("/monthly")
-    public ResponseEntity<ApiResponse<SalesChartResponse>> getMonthlySales(
+        public ResponseEntity<ApiResponse<java.util.List<MonthlySalesPoint>>> getMonthlySales(
             @RequestParam(required = false) 
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) 
             LocalDateTime dateFrom,
@@ -119,9 +120,8 @@ public class SalesChartController {
         
         log.info("GET /api/charts/sales/monthly - dateFrom: {}, dateTo: {}", dateFrom, dateTo);
         
-        // For monthly view, you may want to aggregate differently in service layer
-        SalesChartResponse data = salesChartService.getSalesData(dateFrom, dateTo);
-        return ResponseEntity.ok(ApiResponse.<SalesChartResponse>builder()
+        java.util.List<MonthlySalesPoint> data = salesChartService.getMonthlySales(dateFrom, dateTo);
+        return ResponseEntity.ok(ApiResponse.<java.util.List<MonthlySalesPoint>>builder()
                 .result(data)
                 .message("Lấy dữ liệu doanh số theo tháng thành công")
                 .build());

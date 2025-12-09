@@ -215,6 +215,11 @@ public class OrderService {
             String recipientEmail = order.getCustomer().getUser() != null 
                 ? order.getCustomer().getUser().getEmail() 
                 : order.getCustomer().getEmail();
+            log.info("sendOrderConfirmationEmailById: orderId={}, resolvedRecipient={}", orderId, recipientEmail);
+            if (recipientEmail == null || recipientEmail.isBlank()) {
+                log.warn("Recipient email is missing for order {} - skipping email send", orderId);
+                return;
+            }
             emailService.sendOrderConfirmationEmail(response, recipientEmail);
         } catch (Exception e) {
             log.error("Error: ", e);

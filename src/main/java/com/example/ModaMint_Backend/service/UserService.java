@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.HashSet;
@@ -37,6 +38,7 @@ public class UserService {
     // Ảnh mặc định cố định
     private static final String DEFAULT_IMAGE_URL = "https://res.cloudinary.com/dhjksobmf/image/upload/v1729402353/default-avatar_c2opdo.png";
 
+    @Transactional
     public UserResponse createRequest(UserCreationRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new AppException(ErrorCode.USER_EXISTED);
@@ -53,7 +55,7 @@ public class UserService {
         Set<Role> roleEntities = new HashSet<>();
 
         if (request.getRoles() == null || request.getRoles().isEmpty()) {
-            Role defaultRole = (Role) roleRepository.findByName(RoleName.CUSTOMER)
+            Role defaultRole = roleRepository.findByName(RoleName.CUSTOMER)
                     .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
             roleEntities.add(defaultRole);
         } else {
@@ -64,7 +66,7 @@ public class UserService {
                 } catch (IllegalArgumentException e) {
                     throw new AppException(ErrorCode.ROLE_NOT_FOUND);
                 }
-                Role role = (Role) roleRepository.findByName(roleName)
+                Role role = roleRepository.findByName(roleName)
                         .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
                 roleEntities.add(role);
             }
@@ -73,6 +75,7 @@ public class UserService {
         user.setRoles(roleEntities);
 
         User savedUser = userRepository.save(user);
+        userRepository.flush();
         
         // Tự động tạo Customer record nếu user có role CUSTOMER
         boolean hasCustomerRole = roleEntities.stream()

@@ -2,7 +2,8 @@ package com.example.ModaMint_Backend.controller.chart;
 
 import com.example.ModaMint_Backend.dto.response.ApiResponse;
 import com.example.ModaMint_Backend.dto.response.charts.BestProductChartResponse;
-import com.example.ModaMint_Backend.dto.response.charts.InventoryChartResponse;
+import com.example.ModaMint_Backend.dto.response.charts.InventoryProductChartResponse;
+import com.example.ModaMint_Backend.dto.response.charts.InventoryCategoryChartResponse;
 import com.example.ModaMint_Backend.service.chart.BestProductChartService;
 import com.example.ModaMint_Backend.service.chart.InventoryChartService;
 import lombok.RequiredArgsConstructor;
@@ -95,15 +96,15 @@ public class ProductChartController {
      * @return List of products with inventory status
      */
     @GetMapping("/inventory")
-    public ResponseEntity<ApiResponse<List<InventoryChartResponse>>> getInventoryStatus(
+    public ResponseEntity<ApiResponse<List<InventoryProductChartResponse>>> getInventoryStatus(
             @RequestParam(defaultValue = "50") int limit,
             @RequestParam(defaultValue = "false") boolean lowStockOnly) {
         
         log.info("GET /api/charts/products/inventory - limit: {}, lowStockOnly: {}", 
                 limit, lowStockOnly);
         
-        List<InventoryChartResponse> data = inventoryService.getInventoryData(limit, lowStockOnly);
-        return ResponseEntity.ok(ApiResponse.<List<InventoryChartResponse>>builder()
+        List<InventoryProductChartResponse> data = inventoryService.getInventoryData(limit, lowStockOnly);
+        return ResponseEntity.ok(ApiResponse.<List<InventoryProductChartResponse>>builder()
                 .result(data)
                 .message("Lấy tình trạng kho hàng thành công")
                 .build());
@@ -121,17 +122,15 @@ public class ProductChartController {
      * @return List of products with inventory status (can be enhanced to group by category)
      */
     @GetMapping("/inventory/by-category")
-    public ResponseEntity<ApiResponse<List<InventoryChartResponse>>> getInventoryByCategory(
+    public ResponseEntity<ApiResponse<List<InventoryCategoryChartResponse>>> getInventoryByCategory(
             @RequestParam(defaultValue = "50") int limit,
             @RequestParam(defaultValue = "false") boolean lowStockOnly) {
         
         log.info("GET /api/charts/products/inventory/by-category - limit: {}, lowStockOnly: {}", 
                 limit, lowStockOnly);
         
-        // TODO: Enhance service to group by category if needed
-        // For now, returns same data as regular inventory endpoint
-        List<InventoryChartResponse> data = inventoryService.getInventoryData(limit, lowStockOnly);
-        return ResponseEntity.ok(ApiResponse.<List<InventoryChartResponse>>builder()
+        List<InventoryCategoryChartResponse> data = inventoryService.getInventoryByCategory(limit, lowStockOnly);
+        return ResponseEntity.ok(ApiResponse.<List<InventoryCategoryChartResponse>>builder()
                 .result(data)
                 .message("Lấy kho hàng theo danh mục thành công")
                 .build());

@@ -21,27 +21,38 @@ public interface InventoryChartRepository extends JpaRepository<Product, Long> {
      * minQty is set to 10 as default threshold
      * Returns: [productName, totalStock, minQty]
      */
-    @Query("SELECT p.name, " +
-           "COALESCE(SUM(pv.quantity), 0), " +
-           "10 " +
+    @Query("SELECT p.id, p.name, COALESCE(SUM(pv.quantity), 0), c.name " +
            "FROM Product p " +
            "LEFT JOIN p.productVariants pv " +
+           "LEFT JOIN p.category c " +
            "WHERE p.active = true " +
-           "GROUP BY p.id, p.name " +
+           "GROUP BY p.id, p.name, c.name " +
            "ORDER BY COALESCE(SUM(pv.quantity), 0) ASC")
     List<Object[]> findInventoryStatus(Pageable pageable);
 
     /**
      * Get products with low stock (below threshold)
      */
-    @Query("SELECT p.name, " +
-           "COALESCE(SUM(pv.quantity), 0), " +
-           "10 " +
+    @Query("SELECT p.id, p.name, COALESCE(SUM(pv.quantity), 0), c.name " +
            "FROM Product p " +
            "LEFT JOIN p.productVariants pv " +
+           "LEFT JOIN p.category c " +
            "WHERE p.active = true " +
-           "GROUP BY p.id, p.name " +
+           "GROUP BY p.id, p.name, c.name " +
            "HAVING COALESCE(SUM(pv.quantity), 0) < 10 " +
            "ORDER BY COALESCE(SUM(pv.quantity), 0) ASC")
     List<Object[]> findLowStockProducts(Pageable pageable);
+
+       /**
+        * Get inventory aggregated by product category
+        * Returns: [categoryName, totalStock]
+        */
+       @Query("SELECT c.name, COALESCE(SUM(pv.quantity), 0) " +
+                 "FROM Product p " +
+                 "LEFT JOIN p.productVariants pv " +
+                 "LEFT JOIN p.category c " +
+                 "WHERE p.active = true " +
+                 "GROUP BY c.id, c.name " +
+                 "ORDER BY COALESCE(SUM(pv.quantity), 0) DESC")
+       List<Object[]> findInventoryByCategory(Pageable pageable);
 }

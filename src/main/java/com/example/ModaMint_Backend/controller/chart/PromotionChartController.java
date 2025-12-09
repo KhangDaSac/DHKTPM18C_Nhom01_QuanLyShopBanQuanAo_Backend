@@ -80,3 +80,4 @@ public class PromotionChartController {
                 .build());
     }
 }
+

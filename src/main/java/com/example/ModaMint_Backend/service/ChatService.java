@@ -50,7 +50,7 @@ public class ChatService {
         List<Document> products = productVectorLoader.loadProductsToVectorDB();
 
         String productList = products.stream()
-                .limit(50)
+                .limit(500)
                 .map(Document::getText)
                 .collect(Collectors.joining("\n"));
 
@@ -93,6 +93,8 @@ public class ChatService {
                 .type("ASSISTANT")
                 .build();
     }
+
+
 
     public List<ChatAiResponse> getFullHistory() {
         String conversationId = SecurityContextHolder.getContext().getAuthentication().getName();
